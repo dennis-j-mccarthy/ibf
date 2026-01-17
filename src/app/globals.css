@@ -1,26 +1,385 @@
 @import "tailwindcss";
 
+/* Fonts loaded via Adobe Typekit (poj1hyc) and Google Fonts in layout.tsx:
+   - brother-1816 (Adobe)
+   - Open Sans (Google)
+   - Great Vibes (Google)
+*/
+
 :root {
+  /* Core colors */
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #1a1b1f;
+  --black: #191b22;
+  
+  /* Balbs brand colors (from Webflow) */
+  --balbs-red: #ff6445;
+  --balbs-orange: #f29500;
+  --balbs-yellow: #ffd41d;
+  --balbs-bright-blue: #0088ff;
+  --balbs-dark-blue: #02176f;
+  --balbs-green: #50db92;
+  
+  /* Accent colors */
+  --coral: #ff8946;
+  --mint: #c0dac7;
+  --light-mint: #b9dbc5;
+  --green: #50db92;
+  --slate-grey: #7e828f;
+  --alice-blue: #f5fbfc;
+  
+  /* Legacy mapped colors */
+  --primary: var(--coral);
+  --primary-dark: #e5753d;
+  --secondary: var(--balbs-yellow);
+  --accent: var(--balbs-dark-blue);
+  --light-bg: #fafafa;
+  --orange: var(--balbs-orange);
+  --cream: #fafafa;
+  
+  /* Fonts */
+  --font-brother: 'brother-1816', Arial, sans-serif;
+  --font-open-sans: 'Open Sans', Arial, sans-serif;
+  --font-great-vibes: 'Great Vibes', cursive;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-dark);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-light-bg: var(--light-bg);
+  --color-coral: var(--coral);
+  --color-mint: var(--mint);
+  --color-balbs-red: var(--balbs-red);
+  --color-balbs-orange: var(--balbs-orange);
+  --color-balbs-yellow: var(--balbs-yellow);
+  --color-balbs-bright-blue: var(--balbs-bright-blue);
+  --color-balbs-dark-blue: var(--balbs-dark-blue);
+  --color-green: var(--green);
+  --color-slate-grey: var(--slate-grey);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+  scroll-behavior: smooth;
 }
 
 body {
+  margin: 0;
+  min-height: 100%;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-brother);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img {
+  max-width: 100%;
+  vertical-align: middle;
+  display: inline-block;
+}
+
+/* Heading styles - Brother 1816 */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-brother);
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+h1 {
+  font-size: 38px;
+  line-height: 44px;
+  margin-top: 20px;
+}
+
+h2 {
+  font-size: 32px;
+  line-height: 36px;
+  margin-top: 20px;
+}
+
+h3 {
+  line-height: 30px;
+  margin-top: 20px;
+}
+
+h4 {
+  font-size: 18px;
+  line-height: 24px;
+  margin-top: 10px;
+}
+
+h5 {
+  font-size: 14px;
+  line-height: 20px;
+  margin-top: 10px;
+}
+
+h6 {
+  font-size: 12px;
+  line-height: 18px;
+  margin-top: 10px;
+}
+
+p {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+/* Script/decorative text */
+.font-script {
+  font-family: var(--font-great-vibes);
+}
+
+/* Balbs text styles (matching Webflow) */
+.balbs-red {
+  font-family: var(--font-brother);
+  color: var(--balbs-red);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.balbs-blue {
+  font-family: var(--font-brother);
+  color: var(--balbs-bright-blue);
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+.balbs-orange {
+  font-family: var(--font-brother);
+  color: var(--balbs-orange);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.balbs-green, .green {
+  font-family: var(--font-brother);
+  color: var(--balbs-green);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.balbs-yellow {
+  font-family: var(--font-brother);
+  color: var(--balbs-yellow);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.balbs-white {
+  font-family: var(--font-brother);
+  color: white;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* Coral color for headings */
+.coral {
+  color: var(--coral);
+}
+
+/* Mint color */
+.mint {
+  color: var(--mint);
+  background-color: var(--mint);
+}
+
+/* Form styles matching Webflow */
+.form-field {
+  display: block;
+  width: 100%;
+  height: 38px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  line-height: 1.42857143;
+  color: #333333;
+  vertical-align: middle;
+  background-color: #ffffff;
+  border: 1px solid #cccccc;
+  border-radius: 8px;
+}
+
+.form-field:focus {
+  border-color: var(--primary);
+  outline: 0;
+}
+
+.form-field::placeholder {
+  color: #999;
+}
+
+textarea.form-field {
+  height: auto;
+  min-height: 100px;
+}
+
+select.form-field {
+  background-color: #f3f3f3;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--light-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 4px;
+}
+
+/* Button styles */
+.btn-primary {
+  display: inline-block;
+  background-color: var(--primary);
+  color: white;
+  padding: 1rem 2rem;
+  border-radius: 9999px;
+  font-family: var(--font-brother);
+  font-weight: 700;
+  font-size: 16px;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  border: 0;
+  transition: background-color 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-dark);
+}
+
+.btn-secondary {
+  display: inline-block;
+  background-color: var(--secondary);
+  color: var(--accent);
+  padding: 1rem 2rem;
+  border-radius: 9999px;
+  font-family: var(--font-brother);
+  font-weight: 700;
+  font-size: 16px;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  border: 0;
+  transition: background-color 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background-color: #c9a230;
+}
+
+/* Navigation link styles */
+.nav-link {
+  position: relative;
+  display: inline-block;
+  vertical-align: top;
+  text-decoration: none;
+  color: #333;
+  padding: 20px;
+  text-align: left;
+  font-family: var(--font-brother);
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.nav-link:hover {
+  color: var(--primary);
+}
+
+/* Footer link styles */
+.footer-link {
+  color: white;
+  text-decoration: none;
+  font-family: var(--font-open-sans);
+  font-size: 14px;
+  font-weight: 500;
+  text-transform: uppercase;
+  display: block;
+  padding: 4px 0;
+  transition: color 0.2s ease;
+}
+
+.footer-link:hover {
+  color: var(--secondary);
+}
+
+/* Banner styles */
+.banner {
+  background-color: var(--primary);
+  padding: 8px 0;
+  text-align: center;
+}
+
+.banner-text {
+  color: white;
+  font-family: var(--font-open-sans);
+  font-size: 14px;
+}
+
+/* Section backgrounds */
+.section-dark-blue {
+  background-color: var(--accent);
+}
+
+.section-cream {
+  background-color: var(--cream);
+}
+
+.section-light {
+  background-color: var(--light-bg);
+}
+
+/* FAQ Accordion styles */
+.faq-accordion {
+  background-color: white;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.faq-question {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  cursor: pointer;
+  font-family: var(--font-brother);
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--accent);
+}
+
+.faq-question:hover {
+  background-color: #f9f9f9;
+}
+
+.faq-answer {
+  padding: 0 24px 20px;
+  font-family: var(--font-open-sans);
+  color: #666;
+  line-height: 1.6;
 }

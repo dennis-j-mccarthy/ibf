@@ -1,36 +1,105 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Ignatius Book Fairs
 
-## Getting Started
+A Next.js website for Ignatius Book Fairs - a partnership between Ave Maria University and Ignatius Press providing quality literature for schools, parishes, and families.
 
-First, run the development server:
+## 🚀 Getting Started
 
+### Prerequisites
+- Node.js 18+ 
+- npm
+
+### Installation
+
+1. Install dependencies:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Start the development server:
+```bash
+npm run dev
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📁 Project Structure
 
-## Learn More
+```
+src/
+├── app/                    # Next.js App Router pages
+│   ├── about/             # About page
+│   ├── faqs/              # FAQs page
+│   ├── press-room/        # Press Room page
+│   ├── terms-of-service/  # Terms of Service page
+│   ├── globals.css        # Global styles
+│   ├── layout.tsx         # Root layout
+│   └── page.tsx           # Homepage
+├── components/            # Reusable React components
+│   ├── Header.tsx         # Navigation header
+│   ├── Footer.tsx         # Site footer
+│   ├── Hero.tsx           # Homepage hero
+│   ├── WhyHost.tsx        # Features section
+│   ├── InquiryForm.tsx    # Contact form
+│   ├── Testimonials.tsx   # Testimonials carousel
+│   └── FAQSection.tsx     # FAQ accordion
+```
 
-To learn more about Next.js, take a look at the following resources:
+## 🛠 Tech Stack
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Framework**: [Next.js 14](https://nextjs.org/) with App Router
+- **Language**: TypeScript
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/) v4
+- **Fonts**: Geist Sans & Geist Mono
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🎨 Design System
 
-## Deploy on Vercel
+### Colors
+| Color | Hex | Usage |
+|-------|-----|-------|
+| Primary | `#8b2332` | Buttons, links, accents |
+| Primary Dark | `#6d1c28` | Hover states |
+| Secondary | `#d4af37` | Highlights, gold accents |
+| Accent | `#2e4057` | Headers, dark backgrounds |
+| Light BG | `#f8f5f0` | Section backgrounds |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📝 Available Scripts
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `npm run dev` - Start development server with hot reload
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+
+## 🔗 External Links
+
+- **Shop**: [shop.ignatiusbookfairs.com](https://shop.ignatiusbookfairs.com/)
+- **Original Site**: [ignatiusbookfairs.com](https://ignatiusbookfairs.com)
+- **Donate**: [Donation Page](https://afvapnqh.donorsupport.co/page/ibf)
+
+## 📄 Pages
+
+| Page | Route | Description |
+|------|-------|-------------|
+| Home | `/` | Hero, features, inquiry form, testimonials, FAQs |
+| About | `/about` | Mission, team, mascot, timeline |
+| FAQs | `/faqs` | Comprehensive FAQ accordion |
+| Press Room | `/press-room` | Press releases and media resources |
+| Terms of Service | `/terms-of-service` | Legal terms |
+
+## 🚧 TODOs
+
+- [ ] Add actual images for team members and mascot
+- [ ] Integrate form submission with backend/email service
+- [ ] Add book fair news/blog section
+- [ ] Implement search functionality
+- [ ] Add analytics tracking
+- [ ] Set up CI/CD pipeline
+
+## 📞 Contact
+
+For questions about the project or Ignatius Book Fairs:
+- **Phone**: 888-771-2321
+- **Website**: [ignatiusbookfairs.com](https://ignatiusbookfairs.com)
+
+---
+
+A partnership between **Ave Maria University** & **Ignatius Press**
