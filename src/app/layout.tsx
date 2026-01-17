@@ -15,7 +15,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         {/* Adobe Fonts - Brother 1816, Open Sans, Great Vibes */}
         <link rel="stylesheet" href="https://use.typekit.net/poj1hyc.css" />

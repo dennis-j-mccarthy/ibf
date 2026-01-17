@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+/* Override Tailwind's default font */
+@layer base {
+  html, body {
+    font-family: 'brother-1816', Arial, sans-serif !important;
+  }
+}
+
 /* Fonts loaded via Adobe Typekit (poj1hyc) and Google Fonts in layout.tsx:
    - brother-1816 (Adobe)
    - Open Sans (Google)
