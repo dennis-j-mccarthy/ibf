@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import type { Resource } from '@prisma/client';
 
 interface ResourcesPageContentProps {
@@ -122,11 +121,11 @@ function ResourceCard({ resource, onVideoClick }: { resource: Resource; onVideoC
       {/* Thumbnail */}
       <div className="relative w-full max-w-[200px] aspect-[3/4] bg-white border border-gray-200 rounded shadow-sm mb-4 overflow-hidden">
         {resource.thumbnail ? (
-          <Image
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
             src={resource.thumbnail}
             alt={resource.title}
-            fill
-            className="object-contain p-2"
+            className="absolute inset-0 w-full h-full object-contain p-2"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gray-100">
