@@ -4,7 +4,7 @@ import HowItWorks from '@/components/HowItWorks';
 import WhyHost from '@/components/WhyHost';
 import DiscoverVideo from '@/components/DiscoverVideo';
 import Testimonials from '@/components/Testimonials';
-import HomeFAQs from '@/components/HomeFAQs';
+import FAQSection from '@/components/FAQSection';
 
 export default function Home() {
   return (
@@ -15,7 +15,7 @@ export default function Home() {
       <WhyHost />
       <DiscoverVideo />
       <Testimonials />
-      <HomeFAQs />
+      <FAQSection />
     </>
   );
 }

@@ -1,8 +1,14 @@
 import prisma from '@/lib/prisma';
 
-export async function getFAQs() {
+export async function getFAQs(options?: { pageTitle?: string; version?: string }) {
   const faqs = await prisma.fAQ.findMany({
-    where: { isActive: true },
+    where: { 
+      isActive: true,
+      // Default to Catholic FAQs
+      version: options?.version ?? 'Catholic',
+      // Optionally filter by page
+      ...(options?.pageTitle && { pageTitle: options.pageTitle }),
+    },
     orderBy: { order: 'asc' },
   });
   return faqs;

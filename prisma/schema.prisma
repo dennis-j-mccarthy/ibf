@@ -14,6 +14,9 @@ model FAQ {
   id        Int      @id @default(autoincrement())
   question  String
   answer    String
+  slug      String?
+  pageTitle String?
+  version   String   @default("Public") // "Public", "Catholic", or empty for both
   order     Int      @default(0)
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
@@ -21,14 +24,19 @@ model FAQ {
 }
 
 model Resource {
-  id          Int      @id @default(autoincrement())
-  title       String
-  description String?
-  url         String?
-  fileUrl     String?
-  category    String?
-  order       Int      @default(0)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  title        String
+  slug         String   @unique
+  description  String?
+  thumbnail    String?  // Image URL
+  fileUrl      String?  // Direct file URL
+  category     String?  // Operational, Advertising, Public, Tutorials
+  resourceType String?  // PDF, Video, Image, etc.
+  embedCode    String?  // For YouTube/Loom embeds
+  featured     Boolean  @default(false)
+  hasDetails   Boolean  @default(false)
+  order        Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
