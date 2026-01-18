@@ -48,6 +48,12 @@
   --font-brother: 'brother-1816', Arial, sans-serif;
   --font-open-sans: 'Open Sans', Arial, sans-serif;
   --font-great-vibes: 'Great Vibes', cursive;
+  --font-handsome: 'handsome-pro', cursive;
+}
+
+/* Handsome Pro font utility */
+.font-handsome {
+  font-family: 'handsome-pro', cursive;
 }
 
 @theme inline {

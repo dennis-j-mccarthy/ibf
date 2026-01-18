@@ -154,7 +154,7 @@ const Header = () => {
               FAQS
             </Link>
             <Link
-              href="/press-room"
+              href="/blog"
               className="text-[var(--black)] text-sm font-bold hover:opacity-70 transition-opacity uppercase tracking-wide"
             >
               BLOG

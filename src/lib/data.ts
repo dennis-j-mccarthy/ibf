@@ -32,3 +32,23 @@ export async function getResourcesByCategory(category: string) {
   });
   return resources;
 }
+
+export async function getBlogs(options?: { category?: string; featured?: boolean; limit?: number }) {
+  const blogs = await prisma.blog.findMany({
+    where: { 
+      archived: false,
+      ...(options?.category && { category: options.category }),
+      ...(options?.featured !== undefined && { featured: options.featured }),
+    },
+    orderBy: { publishedAt: 'desc' },
+    ...(options?.limit && { take: options.limit }),
+  });
+  return blogs;
+}
+
+export async function getBlogBySlug(slug: string) {
+  const blog = await prisma.blog.findUnique({
+    where: { slug },
+  });
+  return blog;
+}

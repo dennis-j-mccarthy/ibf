@@ -1,48 +1,3 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
-
-const faqs = [
-  { question: "Find a Book Fair Near You!", answer: "<p>Want to host or attend an Ignatius Book Fair? Visit ignatiusbookfairs.com to fill out an inquiry form today!</p>", slug: "find-a-book-fair-near-you", pageTitle: "Home", version: "Public", order: 1 },
-  { question: "What's the process if I want to host a book fair?", answer: "<p>To host a book fair, please complete an inquiry form. You will then be contacted by a Book Fair Pro who will provide more information and answer any questions you have.</p>", slug: "whats-the-process", pageTitle: "Home", version: "Public", order: 2 },
-  { question: "Where can a fair be hosted?", answer: "<p>Ignatius Book Fairs are now available for schools across the continental United States!</p>", slug: "where-can-a-fair-be-hosted", pageTitle: "Home", version: "Public", order: 3 },
-  { question: "Are your book fairs in-person?", answer: "<p>Yes! We are thrilled to offer a full-service, in-person book fair experience that will captivate the hearts and minds of children, parents, and teachers alike.</p>", slug: "are-your-book-fairs-in-person", pageTitle: "Home", version: "Public", order: 5 },
-  { question: "Why did Ave Maria University and Ignatius Press start book fairs?", answer: "<p>Ave Maria University and Ignatius Press launched book fairs to offer a refreshing, high-quality alternative to other book fairs, providing children access to literature that can shape their minds.</p>", slug: "why-did-ave-maria-start-book-fairs", pageTitle: "Home", version: "Public", order: 6 },
-];
-
-const resources = [
-  { title: "Social Media Guide", slug: "social-media-guide", description: "Copy, paste & post! A comprehensive guide for your book fair social media kit.", thumbnail: "/images/social-media-v-thumb.png", fileUrl: "https://cdn.prod.website-files.com/64f3108dd0bb03ad9fb7a8f2/65f2a5bf0e96ce93b63eddf1_Social%20Media%20Guide%20(1).pdf", category: "Operational", resourceType: "PDF", order: 1, featured: false },
-  { title: "Book Fair Administrator Operational Guide", slug: "book-fair-administrator-operational-guide", description: "Your complete guide for running a successful book fair.", thumbnail: "/images/operational-guide-thumb.png", fileUrl: "https://cdn.prod.website-files.com/64f3108dd0bb03ad9fb7a8f2/66f67a1b98bd4bcf094c2e43_Book%20Fair%20Administrator%20Operational%20Guide%20(2).pdf", category: "Operational", resourceType: "PDF", order: 2, featured: true },
-  { title: "POS Device Instructions", slug: "pos-device-instructions", description: "Instructions for setting up and using your POS device.", thumbnail: "/images/tip-sheet-thumb.png", fileUrl: "https://cdn.prod.website-files.com/64f3108dd0bb03ad9fb7a8f2/667e85f65a99f53fab88bb5d_IBF-POS-Device-Instructions.pdf", category: "Operational", resourceType: "PDF", order: 3, featured: false },
-  { title: "Principal Letter and Flyer", slug: "principal-letter-flyer", description: "A letter and flyer to share with your principal.", thumbnail: "/images/principal-letter-thumb.png", fileUrl: "/documents/Bookfair-principal-letter-flyer.pdf", category: "Operational", resourceType: "PDF", order: 4, featured: false },
-  { title: "Volunteer Training 101", slug: "volunteer-training-101", description: "Essential training for book fair volunteers.", thumbnail: "/images/shopping-guide-thumb.png", fileUrl: "https://cdn.prod.website-files.com/64f3108dd0bb03ad9fb7a8f2/66f683f36b60bd5409d63e61_Volunteer%20training%20101%20(1).pdf", category: "Operational", resourceType: "PDF", order: 5, featured: false },
-  { title: "Volunteer Sign Up Sheet", slug: "volunteer-sign-up-sheet", description: "A sign-up sheet for book fair volunteers.", thumbnail: "/images/tip-sheet-thumb.png", fileUrl: "https://cdn.prod.website-files.com/64f3108dd0bb03ad9fb7a8f2/65e1b84abc7214ec36a71ae8_IBF-Volunteer-Sign-Up-Sheet.pdf", category: "Operational", resourceType: "PDF", order: 6, featured: false },
-  { title: "Student Wishlist", slug: "student-wishlist", description: "Wishlist forms for students to share with their families.", thumbnail: "/images/student-wishlist-10-24-thumb.png", fileUrl: "https://cdn.prod.website-files.com/64f3108dd0bb03ad9fb7a8f2/667ea5f018dfcd4f3cdd5a87_Wishlists.pdf", category: "Operational", resourceType: "PDF", order: 7, featured: false },
-  { title: "Teacher Wishlist", slug: "teacher-wishlist", description: "Wishlist forms for teachers.", thumbnail: "/images/teacher-bookfair-sighlist-thumb.png", fileUrl: "https://cdn.prod.website-files.com/64f3108dd0bb03ad9fb7a8f2/667ea5f018dfcd4f3cdd5a87_Wishlists.pdf", category: "Operational", resourceType: "PDF", order: 8, featured: false },
-  { title: "Ave Dollars Explanation Sheet", slug: "ave-dollars-explanation-sheet", description: "Information about how Ave Dollars work.", thumbnail: "/images/about-ave-dollars-thumb.png", fileUrl: "https://cdn.prod.website-files.com/64f3108dd0bb03ad9fb7a8f2/6637fbcc7b59c66b0fef9aa1_Ave-Dollars-Explanation-Sheet.pdf", category: "Operational", resourceType: "PDF", order: 9, featured: false },
-  { title: "Last Copy Tags", slug: "last-copy-tags", description: "Tags for marking last copies of books.", thumbnail: "/images/thumb-lastcopy-inksaver.png", fileUrl: "https://cdn.prod.website-files.com/64f3108dd0bb03ad9fb7a8f2/667ea5f0a39ded94a01f64d7_Table-Tags.pdf", category: "Operational", resourceType: "PDF", order: 10, featured: false },
-  { title: "Pulpit Announcement", slug: "pulpit-announcement", description: "A script for announcing your book fair at Mass.", thumbnail: "/images/pr-thumb.png", fileUrl: "/documents/pulpit-announcement.pdf", category: "Operational", resourceType: "PDF", order: 11, featured: false },
-  { title: "Coloring Sheet 1", slug: "coloring-sheet-1", description: "A fun coloring sheet for kids.", thumbnail: "/images/color-1-thumb.png", fileUrl: "https://cdn.prod.website-files.com/64f3108dd0bb03ad9fb7a8f2/667eb7ae5a99f53fab94b25e_Coloring-Loupio-1.pdf", category: "Operational", resourceType: "PDF", order: 12, featured: false },
-  { title: "Coloring Sheet 2", slug: "coloring-sheet-2", description: "A fun coloring sheet for kids.", thumbnail: "/images/color-2-thumb.png", fileUrl: "https://cdn.prod.website-files.com/64f3108dd0bb03ad9fb7a8f2/667eb835c09b1ea6a4b9e7e3_Coloring-Loupio-2.pdf", category: "Operational", resourceType: "PDF", order: 13, featured: false },
-  { title: "Coloring Sheet 3", slug: "coloring-sheet-3", description: "A fun coloring sheet for kids.", thumbnail: "/images/color-3-thumb.png", fileUrl: "https://cdn.prod.website-files.com/64f3108dd0bb03ad9fb7a8f2/667eb8cdbf2f36ab39a1082f_Coloring-Loupio-3.pdf", category: "Operational", resourceType: "PDF", order: 14, featured: false },
-  { title: "2025 Parent Letter", slug: "2025-parent-letter", description: "A letter to send to parents about your upcoming book fair.", thumbnail: "/images/in-person-pr-ltr-thumb.png", fileUrl: "https://cdn.prod.website-files.com/64f3108dd0bb03ad9fb7a8f2/667eb12dbd5f8e0dd69f4b75_ad-diocese-full-page.pdf", category: "Advertising", resourceType: "PDF", order: 15, featured: false },
-  { title: "About Ave Dollars", slug: "about-ave-dollars", description: "Flyer explaining Ave Dollars rewards.", thumbnail: "/images/about-ave-dollars-thumb.png", fileUrl: "https://cdn.prod.website-files.com/64f3108dd0bb03ad9fb7a8f2/6637fbcc7b59c66b0fef9aa1_Ave-Dollars-Explanation-Sheet.pdf", category: "Advertising", resourceType: "PDF", order: 16, featured: false },
-  { title: "Diocese-Friendly Full-Page Ad", slug: "diocese-friendly-full-page-ad", description: "A full-page ad for diocesan publications.", thumbnail: "/images/ad-diocese-full-page-thumb.png", fileUrl: "https://cdn.prod.website-files.com/64f3108dd0bb03ad9fb7a8f2/667eb12dbd5f8e0dd69f4b75_ad-diocese-full-page.pdf", category: "Advertising", resourceType: "PDF", order: 17, featured: false },
-  { title: "Diocese-Friendly Half-Page Ad", slug: "diocese-friendly-half-page-ad", description: "A half-page ad for diocesan publications.", thumbnail: "/images/ad-diocese-half-page-thumb.png", fileUrl: "https://cdn.prod.website-files.com/64f3108dd0bb03ad9fb7a8f2/667eb1ec4a06e97dc9ce2ea1_ad-diocese-half-page.pdf", category: "Advertising", resourceType: "PDF", order: 18, featured: false },
-  { title: "Flyer", slug: "flyer", description: "A flyer to promote your book fair.", thumbnail: "/images/flyer-thumb.png", fileUrl: "https://cdn.prod.website-files.com/64f3108dd0bb03ad9fb7a8f2/667eb2aeb2f5a07c8c5b02f8_Flyer-8.5x11.pdf", category: "Advertising", resourceType: "PDF", order: 19, featured: false },
-  { title: "Two-Page Flyer", slug: "two-page-flyer", description: "A two-page flyer with more details.", thumbnail: "/images/two-page-flyer-thumb.png", fileUrl: "https://cdn.prod.website-files.com/64f3108dd0bb03ad9fb7a8f2/667eb4ab5a99f53fab938da1_Flyer-half-sheet.pdf", category: "Advertising", resourceType: "PDF", order: 20, featured: false },
-  { title: "Category Signs", slug: "category-signs", description: "Signs to organize books by category.", thumbnail: "/images/category-signs.png", fileUrl: "https://cdn.prod.website-files.com/64f3108dd0bb03ad9fb7a8f2/667ea5f0a39ded94a01f64d7_Table-Tags.pdf", category: "Advertising", resourceType: "PDF", order: 21, featured: false },
-  { title: "Digital Book Fair Package", slug: "digital-book-fair-package", description: "Everything you need to run a virtual book fair.", thumbnail: "/images/digital-package-v-thumb.png", fileUrl: "/documents/digital-package-virtual.pdf", category: "Public", resourceType: "PDF", order: 22, featured: false },
-  { title: "Flyer - Virtual", slug: "flyer-virtual", description: "A flyer to promote your virtual book fair.", thumbnail: "/images/flyer-virtual-thumb.png", fileUrl: "/documents/flyer-virtual.pdf", category: "Public", resourceType: "PDF", order: 23, featured: false },
-  { title: "Workshop 1: Welcome to IBF", slug: "workshop-1-welcome-to-ibf", description: "An introduction to Ignatius Book Fairs.", thumbnail: "/images/ibf-webinar-thumb.png", category: "Tutorials", resourceType: "Video", embedCode: "<iframe src=\"https://www.youtube.com/embed/cnxSqU6GvAc\" title=\"YouTube video player\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" allowfullscreen></iframe>", order: 24, featured: false },
-  { title: "Workshop 2: Advertising Your Fair", slug: "workshop-2-advertising-your-fair", description: "Tips for promoting your book fair.", thumbnail: "/images/ibf-webinar-thumb.png", category: "Tutorials", resourceType: "Video", embedCode: "<iframe src=\"https://www.youtube.com/embed/J_uPfyMnsmE\" title=\"YouTube video player\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" allowfullscreen></iframe>", order: 25, featured: false },
-  { title: "Workshop 3: Organizing Volunteers", slug: "workshop-3-organizing-volunteers", description: "How to recruit and organize volunteers.", thumbnail: "/images/ibf-webinar-thumb.png", category: "Tutorials", resourceType: "Video", embedCode: "<iframe src=\"https://www.youtube.com/embed/3HZS1ys4BVA\" title=\"YouTube video player\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" allowfullscreen></iframe>", order: 26, featured: false },
-  { title: "Workshop 4: Set Up and Sales Week", slug: "workshop-4-set-up-sales-week", description: "Preparing for and running your book fair.", thumbnail: "/images/ibf-webinar-thumb.png", category: "Tutorials", resourceType: "Video", embedCode: "<iframe src=\"https://www.youtube.com/embed/zY_qO6z1mIQ\" title=\"YouTube video player\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" allowfullscreen></iframe>", order: 27, featured: false },
-  { title: "Workshop 5: Takedown, Rewards and Feedback", slug: "workshop-5-takedown-rewards-feedback", description: "Wrapping up your book fair.", thumbnail: "/images/ibf-webinar-thumb.png", category: "Tutorials", resourceType: "Video", embedCode: "<iframe src=\"https://www.youtube.com/embed/iAoLUr45_Fc\" title=\"YouTube video player\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" allowfullscreen></iframe>", order: 28, featured: false },
-  { title: "Clover Device Tutorial", slug: "clover-device-tutorial", description: "How to use your Clover POS device.", thumbnail: "/images/ibf-video-thumb.png", category: "Tutorials", resourceType: "Video", embedCode: "<iframe src=\"https://www.youtube.com/embed/mLmudCg2jLM\" title=\"YouTube video player\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" allowfullscreen></iframe>", order: 29, featured: false },
-  { title: "Setup and Takedown Video", slug: "setup-takedown-video", description: "A visual guide for setting up and taking down your book fair.", thumbnail: "/images/ibf-video-thumb.png", category: "Tutorials", resourceType: "Video", embedCode: "<iframe src=\"https://www.loom.com/embed/4bbb78e8d22d48a7893f5f1ef1ea1bd7?sid=4ac51f1b-3cd7-4db8-96d4-1ba9d9f0f5d4\" frameborder=\"0\" webkitallowfullscreen mozallowfullscreen allowfullscreen style=\"width: 100%; height: 100%;\"></iframe>", order: 30, featured: false },
-];
-
 const blogs = [
   {
     title: "3 Wholesome Mystery Series You’ll Find at Ignatius Book Fairs",
@@ -332,35 +287,4 @@ const blogs = [
   }
 ];
 
-async function main() {
-  console.log("Seeding database...");
-  await prisma.fAQ.deleteMany();
-  await prisma.resource.deleteMany();
-  await prisma.blog.deleteMany();
-  
-  for (const faq of faqs) { 
-    await prisma.fAQ.create({ data: faq }); 
-  }
-  console.log("Created " + faqs.length + " FAQs");
-  
-  for (const resource of resources) { 
-    await prisma.resource.create({ data: resource }); 
-  }
-  console.log("Created " + resources.length + " Resources");
-
-  for (const blog of blogs) { 
-    await prisma.blog.create({ data: blog }); 
-  }
-  console.log("Created " + blogs.length + " Blogs");
-  
-  console.log("Seeding complete!");
-}
-
-main()
-  .catch((e) => { 
-    console.error(e); 
-    process.exit(1); 
-  })
-  .finally(async () => { 
-    await prisma.$disconnect(); 
-  });
+Processed 22 blog posts

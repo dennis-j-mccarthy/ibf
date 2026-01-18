@@ -13,32 +13,34 @@ const HomeHero = () => {
       />
       
       {/* Content overlay */}
-      <div className="absolute inset-0 flex flex-col md:flex-row px-6 sm:px-12 md:px-20 lg:px-32">
-        {/* Left column - text content */}
-        <div className="w-full md:w-1/2 flex flex-col justify-center py-8 md:py-0">
-          <p 
-            className="text-white text-[12px] sm:text-[14px] md:text-[15px] font-bold uppercase tracking-wide mb-2"
-            style={{ fontFamily: 'brother-1816, sans-serif' }}
-          >
-            Wholesome, Curated, Parent-Approved
-          </p>
-          <h1 
-            className="text-white"
-            style={{ fontFamily: 'brother-1816, sans-serif', fontSize: '60px', fontWeight: 800, lineHeight: '104%' }}
-          >
-            Welcome to<br />Ignatius Book Fairs
-          </h1>
-        </div>
-        
-        {/* Right column blob overlay - hidden on mobile */}
-        <div className="hidden md:flex w-1/2 items-center justify-end">
-          <Image
-            src="/images/blob_no_bg.png"
-            alt=""
-            width={480}
-            height={400}
-            className="h-[80%] w-auto object-contain"
-          />
+      <div className="absolute inset-0 flex items-center justify-center px-6 sm:px-12 md:px-16 lg:px-20">
+        <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 max-w-5xl w-full">
+          {/* Left column - text content */}
+          <div className="text-center md:text-left">
+            <p 
+              className="text-white text-[12px] sm:text-[14px] md:text-[15px] font-bold uppercase tracking-wide mb-2"
+              style={{ fontFamily: 'brother-1816, sans-serif' }}
+            >
+              Wholesome, Curated, Parent-Approved
+            </p>
+            <h1 
+              className="text-white"
+              style={{ fontFamily: 'brother-1816, sans-serif', fontSize: '60px', fontWeight: 800, lineHeight: '104%' }}
+            >
+              Welcome to<br />Ignatius Book Fairs
+            </h1>
+          </div>
+          
+          {/* Right column blob overlay - hidden on mobile */}
+          <div className="hidden md:flex items-center">
+            <Image
+              src="/images/blob_no_bg.png"
+              alt=""
+              width={400}
+              height={340}
+              className="h-auto w-[350px] lg:w-[400px] object-contain"
+            />
+          </div>
         </div>
       </div>
     </section>
