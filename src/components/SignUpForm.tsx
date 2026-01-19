@@ -9,13 +9,15 @@ const SignUpForm = () => {
     email: '',
     phone: '',
     howDidYouHear: '',
+    previouslyHadFair: false,
     comments: '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
     setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
     }));
   };
 
@@ -36,17 +38,11 @@ const SignUpForm = () => {
           {/* Header */}
           <div className="text-center mb-8">
             <h1 
-              className="text-[#ff6445] font-black uppercase mb-0 text-3xl md:text-4xl lg:text-5xl"
-              style={{ fontFamily: 'brother-1816, sans-serif' }}
-            >
-              LEARN MORE
-            </h1>
-            <h3 
-              className="text-[#0088ff] mb-5 text-[35px]"
-              style={{ fontFamily: "handsome-pro, sans-serif", lineHeight: '90%' }}
+              className="text-[#0088ff] mb-[20px] text-[35px]"
+              style={{ fontFamily: "brother-1816, sans-serif", lineHeight: '90%' }}
             >
               Inquire about an<br />Ignatius Book Fair
-            </h3>
+            </h1>
             <p 
               className="text-gray-700 text-sm md:text-base max-w-[77%] mx-auto"
               style={{ fontFamily: 'brother-1816, sans-serif' }}
@@ -57,6 +53,19 @@ const SignUpForm = () => {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="max-w-lg mx-auto">
+            <div className="mb-2.5">
+              <label className="flex items-center gap-3 cursor-pointer" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+                <input
+                  type="checkbox"
+                  name="previouslyHadFair"
+                  checked={formData.previouslyHadFair}
+                  onChange={handleChange}
+                  className="w-5 h-5 rounded border-2 border-[#0088ff] accent-[#0088ff] cursor-pointer"
+                />
+                <span className="text-[#0088ff] text-sm">Have you previously had an Ignatius Book Fair?</span>
+              </label>
+            </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2.5">
               <input
                 type="text"
