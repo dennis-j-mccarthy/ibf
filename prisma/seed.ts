@@ -1,14 +1,7 @@
 import { PrismaClient } from '@prisma/client';
+import { faqsFromCSV } from './faqs-parsed';
 
 const prisma = new PrismaClient();
-
-const faqs = [
-  { question: "Find a Book Fair Near You!", answer: "<p>Want to host or attend an Ignatius Book Fair? Visit ignatiusbookfairs.com to fill out an inquiry form today!</p>", slug: "find-a-book-fair-near-you", pageTitle: "Home", version: "Public", order: 1 },
-  { question: "What's the process if I want to host a book fair?", answer: "<p>To host a book fair, please complete an inquiry form. You will then be contacted by a Book Fair Pro who will provide more information and answer any questions you have.</p>", slug: "whats-the-process", pageTitle: "Home", version: "Public", order: 2 },
-  { question: "Where can a fair be hosted?", answer: "<p>Ignatius Book Fairs are now available for schools across the continental United States!</p>", slug: "where-can-a-fair-be-hosted", pageTitle: "Home", version: "Public", order: 3 },
-  { question: "Are your book fairs in-person?", answer: "<p>Yes! We are thrilled to offer a full-service, in-person book fair experience that will captivate the hearts and minds of children, parents, and teachers alike.</p>", slug: "are-your-book-fairs-in-person", pageTitle: "Home", version: "Public", order: 5 },
-  { question: "Why did Ave Maria University and Ignatius Press start book fairs?", answer: "<p>Ave Maria University and Ignatius Press launched book fairs to offer a refreshing, high-quality alternative to other book fairs, providing children access to literature that can shape their minds.</p>", slug: "why-did-ave-maria-start-book-fairs", pageTitle: "Home", version: "Public", order: 6 },
-];
 
 const resources = [
   { title: "Social Media Guide", slug: "social-media-guide", description: "Copy, paste & post! A comprehensive guide for your book fair social media kit.", thumbnail: "/images/social-media-v-thumb.png", fileUrl: "https://cdn.prod.website-files.com/64f3108dd0bb03ad9fb7a8f2/65f2a5bf0e96ce93b63eddf1_Social%20Media%20Guide%20(1).pdf", category: "Operational", resourceType: "PDF", order: 1, featured: false },
@@ -338,10 +331,26 @@ async function main() {
   await prisma.resource.deleteMany();
   await prisma.blog.deleteMany();
   
-  for (const faq of faqs) { 
-    await prisma.fAQ.create({ data: faq }); 
+  // Create FAQs from CSV data
+  for (const faq of faqsFromCSV) {
+    const slug = faq.question
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .substring(0, 100);
+    
+    await prisma.fAQ.create({
+      data: {
+        question: faq.question,
+        answer: faq.answer,
+        slug,
+        pageTitle: faq.pageTitle || 'FAQs',
+        version: faq.version || 'Public',
+        order: faq.order ?? undefined,
+      }
+    }); 
   }
-  console.log("Created " + faqs.length + " FAQs");
+  console.log("Created " + faqsFromCSV.length + " FAQs");
   
   for (const resource of resources) { 
     await prisma.resource.create({ data: resource }); 

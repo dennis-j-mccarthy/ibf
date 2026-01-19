@@ -11,7 +11,9 @@ export default async function FAQSection() {
   return (
     <FAQSectionWithToggle 
       catholicFaqs={catholicFaqs} 
-      publicFaqs={publicFaqs} 
+      publicFaqs={publicFaqs}
+      showToggle={false}
+      initialOpenIndex={0}
     />
   );
 }

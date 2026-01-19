@@ -13,11 +13,13 @@ interface FAQ {
 interface FAQSectionWithToggleProps {
   catholicFaqs: FAQ[];
   publicFaqs: FAQ[];
+  showToggle?: boolean;
+  initialOpenIndex?: number | null;
 }
 
-export default function FAQSectionWithToggle({ catholicFaqs, publicFaqs }: FAQSectionWithToggleProps) {
+export default function FAQSectionWithToggle({ catholicFaqs, publicFaqs, showToggle = true, initialOpenIndex = null }: FAQSectionWithToggleProps) {
   const [isCatholic, setIsCatholic] = useState(true);
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [openIndex, setOpenIndex] = useState<number | null>(initialOpenIndex);
 
   const faqs = isCatholic ? catholicFaqs : publicFaqs;
 
@@ -61,33 +63,35 @@ export default function FAQSectionWithToggle({ catholicFaqs, publicFaqs }: FAQSe
         </div>
 
         {/* Toggle */}
-        <div className="flex justify-center mb-8">
-          <div 
-            className="inline-flex rounded-full p-1 bg-white shadow-md"
-            style={{ fontFamily: 'brother-1816, sans-serif' }}
-          >
-            <button
-              onClick={() => handleVersionToggle(true)}
-              className={`px-6 py-2 rounded-full text-sm font-bold uppercase transition-all ${
-                isCatholic 
-                  ? 'bg-[#0088ff] text-white' 
-                  : 'bg-transparent text-gray-600 hover:text-gray-800'
-              }`}
+        {showToggle && (
+          <div className="flex justify-center mb-8">
+            <div 
+              className="inline-flex rounded-full p-1 bg-white shadow-md"
+              style={{ fontFamily: 'brother-1816, sans-serif' }}
             >
-              Catholic
-            </button>
-            <button
-              onClick={() => handleVersionToggle(false)}
-              className={`px-6 py-2 rounded-full text-sm font-bold uppercase transition-all ${
-                !isCatholic 
-                  ? 'bg-[#0088ff] text-white' 
-                  : 'bg-transparent text-gray-600 hover:text-gray-800'
-              }`}
-            >
-              Public
-            </button>
+              <button
+                onClick={() => handleVersionToggle(true)}
+                className={`px-6 py-2 rounded-full text-sm font-bold uppercase transition-all ${
+                  isCatholic 
+                    ? 'bg-[#0088ff] text-white' 
+                    : 'bg-transparent text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                Catholic
+              </button>
+              <button
+                onClick={() => handleVersionToggle(false)}
+                className={`px-6 py-2 rounded-full text-sm font-bold uppercase transition-all ${
+                  !isCatholic 
+                    ? 'bg-[#0088ff] text-white' 
+                    : 'bg-transparent text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                Public
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* FAQ Items */}
         <div className="space-y-4">

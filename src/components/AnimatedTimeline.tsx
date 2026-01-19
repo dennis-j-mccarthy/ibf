@@ -212,9 +212,11 @@ export default function AnimatedTimeline() {
       const windowHeight = window.innerHeight;
 
       // Calculate how far we've scrolled through the timeline
-      const startOffset = windowHeight * 0.3;
+      // Start sooner (0.5 = start when timeline is halfway up the screen)
+      const startOffset = windowHeight * 0.5;
       const scrollStart = -containerTop + startOffset;
-      const scrollEnd = containerHeight - windowHeight * 0.5;
+      // End later (0.3 = finish when 30% from bottom)
+      const scrollEnd = containerHeight - windowHeight * 0.3;
       
       let progress = scrollStart / scrollEnd;
       progress = Math.max(0, Math.min(1, progress));

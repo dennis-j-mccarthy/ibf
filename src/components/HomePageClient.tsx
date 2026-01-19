@@ -7,9 +7,8 @@ import HowItWorks from './HowItWorks';
 import WhyHost from './WhyHost';
 import DiscoverVideo from './DiscoverVideo';
 import Testimonials from './Testimonials';
-import FAQSection from './FAQSection';
 
-export default function HomePageClient() {
+export default function HomePageClient({ children }: { children?: React.ReactNode }) {
   return (
     <>
       <HomeHero />
@@ -32,9 +31,7 @@ export default function HomePageClient() {
         <Testimonials />
       </ScrollReveal>
       
-      <ScrollReveal>
-        <FAQSection />
-      </ScrollReveal>
+      {children}
     </>
   );
 }
