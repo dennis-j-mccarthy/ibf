@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useVersion } from '@/contexts/VersionContext';
 
 interface FAQ {
   id: number;
@@ -18,7 +19,7 @@ interface FAQSectionWithToggleProps {
 }
 
 export default function FAQSectionWithToggle({ catholicFaqs, publicFaqs, showToggle = true, initialOpenIndex = null }: FAQSectionWithToggleProps) {
-  const [isCatholic, setIsCatholic] = useState(true);
+  const { isCatholic, setVersion } = useVersion();
   const [openIndex, setOpenIndex] = useState<number | null>(initialOpenIndex);
 
   const faqs = isCatholic ? catholicFaqs : publicFaqs;
@@ -28,7 +29,7 @@ export default function FAQSectionWithToggle({ catholicFaqs, publicFaqs, showTog
   };
 
   const handleVersionToggle = (catholic: boolean) => {
-    setIsCatholic(catholic);
+    setVersion(catholic ? 'Catholic' : 'Public');
     setOpenIndex(null); // Reset open accordion when switching
   };
 

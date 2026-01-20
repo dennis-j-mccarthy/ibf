@@ -120,19 +120,6 @@ const Header = () => {
       {/* Secondary Navigation - White Bar */}
       <div className="bg-white border-b border-[#ddd] sticky top-0 z-50">
         <div className="max-w-[1500px] mx-auto px-[3%] py-3 flex justify-between items-center">
-          {/* Left side - Public school message */}
-          <div className="hidden md:block" style={{ fontFamily: 'brother-1816, sans-serif' }}>
-            <p className="text-[var(--black)] font-semibold text-sm mb-0">
-              Not a Catholic School? We also serve public, Christian and Charter Schools!
-            </p>
-            <Link 
-              href="/?mode=public" 
-              className="text-[var(--balbs-orange)] text-sm font-medium hover:underline"
-            >
-              Switch to Public Mode
-            </Link>
-          </div>
-
           {/* Right side - Secondary nav links */}
           <nav className="flex items-center space-x-8 ml-auto" style={{ fontFamily: 'brother-1816, sans-serif' }}>
             <Link

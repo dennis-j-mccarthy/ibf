@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import KeyboardShortcuts from "@/components/KeyboardShortcuts";
+import ModeIndicator from "@/components/ModeIndicator";
+import { VersionProvider } from "@/contexts/VersionContext";
 
 export const metadata: Metadata = {
   title: "Ignatius Book Fairs | Catholic Book Fairs You Can Trust | Alternative to Scholastic",
@@ -27,9 +30,13 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased">
-        <Header />
-        <main>{children}</main>
-        <Footer />
+        <VersionProvider>
+          <KeyboardShortcuts />
+          <ModeIndicator />
+          <Header />
+          <main>{children}</main>
+          <Footer />
+        </VersionProvider>
       </body>
     </html>
   );

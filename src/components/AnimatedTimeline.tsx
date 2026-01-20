@@ -159,7 +159,7 @@ function BeyondSection() {
       <div className="flex flex-col md:flex-row items-center gap-8">
         <div className="flex-1 md:text-right md:pr-12">
           <h3 className="mb-4">
-            <span className="text-4xl md:text-5xl font-bold text-[#0088ff]">2025 </span>
+            <span className="text-4xl md:text-5xl font-bold text-[#0088ff]">2026 </span>
             <span className="font-handsome text-4xl md:text-5xl text-[#50db92]">and beyond</span>
           </h3>
           <p className="text-gray-700 max-w-md inline-block">

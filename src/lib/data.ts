@@ -52,3 +52,14 @@ export async function getBlogBySlug(slug: string) {
   });
   return blog;
 }
+
+export async function getTestimonials(options?: { type?: string }) {
+  const testimonials = await prisma.testimonial.findMany({
+    where: { 
+      isActive: true,
+      ...(options?.type && { type: options.type }),
+    },
+    orderBy: { order: 'asc' },
+  });
+  return testimonials;
+}

@@ -58,3 +58,14 @@ model Blog {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 }
+
+model Testimonial {
+  id        Int      @id @default(autoincrement())
+  title     String
+  blurb     String
+  type      String   @default("Public") // "Public", "Catholic", or empty for both
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
