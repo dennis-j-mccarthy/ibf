@@ -42,14 +42,24 @@ const HowItWorks = () => {
       {/* Blue bottom portion with captions */}
       <div className="bg-[#0088ff] pt-4 pb-12 -mt-24 sm:-mt-32 md:-mt-40">
         <div className="max-w-6xl mx-auto px-4 pt-24 sm:pt-32 md:pt-40">
+          <div className="flex items-center justify-center gap-4 mb-[15px]">
+            <div className="flex-1 h-[1px] bg-white max-w-[200px]"></div>
+            <h2
+              className="text-white text-2xl md:text-3xl font-bold text-center"
+              style={{ fontFamily: 'brother-1816, sans-serif' }}
+            >
+              THREE EASY STEPS
+            </h2>
+            <div className="flex-1 h-[1px] bg-white max-w-[200px]"></div>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 md:gap-10">
             {steps.map((step, index) => (
               <div key={index} className="text-center">
-                <p 
-                  className="text-white text-lg md:text-xl font-medium underline decoration-2 underline-offset-4"
-                  style={{ fontFamily: 'brother-1816, sans-serif' }}
+                <p
+                  className="text-white text-2xl md:text-3xl font-bold"
+                  style={{ fontFamily: 'handsome-pro, sans-serif' }}
                 >
-                  {step.caption}
+                  {index + 1}. {step.caption}
                 </p>
               </div>
             ))}

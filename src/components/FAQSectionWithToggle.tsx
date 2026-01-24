@@ -110,14 +110,14 @@ export default function FAQSectionWithToggle({ catholicFaqs, publicFaqs, showTog
               >
                 <button
                   onClick={() => toggleFAQ(index)}
-                  className="w-full px-6 py-5 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+                  className="w-full px-6 py-5 text-left flex items-center justify-between bg-[#0088ff] hover:bg-[#0077e6] transition-colors rounded-t-lg"
                   style={{ fontFamily: 'brother-1816, sans-serif' }}
                 >
-                  <span className="font-semibold text-[#02176f] text-base">
+                  <span className="font-semibold text-white text-base">
                     {faq.question}
                   </span>
                   <svg
-                    className={`w-5 h-5 text-[#02176f] transform transition-transform flex-shrink-0 ml-4 ${
+                    className={`w-5 h-5 text-white transform transition-transform flex-shrink-0 ml-4 ${
                       openIndex === index ? 'rotate-180' : ''
                     }`}
                     fill="none"
@@ -128,7 +128,7 @@ export default function FAQSectionWithToggle({ catholicFaqs, publicFaqs, showTog
                   </svg>
                 </button>
                 {openIndex === index && (
-                  <div className="px-6 pb-5">
+                  <div className="px-6 pt-3 pb-5">
                     <div 
                       className="text-gray-600 text-base leading-relaxed"
                       style={{ fontFamily: 'brother-1816, sans-serif' }}

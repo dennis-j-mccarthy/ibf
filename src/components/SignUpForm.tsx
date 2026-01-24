@@ -1,6 +1,33 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+
+interface HubSpotData {
+  found: boolean;
+  contact?: {
+    firstname?: string;
+    lastname?: string;
+    company?: string;
+  };
+  company?: {
+    name?: string;
+    city?: string;
+    state?: string;
+  };
+  lastDeal?: {
+    dealname?: string;
+    closedate?: string;
+    dealstage?: string;
+    amount?: string;
+    fair_date?: string;
+  };
+  owner?: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+  };
+  bookingUrl?: string;
+}
 
 const SignUpForm = () => {
   const [formData, setFormData] = useState({
@@ -11,7 +38,53 @@ const SignUpForm = () => {
     howDidYouHear: '',
     previouslyHadFair: false,
     comments: '',
+    rebookEmail: '',
+    rebookPhone: '',
+    rebookWebsite: '',
   });
+
+  const [hubspotData, setHubspotData] = useState<HubSpotData | null>(null);
+  const [isLookingUp, setIsLookingUp] = useState(false);
+
+  // Lookup HubSpot data when email or website changes
+  const lookupHubSpot = useCallback(async (email: string, website: string) => {
+    if (!email && !website) {
+      setHubspotData(null);
+      return;
+    }
+
+    setIsLookingUp(true);
+    try {
+      const response = await fetch('/api/hubspot/lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, website }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('HubSpot response:', data);
+        setHubspotData(data);
+      }
+    } catch (error) {
+      console.error('HubSpot lookup error:', error);
+    } finally {
+      setIsLookingUp(false);
+    }
+  }, []);
+
+  // Debounce the lookup
+  useEffect(() => {
+    if (!formData.previouslyHadFair) return;
+
+    const timer = setTimeout(() => {
+      if (formData.rebookEmail || formData.rebookWebsite) {
+        lookupHubSpot(formData.rebookEmail, formData.rebookWebsite);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [formData.rebookEmail, formData.rebookWebsite, formData.previouslyHadFair, lookupHubSpot]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -53,19 +126,109 @@ const SignUpForm = () => {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="max-w-lg mx-auto">
-            <div className="mb-2.5">
-              <label className="flex items-center gap-3 cursor-pointer" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+            <div className={`mb-4 p-4 border-4 border-[#0088ff] rounded-xl bg-gray-100 transition-all ${formData.previouslyHadFair ? 'pb-6' : ''}`}>
+              <label className="flex items-center justify-center gap-3 cursor-pointer" style={{ fontFamily: 'brother-1816, sans-serif' }}>
                 <input
                   type="checkbox"
                   name="previouslyHadFair"
                   checked={formData.previouslyHadFair}
                   onChange={handleChange}
-                  className="w-5 h-5 rounded border-2 border-[#0088ff] accent-[#0088ff] cursor-pointer"
+                  className="w-6 h-6 rounded border-2 border-[#0088ff] accent-[#0088ff] cursor-pointer"
                 />
-                <span className="text-[#0088ff] text-sm">Have you previously had an Ignatius Book Fair?</span>
+                <span className="text-[#0088ff] text-lg font-semibold">Have you previously had an Ignatius Book Fair?</span>
               </label>
+
+              <div className={`grid transition-all duration-300 ease-out ${formData.previouslyHadFair ? 'grid-rows-[1fr] opacity-100 mt-4' : 'grid-rows-[0fr] opacity-0 mt-0'}`}>
+                <div className="overflow-hidden">
+                <div className="space-y-3">
+                  <input
+                    type="email"
+                    name="rebookEmail"
+                    placeholder="Email"
+                    value={formData.rebookEmail}
+                    onChange={handleChange}
+                    className="w-full h-11 px-4 rounded-lg border-0 bg-[#0088ff] text-white placeholder-white tracking-wide"
+                    style={{ fontFamily: 'brother-1816, sans-serif' }}
+                  />
+                  <input
+                    type="text"
+                    name="rebookWebsite"
+                    placeholder="School or Organization Website"
+                    value={formData.rebookWebsite}
+                    onChange={handleChange}
+                    className="w-full h-11 px-4 rounded-lg border-0 bg-[#0088ff] text-white placeholder-white tracking-wide"
+                    style={{ fontFamily: 'brother-1816, sans-serif' }}
+                  />
+                  {/* Welcome message when HubSpot finds the customer */}
+                  {hubspotData?.found && (
+                    <div className="bg-[#50db92] rounded-lg p-4 text-center text-white">
+                      <p className="text-lg font-bold" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+                        Welcome back{hubspotData.contact?.firstname ? `, ${hubspotData.contact.firstname}` : ''}!
+                      </p>
+                      {hubspotData.company?.name && (
+                        <p className="text-base" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+                          {hubspotData.company.name}
+                        </p>
+                      )}
+                      {hubspotData.company?.city && hubspotData.company?.state && (
+                        <p className="text-sm opacity-90" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+                          {hubspotData.company.city}, {hubspotData.company.state}
+                        </p>
+                      )}
+                      {hubspotData.lastDeal?.dealname && (
+                        <p className="text-sm mt-2 opacity-90" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+                          Last fair: {hubspotData.lastDeal.dealname}
+                          {(hubspotData.lastDeal.fair_date || hubspotData.lastDeal.closedate) && (
+                            <> ({new Date(hubspotData.lastDeal.fair_date || hubspotData.lastDeal.closedate!).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })})</>
+                          )}
+                        </p>
+                      )}
+                      {hubspotData.owner && (
+                        <p className="text-sm mt-2" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+                          Your rep: {hubspotData.owner.firstName} {hubspotData.owner.lastName}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Loading indicator */}
+                  {isLookingUp && (
+                    <div className="text-center text-[#0088ff]" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+                      <p className="text-sm">Looking up your information...</p>
+                    </div>
+                  )}
+
+                  {/* Embedded HubSpot booking calendar */}
+                  {hubspotData?.bookingUrl && (
+                    <div className="mt-4 bg-white rounded-lg overflow-hidden">
+                      <iframe
+                        src={`${hubspotData.bookingUrl}?embed=true`}
+                        width="100%"
+                        height="600"
+                        className="rounded-lg border-0"
+                        title="Book a meeting"
+                      />
+                    </div>
+                  )}
+
+                  {!hubspotData?.bookingUrl && (
+                    <div className="text-center pt-2">
+                      <button
+                        type="submit"
+                        className="bg-[#50db92] text-white font-bold uppercase px-8 py-4 rounded-xl hover:bg-[#45c583] transition-colors tracking-wider"
+                        style={{ fontFamily: 'brother-1816, sans-serif' }}
+                      >
+                        REBOOK A FAIR &gt;
+                      </button>
+                    </div>
+                  )}
+                </div>
+                </div>
+              </div>
             </div>
-            
+
+            {!formData.previouslyHadFair && (
+            <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2.5">
               <input
                 type="text"
@@ -149,12 +312,14 @@ const SignUpForm = () => {
             <div className="text-center pt-4">
               <button
                 type="submit"
-                className="bg-[#50db92] text-white font-bold uppercase px-8 py-4 rounded-xl hover:bg-[#45c583] transition-colors tracking-wider w-[65%]"
+                className="bg-[#50db92] text-white font-bold uppercase px-8 py-4 rounded-xl hover:bg-[#45c583] transition-colors tracking-wider w-auto whitespace-nowrap"
                 style={{ fontFamily: 'brother-1816, sans-serif' }}
               >
                 ABOUT YOUR ORGANIZATION &gt;
               </button>
             </div>
+            </>
+            )}
           </form>
         </div>
       </div>
