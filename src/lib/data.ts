@@ -1,11 +1,17 @@
 import prisma from '@/lib/prisma';
 
 export async function getFAQs(options?: { pageTitle?: string; version?: string }) {
+  const targetVersion = options?.version ?? 'Catholic';
+
   const faqs = await prisma.fAQ.findMany({
-    where: { 
+    where: {
       isActive: true,
-      // Default to Catholic FAQs
-      version: options?.version ?? 'Catholic',
+      // Match exact version, "Both", or comma-separated that includes the version
+      OR: [
+        { version: targetVersion },
+        { version: 'Both' },
+        { version: { contains: targetVersion } },
+      ],
       // Optionally filter by page
       ...(options?.pageTitle && { pageTitle: options.pageTitle }),
     },

@@ -1,13 +1,13 @@
 {
-  "name": "ibf",
-  "version": "0.1.0",
-  "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3003",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
+  "name": "ibf",
+  "version": "0.1.0",
+  "private": true,
   "dependencies": {
     "@prisma/client": "^5.22.0",
     "next": "16.1.3",

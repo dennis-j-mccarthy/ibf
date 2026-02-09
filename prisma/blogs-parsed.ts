@@ -286,5 +286,3 @@ const blogs = [
     publishedAt: new Date("2025-06-24T12:31:39.000Z"),
   }
 ];
-
-Processed 22 blog posts

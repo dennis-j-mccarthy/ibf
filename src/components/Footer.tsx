@@ -1,7 +1,24 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
+import { useVersion } from '@/contexts/VersionContext';
+import { useState, useEffect } from 'react';
 
 const Footer = () => {
+  const { version, setVersion } = useVersion();
+  const [showModeSwitch, setShowModeSwitch] = useState(false);
+
+  useEffect(() => {
+    const isDismissed = localStorage.getItem('modeIndicatorDismissed');
+    setShowModeSwitch(isDismissed === 'true');
+  }, []);
+
+  const isCatholic = version === 'Catholic';
+
+  const handleSwitch = () => {
+    setVersion(isCatholic ? 'Public' : 'Catholic');
+  };
   const footerLinks = [
     { href: '/', label: 'HOME' },
     { href: '/about', label: 'ABOUT' },
@@ -40,6 +57,16 @@ const Footer = () => {
                   {link.label}
                 </Link>
               )
+            )}
+
+            {/* Mode Switch - shows after popup is dismissed */}
+            {showModeSwitch && (
+              <button
+                onClick={handleSwitch}
+                className="text-white/80 hover:text-white text-sm font-medium transition-opacity uppercase mt-2"
+              >
+                Switch to {isCatholic ? 'Public' : 'Catholic'} Mode
+              </button>
             )}
           </nav>
 

@@ -5,11 +5,13 @@ import Link from 'next/link';
 import ScrollReveal from './ScrollReveal';
 import OurStoryAccordion from './OurStoryAccordion';
 import AnimatedTimeline from './AnimatedTimeline';
+import { useVersion } from '@/contexts/VersionContext';
 
 interface TeamMember {
   name: string;
   role: string;
   image: string;
+  borderColor?: string; // Optional colored border (e.g., '#42ADE2' for blue)
 }
 
 interface AboutPageClientProps {
@@ -18,6 +20,8 @@ interface AboutPageClientProps {
 }
 
 export default function AboutPageClient({ teamMembers, founders }: AboutPageClientProps) {
+  const { isCatholic } = useVersion();
+
   return (
     <>
       {/* Hero Section - Blue Background */}
@@ -34,7 +38,7 @@ export default function AboutPageClient({ teamMembers, founders }: AboutPageClie
         
         <div className="max-w-5xl mx-auto px-4 relative z-10">
           <ScrollReveal direction="down" duration={800}>
-            <div className="flex justify-center mb-8 mt-10">
+            <div className="flex justify-center mb-4 mt-6">
               <Image
                 src="/images/AboutIBF.png"
                 alt="About Ignatius Book Fairs"
@@ -46,55 +50,51 @@ export default function AboutPageClient({ teamMembers, founders }: AboutPageClie
             </div>
           </ScrollReveal>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
             <ScrollReveal direction="left" delay={200}>
               <div className="text-white">
-                <h2 className="font-handsome text-5xl md:text-6xl text-[#ffd41d] mb-4">Mission</h2>
-                <p className="text-white/90 leading-relaxed mb-6">
-                  At Ignatius Book Fairs, we aim to foster a love of reading and ensure children 
-                  can access literature that aligns with Christian values. We believe in the 
-                  transformative power of books to mold character and enrich minds.
+                <h2 className="font-handsome text-5xl md:text-6xl text-[#ffd41d] mb-2">Mission</h2>
+                <p className="text-white/90 leading-relaxed">
+                  {isCatholic
+                    ? 'At Ignatius Book Fairs, we aim to foster a love of reading and ensure children can access literature that aligns with Christian values. We believe in the transformative power of books to mold character and enrich minds.'
+                    : 'At Ignatius Book Fairs, we aim to foster a love of reading and ensure children can access great literature. We believe in the transformative power of books to mold character and enrich minds.'}
                 </p>
               </div>
             </ScrollReveal>
 
             <ScrollReveal direction="right" delay={400}>
-              <div className="flex justify-center lg:justify-end">
+              <div className="flex justify-center">
                 <Image
                   src="/images/Mission-Pic.png"
                   alt="Children at book fair"
-                  width={380}
-                  height={380}
-                  className="w-[320px] h-[320px] md:w-[380px] md:h-[380px] object-contain"
+                  width={354}
+                  height={354}
+                  className="w-[307px] h-[307px] md:w-[354px] md:h-[354px] object-contain"
                 />
               </div>
             </ScrollReveal>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mt-16">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center mt-4">
             <ScrollReveal direction="left" delay={200} className="order-2 lg:order-1">
-              <div className="flex justify-center lg:justify-start">
+              <div className="flex justify-center">
                 <Image
                   src="/images/UniqueApproach-Image.png"
                   alt="Book selection"
-                  width={380}
-                  height={380}
-                  className="w-[320px] h-[320px] md:w-[380px] md:h-[380px] object-contain"
+                  width={354}
+                  height={354}
+                  className="w-[307px] h-[307px] md:w-[354px] md:h-[354px] object-contain"
                 />
               </div>
             </ScrollReveal>
 
             <ScrollReveal direction="right" delay={400} className="order-1 lg:order-2">
               <div className="text-white">
-                <h2 className="font-handsome text-5xl md:text-6xl text-[#ffd41d] mb-4">Our Unique Approach</h2>
-                <p className="text-white/90 leading-relaxed">
-                  Ignatius Book Fairs invites students to explore more than a thousand—and growing— 
-                  Christian and secular works that feed their imaginations and nourish their minds. 
-                  The titles available are carefully handpicked by the staff of Ignatius Press and 
-                  Ave Maria University, a team you can trust. In a landscape dominated by mainstream 
-                  distributors like Scholastic, Ignatius Book Fairs offers an alternative that aligns 
-                  with Christian values, ensuring kindergarten through 8th-grade readers discover books 
-                  that will edify their minds, shape their character, and deepen their faith.
+                <h2 className="font-handsome text-5xl md:text-6xl text-[#ffd41d] mb-2">Our Unique Approach</h2>
+                <p className="text-white/90 leading-relaxed text-sm md:text-base">
+                  {isCatholic
+                    ? 'Ignatius Book Fairs invites students to explore more than a thousand—and growing—Christian and secular works that feed their imaginations and nourish their minds. The titles available are carefully handpicked by the staff of Ignatius Press and Ave Maria University, a team you can trust. In a landscape dominated by mainstream distributors like Scholastic, Ignatius Book Fairs offers an alternative that aligns with Christian values, ensuring kindergarten through 8th-grade readers discover books that will edify their minds, shape their character, and deepen their faith.'
+                    : 'Ignatius Book Fairs invites students to explore more than a thousand—and growing—wholesome and secular works that feed their imaginations and nourish their minds. The titles available are carefully handpicked by the staff of Ignatius Press and Ave Maria University, a team you can trust. In a landscape dominated by mainstream distributors like Scholastic, Ignatius Book Fairs offers an alternative, ensuring kindergarten through 8th-grade readers discover books that will edify their minds, shape their character, and deepen their virtue.'}
                 </p>
               </div>
             </ScrollReveal>
@@ -128,11 +128,9 @@ export default function AboutPageClient({ teamMembers, founders }: AboutPageClie
                 <h2 className="font-handsome text-5xl md:text-6xl text-[#0066ff] mb-1">meet loupio</h2>
                 <h3 className="font-brother font-bold text-2xl md:text-3xl text-[#0066ff] mb-8 uppercase">Our Mascot</h3>
                 <p className="text-gray-800 leading-relaxed text-lg max-w-xl mx-auto lg:mx-0">
-                  Loupio, our adventurous troubadour from 13th-century Italy, is not just a fun and 
-                  engaging character but a symbol of our mission at Ignatius Book Fairs. His tales, 
-                  set in the era of Francis of Assisi, are more than just stories; they are life 
-                  lessons shared through engaging narratives. They teach about kindness, bravery, 
-                  and honesty, aiming to inspire virtues of faith, hope, and charity in young readers.
+                  {isCatholic
+                    ? 'Loupio, our adventurous troubadour from 13th-century Italy, is not just a fun and engaging character but a symbol of our mission at Ignatius Book Fairs. His tales, set in the era of Francis of Assisi, are more than just stories; they are life lessons shared through engaging narratives. They teach about kindness, bravery, and honesty, aiming to inspire virtues of faith, hope, and charity in young readers.'
+                    : 'Loupio, our adventurous troubadour from 13th-century Italy, is not just a fun and engaging character but a symbol of our mission at Ignatius Book Fairs. His tales are more than just stories; they are life lessons shared through engaging narratives. They teach about kindness, bravery, and honesty, aiming to inspire virtue in young readers.'}
                 </p>
               </div>
             </ScrollReveal>
@@ -275,7 +273,26 @@ export default function AboutPageClient({ teamMembers, founders }: AboutPageClie
               <ScrollReveal key={index} delay={(index % 3) * 100}>
                 <div className="text-center">
                   <div className="w-40 h-40 mx-auto mb-3">
-                    <Image src={member.image} alt={member.name} width={160} height={160} className="w-full h-full object-contain" />
+                    {member.borderColor ? (
+                      // Special styling for members with colored border (circular crop with border)
+                      <div
+                        className="w-full h-full rounded-full overflow-hidden"
+                        style={{
+                          border: `3px solid ${member.borderColor}`,
+                          padding: '2px'
+                        }}
+                      >
+                        <Image
+                          src={member.image}
+                          alt={member.name}
+                          width={160}
+                          height={160}
+                          className="w-full h-full object-cover rounded-full"
+                        />
+                      </div>
+                    ) : (
+                      <Image src={member.image} alt={member.name} width={160} height={160} className="w-full h-full object-contain" />
+                    )}
                   </div>
                   <h4 className="font-brother font-semibold text-gray-800 text-base">{member.name}</h4>
                   <p className="text-gray-500 text-sm">{member.role}</p>

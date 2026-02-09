@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Explicitly set source paths to exclude generated files */
+@source "../components/**/*.{js,ts,jsx,tsx}";
+@source "../lib/**/*.{js,ts,jsx,tsx}";
+@source "./**/*.{js,ts,jsx,tsx}";
+
 /* Override Tailwind's default font */
 @layer base {
   html, body {

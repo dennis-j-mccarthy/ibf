@@ -16,7 +16,7 @@ model FAQ {
   answer    String
   slug      String?
   pageTitle String?
-  version   String   @default("Public") // "Public", "Catholic", or empty for both
+  version   String   @default("Public") // "Public", "Catholic", "Both", or comma-separated "Catholic,Public"
   order     Int      @default(0)
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
@@ -68,4 +68,20 @@ model Testimonial {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model FormFunnelEvent {
+  id          Int      @id @default(autoincrement())
+  sessionId   String   // Unique session identifier
+  event       String   // form_step1_completed, form_step2_completed, appointment_shown, etc.
+  orgType     String?
+  schoolType  String?
+  state       String?
+  rep         String?
+  properties  String?  // JSON string for additional properties
+  createdAt   DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([event])
+  @@index([createdAt])
 }

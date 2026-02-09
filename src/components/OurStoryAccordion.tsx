@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { useVersion } from '@/contexts/VersionContext';
 
-const storyAccordion = [
-  { 
+// Catholic version content
+const catholicStoryAccordion = [
+  {
     title: 'Inspiration for the Partnership',
     content: `This partnership between Ignatius Press and Ave Maria University was born of a shared desire to provide easy access to the best in Christian literature for schools, parishes, and parents.
 
@@ -12,7 +14,7 @@ const storyAccordion = [
 
 - Fr. Joseph Fessio, S. J.`
   },
-  { 
+  {
     title: 'The Uniqueness of This Collaboration',
     content: `Ave Maria University, known for its commitment to liberal arts education, and Ignatius Press, the leading Catholic publisher in America, are joining forces. Together, they will support schools seeking quality children's literature.
 
@@ -20,7 +22,7 @@ const storyAccordion = [
 
 - Mark Middendorf`
   },
-  { 
+  {
     title: 'The Importance of Our Mission',
     content: `Our partnership is rooted in the shared mission of fostering children's relationship with Jesus and forming them in His love. Recognizing the cultural threat to Christian values, we offer young people wholesome literature to nourish their minds and hearts.
 
@@ -28,7 +30,7 @@ const storyAccordion = [
 
 - Fr. Joseph Fessio, S. J.`
   },
-  { 
+  {
     title: 'Why Now is the Time',
     content: `Many dioceses and schools are seeking alternatives to Scholastic, which has declined in its credibility in recent years. Ignatius Press and Ave Maria University provide a trusted book fair experience, equipped with literature consistent with Christian values.
 
@@ -36,7 +38,7 @@ const storyAccordion = [
 
 - Mark Middendorf`
   },
-  { 
+  {
     title: "Defining a 'Good Book'",
     content: `A good book excels in literary quality while also inspiring the mind, moving the heart, and inspiring the Christian to live a life of faith and virtue.
 
@@ -46,8 +48,54 @@ const storyAccordion = [
   },
 ];
 
+// Public version content
+const publicStoryAccordion = [
+  {
+    title: 'Inspiration for the Partnership',
+    content: `This partnership between Ignatius Press and Ave Maria University was born of a shared desire to provide easy access to the best in quality literature for schools and families.
+
+"We feel the need for good books in our culture, and we want to provide them in schools for young people and for parents to have easy access to the best in children's literature."
+
+- Fr. Joseph Fessio, S. J.`
+  },
+  {
+    title: 'The Uniqueness of This Collaboration',
+    content: `Ave Maria University, known for its commitment to liberal arts education, and Ignatius Press, the leading independent publisher in America, are joining forces. Together, they will support schools seeking quality children's literature.
+
+"Ave Maria University has established itself as a university committed to providing a liberal arts curriculum. Ignatius Press has a longstanding tradition of being a highly respected publisher in America. Through this new venture, we hope to help form young children with virtue-filled literature."
+
+- Mark Middendorf`
+  },
+  {
+    title: 'The Importance of Our Mission',
+    content: `Our partnership is rooted in the shared mission of fostering children's love of reading and forming them in virtue. Recognizing the importance of quality literature, we offer young people wholesome books to nourish their minds and hearts.
+
+"The attack on the innocence of children has become almost omnipresent, and we wanted to use our resources to provide young people with good, wholesome literature and give them a love for reading. At the same time, we want to provide what no other book fair provides, namely, the best in quality literature for young people that will form them in ways that they will build upon throughout their life."
+
+- Fr. Joseph Fessio, S. J.`
+  },
+  {
+    title: 'Why Now is the Time',
+    content: `Many schools are seeking alternatives to Scholastic, which has declined in its credibility in recent years. Ignatius Press and Ave Maria University provide a trusted book fair experience, equipped with quality, wholesome literature.
+
+"Scholastic has a venerable history of providing great literature and now is not as trusted a resource as they have been in the past through their newer material. Schools are turning to where they can find a trusted resource. Ignatius Press has always been trusted, making it the perfect publisher for Ave Maria University to partner with on this journey."
+
+- Mark Middendorf`
+  },
+  {
+    title: "Defining a 'Good Book'",
+    content: `A good book excels in literary quality while also inspiring the mind, moving the heart, and inspiring readers to live a life of virtue.
+
+"(A good book) is well written and provides a narrative that engages the reader on a level of artistic goodness. We also believe that good books are written from a perspective of moral rectitude that will form the heart and the mind and help to develop the reader's character."
+
+- Fr. Joseph Fessio, S. J.`
+  },
+];
+
 export default function OurStoryAccordion() {
+  const { isCatholic } = useVersion();
   const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const storyAccordion = isCatholic ? catholicStoryAccordion : publicStoryAccordion;
 
   const toggleAccordion = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);

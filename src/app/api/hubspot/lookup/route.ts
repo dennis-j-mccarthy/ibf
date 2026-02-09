@@ -15,11 +15,16 @@ export async function POST(request: NextRequest) {
   try {
     const { email, website } = await request.json();
 
+    console.log('\n========== HubSpot Lookup ==========');
+    console.log('Email:', email || '(none)');
+    console.log('Website:', website || '(none)');
+
     if (!email && !website) {
       return NextResponse.json({ error: 'Email or website required' }, { status: 400 });
     }
 
     if (!HUBSPOT_ACCESS_TOKEN) {
+      console.log('ERROR: HUBSPOT_ACCESS_TOKEN not set');
       return NextResponse.json({ error: 'HubSpot not configured' }, { status: 500 });
     }
 
@@ -29,6 +34,7 @@ export async function POST(request: NextRequest) {
     // Search for contact by email
     let contactId = null;
     if (email) {
+      console.log('Searching for contact by email:', email);
       const contactResponse = await fetch('https://api.hubapi.com/crm/v3/objects/contacts/search', {
         method: 'POST',
         headers: {
@@ -73,30 +79,94 @@ export async function POST(request: NextRequest) {
         // Use as-is if URL parsing fails
       }
 
-      const companyResponse = await fetch('https://api.hubapi.com/crm/v3/objects/companies/search', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          filterGroups: [{
-            filters: [{
-              propertyName: 'domain',
-              operator: 'EQ',
-              value: domain,
-            }],
-          }],
-          properties: ['name', 'domain', 'city', 'state', 'numberofemployees', 'notes_last_updated', 'hubspot_owner_id'],
-        }),
-      });
+      console.log('Searching for company by domain:', domain, '(from website:', website, ')');
 
-      if (companyResponse.ok) {
-        const companyResult = await companyResponse.json();
-        if (companyResult.results && companyResult.results.length > 0) {
-          companyData = companyResult.results[0].properties;
-          companyId = companyResult.results[0].id;
+      // Try multiple search strategies for domain matching
+      // Strategy 1: Exact match on domain
+      // Strategy 2: CONTAINS_TOKEN for partial matches
+      // Strategy 3: Try with www. prefix
+      const searchStrategies = [
+        { operator: 'EQ', value: domain, description: 'exact match' },
+        { operator: 'CONTAINS_TOKEN', value: domain.split('.')[0], description: 'contains token' },
+        { operator: 'EQ', value: `www.${domain}`, description: 'with www prefix' },
+      ];
+
+      for (const strategy of searchStrategies) {
+        if (companyId) break; // Already found
+
+        console.log(`Trying domain search: ${strategy.description} (${strategy.operator}: ${strategy.value})`);
+
+        const companyResponse = await fetch('https://api.hubapi.com/crm/v3/objects/companies/search', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            filterGroups: [{
+              filters: [{
+                propertyName: 'domain',
+                operator: strategy.operator,
+                value: strategy.value,
+              }],
+            }],
+            properties: ['name', 'domain', 'city', 'state', 'numberofemployees', 'notes_last_updated', 'hubspot_owner_id'],
+          }),
+        });
+
+        if (companyResponse.ok) {
+          const companyResult = await companyResponse.json();
+          console.log(`  Results: ${companyResult.results?.length || 0} found`);
+          if (companyResult.results && companyResult.results.length > 0) {
+            companyData = companyResult.results[0].properties;
+            companyId = companyResult.results[0].id;
+            console.log('Found company:', companyData.name, '(ID:', companyId, ')');
+          }
+        } else {
+          const errorText = await companyResponse.text();
+          console.log(`  Search failed: ${companyResponse.status}`, errorText);
         }
+      }
+
+      // Strategy 4: If still not found, try searching by name (if domain looks like a school name)
+      if (!companyId) {
+        // Extract potential company name from domain (e.g., "cabrinischool" from "cabrinischool.org")
+        const domainName = domain.split('.')[0];
+        if (domainName.length > 3) {
+          console.log(`Trying company name search: ${domainName}`);
+
+          const nameSearchResponse = await fetch('https://api.hubapi.com/crm/v3/objects/companies/search', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              filterGroups: [{
+                filters: [{
+                  propertyName: 'name',
+                  operator: 'CONTAINS_TOKEN',
+                  value: domainName,
+                }],
+              }],
+              properties: ['name', 'domain', 'city', 'state', 'numberofemployees', 'notes_last_updated', 'hubspot_owner_id'],
+            }),
+          });
+
+          if (nameSearchResponse.ok) {
+            const nameResult = await nameSearchResponse.json();
+            console.log(`  Name search results: ${nameResult.results?.length || 0} found`);
+            if (nameResult.results && nameResult.results.length > 0) {
+              companyData = nameResult.results[0].properties;
+              companyId = nameResult.results[0].id;
+              console.log('Found company by name:', companyData.name, '(ID:', companyId, ')');
+            }
+          }
+        }
+      }
+
+      if (!companyId) {
+        console.log('No company found for domain:', domain);
       }
     }
 
@@ -229,6 +299,8 @@ export async function POST(request: NextRequest) {
 
     // Return found data
     if (contactData || companyData) {
+      console.log('Lookup SUCCESS - Contact:', !!contactData, 'Company:', !!companyData, 'BookingUrl:', !!bookingUrl);
+      console.log('=========================================\n');
       return NextResponse.json({
         found: true,
         contact: contactData,
@@ -240,6 +312,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    console.log('Lookup returned: NOT FOUND');
+    console.log('=========================================\n');
     return NextResponse.json({ found: false });
 
   } catch (error) {

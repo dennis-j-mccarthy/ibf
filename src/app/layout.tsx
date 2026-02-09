@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import KeyboardShortcuts from "@/components/KeyboardShortcuts";
 import ModeIndicator from "@/components/ModeIndicator";
+import FloatingVersionToggle from "@/components/FloatingVersionToggle";
 import { VersionProvider } from "@/contexts/VersionContext";
 
 export const metadata: Metadata = {
@@ -33,6 +34,7 @@ export default function RootLayout({
         <VersionProvider>
           <KeyboardShortcuts />
           <ModeIndicator />
+          <FloatingVersionToggle />
           <Header />
           <main>{children}</main>
           <Footer />
