@@ -33,7 +33,7 @@ const Footer = () => {
       <div className="max-w-[1500px] mx-auto px-[3%] py-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
           {/* Navigation Links */}
-          <nav 
+          <nav
             className="flex flex-col space-y-1"
             style={{ fontFamily: 'brother-1816, sans-serif' }}
           >

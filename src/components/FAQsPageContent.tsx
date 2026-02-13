@@ -45,8 +45,8 @@ const categoryConfig: Record<string, { image: string; bgColor: string; textColor
     image: '/images/FAQ-WHITE-LiteratureLogistics.png',
     bgColor: 'bg-[#ff6445]',
     textColor: 'text-white',
-    heightMobile: 45,
-    heightDesktop: 60,
+    heightMobile: 52,
+    heightDesktop: 69,
   },
   'Reader Rewards': {
     image: '/images/bookfair-rewards-header.png',
@@ -59,8 +59,8 @@ const categoryConfig: Record<string, { image: string; bgColor: string; textColor
     image: '/images/FAQ-WHITE-YourConcernsOurCommitment.png',
     bgColor: 'bg-[#02176f]',
     textColor: 'text-white',
-    heightMobile: 96,
-    heightDesktop: 128,
+    heightMobile: 67,
+    heightDesktop: 90,
   },
 };
 
@@ -216,6 +216,7 @@ export default function FAQsPageContent({ catholicFaqs, publicFaqs }: FAQsPageCo
     'Flow of the Fair',
     'Literature Logistics',
     'Reader Rewards',
+    'Your Concerns Our Commitments',
   ];
 
   // Sort and filter categories (only show categories in the order list)
@@ -270,37 +271,6 @@ export default function FAQsPageContent({ catholicFaqs, publicFaqs }: FAQsPageCo
                 tips and guidance for initiating, starting, and managing a successful book fair.
               </p>
             </ScrollReveal>
-
-            {/* Toggle - moved into hero */}
-            <ScrollReveal direction="up" delay={300}>
-              <div className="mt-8">
-                <div
-                  className="inline-flex rounded-full p-1 bg-white/80 shadow-sm border border-gray-200"
-                  style={{ fontFamily: 'brother-1816, sans-serif' }}
-                >
-                  <button
-                    onClick={() => handleVersionToggle(true)}
-                    className={`px-5 py-2 rounded-full text-xs font-medium uppercase tracking-wide transition-all ${
-                      isCatholic
-                        ? 'bg-[#0088ff] text-white'
-                        : 'bg-transparent text-gray-400 hover:text-gray-600'
-                    }`}
-                  >
-                    Catholic
-                  </button>
-                  <button
-                    onClick={() => handleVersionToggle(false)}
-                    className={`px-5 py-2 rounded-full text-xs font-medium uppercase tracking-wide transition-all ${
-                      !isCatholic
-                        ? 'bg-[#ff6445] text-white'
-                        : 'bg-transparent text-gray-400 hover:text-gray-600'
-                    }`}
-                  >
-                    Public
-                  </button>
-                </div>
-              </div>
-            </ScrollReveal>
           </div>
         </div>
       </section>
@@ -330,7 +300,7 @@ export default function FAQsPageContent({ catholicFaqs, publicFaqs }: FAQsPageCo
                 <div className={`${config.bgColor} py-10`}>
                   <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
                     <ScrollReveal direction="up">
-                      <div className="flex justify-center">
+                      <div className={`flex justify-center ${categoryIndex > 0 ? 'mt-5' : ''}`}>
                         <Image
                           src={config.image}
                           alt={title}
@@ -344,12 +314,12 @@ export default function FAQsPageContent({ catholicFaqs, publicFaqs }: FAQsPageCo
                   </div>
                 </div>
 
-                {/* FAQ Items */}
-                <div className={`py-10 relative ${categoryIndex % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}>
+                {/* FAQ Items - background color carries from header */}
+                <div className={`${config.bgColor} pt-6 pb-10 relative`}>
                   {/* Subtle dot pattern on alternating sections */}
                   {categoryIndex % 2 === 0 && <DotPattern opacity={0.04} />}
                   <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                    <div className="space-y-4">
+                    <div className="space-y-4 pb-10">
                       {groupedFaqs[category].map((faq, index) => {
                         const tags = getVersionTags(faq.version);
                         const accentColor = isCatholic ? '#0088ff' : '#ff6445';
@@ -452,25 +422,25 @@ export default function FAQsPageContent({ catholicFaqs, publicFaqs }: FAQsPageCo
       </section>
 
       {/* Bottom CTA */}
-      <section className="bg-[#0088ff] py-16">
+      <section className="bg-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <ScrollReveal direction="up" delay={0}>
             <h3
-              className="text-2xl md:text-3xl font-bold text-white mb-4"
+              className="text-2xl md:text-3xl font-bold text-gray-900 mb-4"
               style={{ fontFamily: 'brother-1816, sans-serif' }}
             >
               Still have questions?
             </h3>
           </ScrollReveal>
           <ScrollReveal direction="up" delay={100}>
-            <p className="text-white/90 mb-8 text-lg">
+            <p className="text-gray-700 mb-8 text-lg">
               We&apos;re here to help! Contact our team for personalized assistance.
             </p>
           </ScrollReveal>
           <ScrollReveal direction="up" delay={200}>
             <a
               href="mailto:bookfairpro@ignatiusbookclub.com"
-              className="inline-block bg-white text-[#0088ff] font-bold uppercase px-8 py-4 rounded-full hover:bg-gray-100 transition-colors shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+              className="inline-block bg-[#0088ff] text-white font-bold uppercase px-8 py-4 rounded-full hover:bg-[#0077dd] transition-colors shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
               style={{ fontFamily: 'brother-1816, sans-serif' }}
             >
               Contact Us

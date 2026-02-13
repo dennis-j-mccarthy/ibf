@@ -35,6 +35,7 @@ model Resource {
   embedCode    String?  // For YouTube/Loom embeds
   featured     Boolean  @default(false)
   hasDetails   Boolean  @default(false)
+  parentGuide  String?  // Parent operational guide slug (book-fair-administrator-operational-guide, parish-book-fair-administrator-operational-guide, virtual-book-fair-operational-guide, public-book-fair-administrator-operational-guide)
   order        Int      @default(0)
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())

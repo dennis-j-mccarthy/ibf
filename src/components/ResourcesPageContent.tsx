@@ -40,10 +40,15 @@ export default function ResourcesPageContent({ resources }: ResourcesPageContent
     router.push('/bookfair-resources', { scroll: false });
   };
 
-  // Get related resources (same category, excluding current)
+  // Get related resources (same parentGuide, excluding current)
   const getRelatedResources = (resource: Resource) => {
+    // If the resource has no parentGuide, return empty array
+    if (!resource.parentGuide) {
+      return [];
+    }
+
     return resources
-      .filter(r => r.category === resource.category && r.id !== resource.id)
+      .filter(r => r.parentGuide === resource.parentGuide && r.id !== resource.id)
       .slice(0, 3);
   };
 

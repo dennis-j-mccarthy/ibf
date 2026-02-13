@@ -3,12 +3,14 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
+import { useVersion } from '@/contexts/VersionContext';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { isCatholic, setVersion } = useVersion();
 
   return (
-    <header className="bg-[#0088ff] sticky top-0 z-50">
+    <header className={`${isCatholic ? 'bg-[#0088ff]' : 'bg-[#ff6445]'} sticky top-0 z-50 transition-colors`}>
       <div className="max-w-[1500px] mx-auto px-[3%] py-4">
         <div className="flex justify-between items-center">
           {/* Left side: Logo + Nav links */}
@@ -45,6 +47,31 @@ const Header = () => {
               >
                 BLOG
               </Link>
+              {/* Version toggle */}
+              <div className="flex items-center rounded-full overflow-hidden border border-white/40 ml-2">
+                <button
+                  onClick={() => setVersion('Catholic')}
+                  className={`px-3 py-1 text-xs font-bold uppercase tracking-wide transition-all ${
+                    isCatholic
+                      ? 'bg-white text-[#0088ff]'
+                      : 'text-white/60 hover:text-white'
+                  }`}
+                  style={{ fontFamily: 'brother-1816, sans-serif' }}
+                >
+                  Catholic
+                </button>
+                <button
+                  onClick={() => setVersion('Public')}
+                  className={`px-3 py-1 text-xs font-bold uppercase tracking-wide transition-all ${
+                    !isCatholic
+                      ? 'bg-white text-[#ff6445]'
+                      : 'text-white/60 hover:text-white'
+                  }`}
+                  style={{ fontFamily: 'brother-1816, sans-serif' }}
+                >
+                  Public
+                </button>
+              </div>
             </nav>
           </div>
 
@@ -52,7 +79,7 @@ const Header = () => {
           <nav className="hidden md:flex items-center gap-6" style={{ fontFamily: 'brother-1816, sans-serif' }}>
             <Link
               href="/"
-              className="text-white text-sm font-semibold border border-white rounded px-4 py-2 hover:bg-white hover:text-[#0088ff] transition-colors uppercase tracking-wide"
+              className={`text-white text-sm font-semibold border border-white rounded px-4 py-2 hover:bg-white ${isCatholic ? 'hover:text-[#0088ff]' : 'hover:text-[#ff6445]'} transition-colors uppercase tracking-wide`}
             >
               BOOK FAIRS
             </Link>
@@ -137,6 +164,30 @@ const Header = () => {
               >
                 BLOG
               </Link>
+              <div className="flex items-center rounded-full overflow-hidden border border-white/40 self-start">
+                <button
+                  onClick={() => setVersion('Catholic')}
+                  className={`px-3 py-1 text-xs font-bold uppercase tracking-wide transition-all ${
+                    isCatholic
+                      ? 'bg-white text-[#0088ff]'
+                      : 'text-white/60 hover:text-white'
+                  }`}
+                  style={{ fontFamily: 'brother-1816, sans-serif' }}
+                >
+                  Catholic
+                </button>
+                <button
+                  onClick={() => setVersion('Public')}
+                  className={`px-3 py-1 text-xs font-bold uppercase tracking-wide transition-all ${
+                    !isCatholic
+                      ? 'bg-white text-[#ff6445]'
+                      : 'text-white/60 hover:text-white'
+                  }`}
+                  style={{ fontFamily: 'brother-1816, sans-serif' }}
+                >
+                  Public
+                </button>
+              </div>
               <Link
                 href="https://shop.ignatiusbookfairs.com/"
                 target="_blank"

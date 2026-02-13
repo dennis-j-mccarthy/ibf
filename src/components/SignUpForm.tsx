@@ -178,6 +178,7 @@ const SignUpForm = () => {
     email: '',
     phone: '',
     howDidYouHear: '',
+    referrerOrg: '', // Name and zip code of referring organization (shown when howDidYouHear === 'Referral')
     comments: '',
     previouslyHadFair: null as boolean | null, // null = not answered yet, true = yes, false = no
     rebookEmail: '',
@@ -633,7 +634,7 @@ const SignUpForm = () => {
   const isDev = process.env.NODE_ENV === 'development';
 
   return (
-    <section id="signup" className={`relative overflow-hidden transition-all duration-500 ${formData.previouslyHadFair === null && currentStep === 1 ? 'py-8' : 'py-16 md:py-24'}`}>
+    <section id="signup" className={`relative overflow-hidden transition-all duration-700 ease-in-out ${formData.previouslyHadFair === null && currentStep === 1 ? 'py-8' : 'py-16 md:py-24'}`}>
       {/* Background image in absolute div - gets clipped by overflow-hidden */}
       <div
         className="absolute inset-0 bg-contain bg-top bg-no-repeat pointer-events-none"
@@ -656,9 +657,9 @@ const SignUpForm = () => {
               : '✅ LIVE MODE - Click to enable test mode'}
           </button>
         )}
-        <div className={`bg-white/90 ${isDev ? 'rounded-b-md border-x border-b' : 'rounded-md border'} border-[#0087ff] transition-all duration-500 ${formData.previouslyHadFair === null && currentStep === 1 ? 'p-6 md:p-8' : 'p-10 md:p-12'}`}>
+        <div className={`bg-white/90 ${isDev ? 'rounded-b-md border-x border-b' : 'rounded-md border'} border-[#0087ff] transition-all duration-700 ease-in-out ${formData.previouslyHadFair === null && currentStep === 1 ? 'p-6 md:p-8' : 'p-10 md:p-12'}`}>
           {/* Header */}
-          <div className={`text-center transition-all duration-500 ${formData.previouslyHadFair === null && currentStep === 1 ? 'mb-4' : 'mb-8'}`}>
+          <div className={`text-center transition-all duration-700 ease-in-out ${formData.previouslyHadFair === null && currentStep === 1 ? 'mb-4' : 'mb-8'}`}>
             <h1
               className="text-[#0088ff] mb-[20px] text-[35px]"
               style={{ fontFamily: "brother-1816, sans-serif", lineHeight: '90%' }}
@@ -718,7 +719,10 @@ const SignUpForm = () => {
           )}
 
           {/* Form Steps Container with Slide Animation - hidden until radio is selected */}
-          <div className={`relative overflow-hidden transition-all duration-500 ${formData.previouslyHadFair === null && currentStep === 1 ? 'max-h-0 opacity-0' : 'max-h-[3000px] opacity-100'}`}>
+          <div
+            className={`relative overflow-hidden transition-all duration-700 ease-in-out ${formData.previouslyHadFair === null && currentStep === 1 ? 'max-h-0 opacity-0' : 'max-h-[2000px] opacity-100'}`}
+            style={{ willChange: formData.previouslyHadFair === null ? 'max-height, opacity' : 'auto' }}
+          >
             <div
               className="flex transition-transform duration-500 ease-out"
               style={{ transform: `translateX(${currentStep === 1 ? '0%' : '-50%'})`, width: '200%' }}
@@ -729,9 +733,10 @@ const SignUpForm = () => {
 
               {/* Returning customer lookup (Yes) - with slide-down animation */}
               <div
-                className={`overflow-hidden transition-all duration-500 ease-out ${
-                  formData.previouslyHadFair === true ? 'max-h-[2000px] opacity-100 mt-6' : 'max-h-0 opacity-0 mt-0'
+                className={`overflow-hidden transition-all duration-700 ease-in-out ${
+                  formData.previouslyHadFair === true ? 'max-h-[1000px] opacity-100 mt-6' : 'max-h-0 opacity-0 mt-0'
                 }`}
+                style={{ willChange: formData.previouslyHadFair === null ? 'max-height, opacity' : 'auto' }}
               >
                 <div className="space-y-4">
                   <p className="text-gray-600 text-sm text-center" style={{ fontFamily: 'brother-1816, sans-serif' }}>
@@ -828,9 +833,10 @@ const SignUpForm = () => {
 
               {/* New customer fields (No) - with slide-down animation */}
               <div
-                className={`overflow-hidden transition-all duration-500 ease-out ${
-                  formData.previouslyHadFair === false ? 'max-h-[3000px] opacity-100 mt-6' : 'max-h-0 opacity-0 mt-0'
+                className={`overflow-hidden transition-all duration-700 ease-in-out ${
+                  formData.previouslyHadFair === false ? 'max-h-[1200px] opacity-100 mt-6' : 'max-h-0 opacity-0 mt-0'
                 }`}
+                style={{ willChange: formData.previouslyHadFair === null ? 'max-height, opacity' : 'auto' }}
               >
                 <div>
                   {/* Salutation, First Name, Last Name */}
@@ -921,6 +927,22 @@ const SignUpForm = () => {
                     </select>
                   </div>
 
+                  {/* Conditional field for Referral */}
+                  {formData.howDidYouHear === 'Referral' && (
+                    <div className="mb-2.5">
+                      <label className="block text-[#0088ff] text-sm mb-1" style={{ fontFamily: 'brother-1816, sans-serif' }}>Referring organization name and zip code</label>
+                      <input
+                        type="text"
+                        name="referrerOrg"
+                        placeholder="Organization name and zip code"
+                        value={formData.referrerOrg}
+                        onChange={handleChange}
+                        className="w-full h-11 px-4 rounded-lg border-0 bg-[#0088ff] text-white placeholder-white tracking-wide"
+                        style={{ fontFamily: 'brother-1816, sans-serif' }}
+                      />
+                    </div>
+                  )}
+
                   <div className="mb-2.5">
                     <label className="block text-[#0088ff] text-sm mb-1" style={{ fontFamily: 'brother-1816, sans-serif' }}>Comments</label>
                     <textarea
@@ -952,6 +974,17 @@ const SignUpForm = () => {
               {/* Step 2: Organization Info */}
               <div className="w-1/2 px-4">
                 <form onSubmit={handleStep2Submit} className="max-w-lg mx-auto">
+              {/* Email field at top - prefilled from step 1, not editable */}
+              <div className="mb-4">
+                <input
+                  type="email"
+                  value={formData.email}
+                  disabled
+                  className="w-full h-11 px-4 rounded-lg border border-gray-300 bg-gray-50 text-gray-600 tracking-wide cursor-not-allowed"
+                  style={{ fontFamily: 'brother-1816, sans-serif' }}
+                />
+              </div>
+
               {/* Do you represent an organization? + What is your role? */}
               <div className={`grid gap-4 mb-4 ${formData.representsOrg === 'Yes' ? 'grid-cols-2' : 'grid-cols-1'}`}>
                 <div>
