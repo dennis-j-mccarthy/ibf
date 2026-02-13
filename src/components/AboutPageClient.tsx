@@ -141,62 +141,6 @@ export default function AboutPageClient({ teamMembers, founders }: AboutPageClie
       {/* Timeline Section */}
       <AnimatedTimeline />
 
-      {/* Supporting Section */}
-      <section className="bg-[#c8e6d9] py-24 relative overflow-hidden">
-        {/* Background decorative shape */}
-        <div className="absolute inset-0 pointer-events-none">
-          <Image
-            src="/images/SupportingIBF-BG.png"
-            alt=""
-            fill
-            className="object-cover object-right"
-          />
-        </div>
-        
-        <div className="max-w-5xl mx-auto px-4 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <ScrollReveal direction="left">
-              <div>
-                <h3 className="font-brother font-bold text-3xl md:text-4xl text-[#2e4057] mb-4 uppercase">SUPPORTING</h3>
-                <h2 className="font-handsome text-4xl md:text-5xl text-[#0066ff] mb-6">Ignatius Book Fairs</h2>
-                <p className="text-[#2e4057] text-lg mb-8">
-                  Join the adventure! We invite you prayerfully to consider supporting our mission with a{' '}
-                  <a 
-                    href="https://afvapnqh.donorsupport.co/page/ibf" 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="text-[#0066ff] font-semibold underline hover:text-[#0055dd]"
-                  >
-                    $10+ monthly donation
-                  </a>.
-                </p>
-                <a 
-                  href="https://afvapnqh.donorsupport.co/page/ibf" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="inline-block bg-[#ff6445] hover:bg-[#e55535] text-white font-brother font-bold uppercase px-8 py-4 rounded-full transition-all hover:scale-105 shadow-lg"
-                >
-                  Make a Donation
-                </a>
-              </div>
-            </ScrollReveal>
-            
-            <ScrollReveal direction="right" delay={200}>
-              <div className="hidden lg:flex justify-center items-center">
-                <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-8 shadow-xl">
-                  <div className="text-center">
-                    <div className="text-6xl mb-4">📚</div>
-                    <p className="text-[#2e4057] font-semibold text-lg">Your support helps bring</p>
-                    <p className="text-[#0066ff] font-bold text-3xl my-2">1000+</p>
-                    <p className="text-[#2e4057] font-semibold text-lg">quality books to children</p>
-                  </div>
-                </div>
-              </div>
-            </ScrollReveal>
-          </div>
-        </div>
-      </section>
-
       {/* Book Selections / Rich Tapestry Section */}
       <section className="relative py-24 overflow-hidden">
         {/* Background Image */}

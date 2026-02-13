@@ -14,7 +14,7 @@ type FilterCategory = 'all' | 'Operational' | 'Advertising' | 'Tutorials' | 'Pub
 export default function ResourcesPageContent({ resources }: ResourcesPageContentProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [activeFilter, setActiveFilter] = useState<FilterCategory>('Operational');
+  const [activeFilter, setActiveFilter] = useState<FilterCategory>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedVideo, setSelectedVideo] = useState<Resource | null>(null);
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
@@ -151,7 +151,7 @@ export default function ResourcesPageContent({ resources }: ResourcesPageContent
       {/* Resources Grid */}
       <section className="bg-[#b9dbc5] py-12">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 max-w-5xl mx-auto">
             {filteredResources.map((resource) => (
               <ResourceCard
                 key={resource.id}
@@ -196,9 +196,10 @@ export default function ResourcesPageContent({ resources }: ResourcesPageContent
 
 function ResourceCard({ resource, onVideoClick, onDetailsClick }: { resource: Resource; onVideoClick: () => void; onDetailsClick: () => void }) {
   const isVideo = resource.resourceType === 'Video';
+  const isTutorial = resource.category === 'Tutorials';
 
   return (
-    <div className="relative bg-white rounded-xl p-4 flex flex-col items-center text-center shadow-sm border border-[#dddddd]">
+    <div className={`relative bg-white rounded-xl p-4 flex flex-col items-center text-center shadow-sm ${isVideo ? '' : 'border border-[#dddddd]'}`}>
       {/* Top action icons - positioned at card corners */}
       {!isVideo && (
         <>
@@ -421,44 +422,84 @@ function ResourceDetailModal({
 }
 
 function VideoModal({ resource, onClose }: { resource: Resource; onClose: () => void }) {
+  // Load Wistia script if this is a Wistia video
+  useEffect(() => {
+    if (resource.embedCode?.includes('wistia-player')) {
+      // Check if Wistia script is already loaded
+      if (!document.querySelector('script[src*="wistia"]')) {
+        const script = document.createElement('script');
+        script.src = 'https://fast.wistia.com/assets/external/E-v1.js';
+        script.async = true;
+        document.head.appendChild(script);
+      }
+    }
+  }, [resource.embedCode]);
+
+  // Process embed code to handle iframes (Loom, YouTube) and Wistia custom elements
+  const processEmbedCode = (embedCode: string) => {
+    // For iframes (Loom, YouTube), make them responsive
+    let processed = embedCode
+      .replace(/width="[^"]*"/gi, '')
+      .replace(/height="[^"]*"/gi, '')
+      .replace(/style="[^"]*"/gi, '')
+      .replace(/<iframe/gi, '<iframe allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;border:0"');
+
+    // For Wistia players, ensure they're responsive and add required attributes
+    if (processed.includes('wistia-player')) {
+      processed = processed.replace(
+        /<wistia-player([^>]*)>/gi,
+        '<wistia-player$1 style="position:absolute;top:0;left:0;width:100%;height:100%">'
+      );
+    }
+
+    return processed;
+  };
+
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
       onClick={onClose}
     >
-      <div 
-        className="relative w-full max-w-4xl bg-black rounded-lg overflow-hidden"
+      <div
+        className="relative w-full max-w-5xl bg-black rounded-xl overflow-hidden shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close button */}
-        <button 
+        <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+          className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-sm flex items-center justify-center text-white transition-all hover:scale-110"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        
-        {/* Video embed */}
-        <div className="aspect-video">
+
+        {/* Video embed - responsive container */}
+        <div className="relative w-full bg-black" style={{ paddingBottom: '56.25%' }}>
           {resource.embedCode ? (
-            <div 
-              className="w-full h-full"
-              dangerouslySetInnerHTML={{ __html: resource.embedCode.replace(/width="[^"]*"/g, 'width="100%"').replace(/height="[^"]*"/g, 'height="100%"') }}
+            <div
+              className="absolute inset-0"
+              dangerouslySetInnerHTML={{ __html: processEmbedCode(resource.embedCode) }}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-white">
-              Video not available
+            <div className="absolute inset-0 flex items-center justify-center text-white bg-gray-900">
+              <div className="text-center">
+                <svg className="w-16 h-16 mx-auto mb-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                <p className="text-gray-400">Video not available</p>
+              </div>
             </div>
           )}
         </div>
-        
-        {/* Title */}
-        <div className="p-4 bg-gray-900">
-          <h3 className="text-white font-semibold">{resource.title}</h3>
+
+        {/* Title and description */}
+        <div className="p-6 bg-gradient-to-t from-black to-gray-900">
+          <h3 className="text-white font-bold text-xl mb-2" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+            {resource.title}
+          </h3>
           {resource.description && (
-            <p className="text-gray-400 text-sm mt-1">{resource.description}</p>
+            <p className="text-gray-300 text-sm leading-relaxed">{resource.description}</p>
           )}
         </div>
       </div>

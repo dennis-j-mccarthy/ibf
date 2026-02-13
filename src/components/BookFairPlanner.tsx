@@ -16,212 +16,295 @@ interface PlannerEvent {
 
 const PLANNER_EVENTS: PlannerEvent[] = [
   {
-    id: 'kickoff',
-    daysFromFair: -85,
-    title: 'Planning Kickoff',
+    id: 'workshop-1',
+    daysFromFair: -90,
+    title: 'Live Workshop Series - Part 1',
     type: 'operations',
-    description: 'Begin your book fair planning journey. Set goals, identify key volunteers, and establish your timeline.',
+    description: 'Join the first part of our 3-part live workshop series. RSVP to receive recordings even if you can\'t attend live.',
     tasks: [
-      'Set book fair goals (sales target, participation rate)',
-      'Identify volunteer coordinator and key helpers',
-      'Reserve book fair dates with school administration',
-      'Review previous year results (if applicable)',
+      'Watch for email invitation to workshop',
+      'RSVP yes to receive recordings',
+      'Invite your volunteer team to join',
+      'Attend live or watch the recording',
     ],
-    resources: [
-      { title: 'Book Fair Administrator Guide' },
-      { title: 'Planning Checklist' },
-    ],
+    resources: [],
   },
   {
-    id: 'materials',
-    daysFromFair: -70,
-    title: 'Order Marketing Materials',
-    type: 'marketing',
-    description: 'Order promotional materials and begin recruiting volunteers for your book fair.',
+    id: 'workshop-2',
+    daysFromFair: -60,
+    title: 'Live Workshop Series - Part 2',
+    type: 'operations',
+    description: 'Join the second part of our workshop series focusing on mid-planning tasks.',
     tasks: [
-      'Order flyers and promotional materials',
-      'Create volunteer sign-up sheet',
-      'Send initial volunteer recruitment email',
-      'Book any required equipment or tables',
+      'Watch for email invitation to workshop',
+      'RSVP yes to receive recordings',
+      'Invite your volunteer team to join',
+      'Attend live or watch the recording',
     ],
-    resources: [
-      { title: 'Flyer Templates' },
-      { title: 'Volunteer Sign-Up Sheet' },
-    ],
+    resources: [],
   },
   {
-    id: 'announcements',
-    daysFromFair: -50,
-    title: 'Save-the-Date Announcements',
-    type: 'marketing',
-    description: 'Launch your promotional campaign with save-the-date communications and social media.',
-    tasks: [
-      'Send save-the-date to parents/families',
-      'Post first social media announcement',
-      'Add book fair to school calendar/newsletter',
-      'Create classroom wish lists',
-    ],
-    resources: [
-      { title: 'Save the Date Flyer' },
-      { title: 'Social Media Templates' },
-      { title: 'Teacher Wish List Form' },
-    ],
-  },
-  {
-    id: 'flyers',
+    id: 'workshop-3',
     daysFromFair: -30,
-    title: 'Distribute Flyers & Confirm Volunteers',
-    type: 'marketing',
-    description: 'Ramp up promotional efforts and finalize your volunteer schedule.',
+    title: 'Live Workshop Series - Part 3',
+    type: 'operations',
+    description: 'Final workshop in the series during the month leading up to your event.',
     tasks: [
-      'Send flyers home with students',
-      'Confirm volunteer schedule',
-      'Post promotional materials around school',
-      'Send reminder to teachers about wish lists',
+      'Watch for email invitation to workshop',
+      'RSVP yes to receive recordings',
+      'Invite your volunteer team to join',
+      'Attend live or watch the recording',
     ],
-    resources: [
-      { title: 'Parent Letter' },
-      { title: 'Promotional Flyer' },
-      { title: 'Volunteer Schedule Template' },
-    ],
+    resources: [],
   },
   {
-    id: 'training',
+    id: 'book-delivery',
     daysFromFair: -7,
-    title: 'Final Volunteer Training',
+    title: 'Book Delivery Arrives',
     type: 'operations',
-    description: 'Train volunteers and coordinate final setup details for the book fair.',
+    description: 'Your books and materials will be delivered! You will receive 20-38 boxes sorted by category.',
     tasks: [
-      'Hold volunteer training session',
-      'Review POS system procedures',
-      'Confirm setup and breakdown assignments',
-      'Send final reminder to families',
+      'Receive 20-38 boxes of books and materials',
+      'Check that boxes are sorted by category (Picture Books, Early Readers, Comic Books, Elementary Books, Middle School Books, Crafts and Activities, Older Readers and Adults, Seasonal Selections, Toys and Trinkets)',
+      'Verify packing slips match box contents',
+      'Store boxes safely until setup day',
+      'Count and organize materials',
     ],
     resources: [
-      { title: 'Volunteer Training Guide' },
-      { title: 'POS Instructions' },
+      { title: 'Table Signs', url: '/bookfair-resources?resource=table-signs' },
     ],
   },
   {
-    id: 'prep',
-    daysFromFair: -2,
-    title: 'Prepare Signage & Communications',
-    type: 'operations',
-    description: 'Finalize all signage and send last-minute communications to families.',
+    id: 'week-6',
+    daysFromFair: -42,
+    title: 'Save the Date Announcement',
+    type: 'marketing',
+    description: 'Launch your promotional campaign with save-the-date communications across all channels.',
     tasks: [
-      'Print and prepare all signage',
-      'Send final reminder email to parents',
-      'Prepare cash box and supplies',
-      'Confirm book inventory arrival',
+      'Post "Save the Date for Our Book Fair" graphic on all social media channels',
+      'Include book fair announcement in parish bulletin',
+      'Add to weekly newsletter/email',
+      'Post on school bulletin board',
+      'Include start and end dates of fair',
+      'Mention online shopping availability with school selection',
+      'Highlight free shipping options during fair dates',
     ],
     resources: [
-      { title: 'Table Signs' },
-      { title: 'Category Signs' },
+      { title: 'Blue Save the Date Interactive', url: '/bookfair-resources?resource=blue-save-the-date' },
+      { title: 'Half Page Save Date Interactive', url: '/bookfair-resources?resource=half-page-save-date' },
+      { title: 'Social Media Guide', url: '/bookfair-resources?resource=social-media-guide' },
     ],
   },
   {
-    id: 'setup',
+    id: 'week-5',
+    daysFromFair: -35,
+    title: 'Share Parent Account Video',
+    type: 'marketing',
+    description: 'Share the "How to Create a Parent Account" video to help families get started.',
+    tasks: [
+      'Share parent account creation video on social media',
+      'Include video link in newsletter or email to parents',
+      'Explain school linking benefits',
+      'Remind families to select your school from dropdown',
+    ],
+    resources: [
+      { title: 'Creating a Parent Account', url: '/bookfair-resources?resource=creating-a-parent-account' },
+      { title: 'How your Orders Benefit your School', url: '/bookfair-resources?resource=how-your-orders-benefit-your-school' },
+    ],
+  },
+  {
+    id: 'week-4',
+    daysFromFair: -28,
+    title: 'Second Save the Date Reminder',
+    type: 'marketing',
+    description: 'Post another save-the-date to keep the book fair top of mind.',
+    tasks: [
+      'Post save-the-date graphic reminder',
+      'Remind community about fair dates',
+      'Reinforce in-person and online shopping options',
+    ],
+    resources: [
+      { title: 'Yellow Save the Dates Interactive', url: '/bookfair-resources?resource=yellow-save-the-dates' },
+      { title: 'Social Media Guide', url: '/bookfair-resources?resource=social-media-guide' },
+    ],
+  },
+  {
+    id: 'week-3',
+    daysFromFair: -21,
+    title: 'Highlight Featured Titles',
+    type: 'marketing',
+    description: 'Showcase specific titles from staff and teachers to build excitement.',
+    tasks: [
+      'Select a few titles from the website',
+      'Share what you, staff, or teachers are reading',
+      'Let community know these books are available in person or online',
+      'Explain how all sales benefit your organization',
+    ],
+    resources: [
+      { title: 'Bookfair Sneak Peek', url: '/bookfair-resources?resource=bookfair-sneak-peek' },
+      { title: 'Social Media Guide', url: '/bookfair-resources?resource=social-media-guide' },
+    ],
+  },
+  {
+    id: 'week-2',
+    daysFromFair: -14,
+    title: 'Principal Letter & Email Campaign',
+    type: 'marketing',
+    description: 'Email letter home to families explaining dates, times, and purpose of the book fair.',
+    tasks: [
+      'Email letter home to families',
+      'Include book fair dates and times',
+      'Explain purpose of the book fair',
+      'Send invitation from principal to community',
+      'Highlight opportunities to shop in person during fair',
+    ],
+    resources: [
+      { title: 'Principal Parent Letter - In Person', url: '/bookfair-resources?resource=principal-parent-letter-in-person' },
+      { title: 'Principal Parent Letter - Virtual', url: '/bookfair-resources?resource=principal-parent-letter-virtual' },
+    ],
+  },
+  {
+    id: 'week-1',
+    daysFromFair: -7,
+    title: 'Sneak Peek & Final Reminders',
+    type: 'marketing',
+    description: 'Email sneak peek flyer and distribute marketing materials around school.',
+    tasks: [
+      'Email link to general flyer',
+      'Email link to sneak peek flyer so families can preview offerings',
+      'Distribute Sneak Peek flyers in common areas',
+      'Post flyers inside school newsletter',
+      'Ensure fair schedule allows ample time for browsing',
+      'Remind families book fair is almost here',
+    ],
+    resources: [
+      { title: 'Bookfair Sneak Peek', url: '/bookfair-resources?resource=bookfair-sneak-peek' },
+      { title: 'Flyer', url: '/bookfair-resources?resource=flyer' },
+      { title: 'Two-Page Flyer', url: '/bookfair-resources?resource=two-page-flyer' },
+    ],
+  },
+  {
+    id: 'evening-before',
     daysFromFair: -1,
-    title: 'Setup Day',
-    type: 'operations',
-    description: 'Set up the book fair space and conduct final walkthrough.',
+    title: 'Evening Before Fair - Social Post',
+    type: 'marketing',
+    description: 'Post on social media the evening before to build anticipation.',
     tasks: [
-      'Set up tables and displays',
-      'Arrange books by category',
-      'Test POS system',
-      'Do final walkthrough with volunteers',
+      'Post social media graphic',
+      'Remind families fair starts tomorrow',
+      'Share fair hours and location',
+      'Include online shopping link',
     ],
     resources: [
-      { title: 'Setup Checklist' },
-      { title: 'Display Guide' },
+      { title: 'Social Media Guide', url: '/bookfair-resources?resource=social-media-guide' },
     ],
   },
   {
-    id: 'fair-day',
+    id: 'day-1',
     daysFromFair: 0,
-    title: 'Book Fair Day!',
+    title: 'Day 1 - Reading Challenge Kickoff',
     type: 'operations',
-    description: 'The big day! Execute your book fair with enthusiasm and organization.',
+    description: 'First day of book fair! Kick off with the Reading Challenge.',
     tasks: [
-      'Arrive early to do final prep',
+      'Introduce the Reading Challenge to families',
+      'Set up book fair displays',
       'Brief volunteers on their roles',
       'Monitor inventory throughout the day',
       'Engage with families and students',
-      'Track sales and handle any issues',
     ],
     resources: [
-      { title: 'Day-of Checklist' },
-      { title: 'Troubleshooting Guide' },
+      { title: 'Reading Challenge Campaign', url: '/bookfair-resources?resource=reading-challenge-campaign' },
+      { title: 'POS Device Instructions', url: '/bookfair-resources?resource=pos-device-instructions' },
     ],
   },
   {
-    id: 'thank-you',
+    id: 'day-2',
     daysFromFair: 1,
-    title: 'Thank You Communications',
+    title: 'Day 2 - Shopping Hours Reminder',
     type: 'marketing',
-    description: 'Send immediate thank you messages and begin initial cleanup.',
+    description: 'Post on social media with shopping times and location.',
     tasks: [
-      'Send thank you email to volunteers',
-      'Post thank you on social media',
-      'Begin packing unsold books',
-      'Secure cash and receipts',
+      'Post social media graphic',
+      'Share in-person shopping times and location',
+      'Remind about goal of getting new books for classrooms/library',
+      'Mention free shipping to school during fair dates',
+      'Remind families to select your school when shopping online',
     ],
     resources: [
-      { title: 'Thank You Email Template' },
-      { title: 'Social Media Thank You Post' },
+      { title: 'Social Media Guide', url: '/bookfair-resources?resource=social-media-guide' },
     ],
   },
   {
-    id: 'returns',
+    id: 'day-3',
+    daysFromFair: 2,
+    title: 'Day 3 - Reading Recommendations',
+    type: 'marketing',
+    description: 'Share that reading recommendations by age and grade are available.',
+    tasks: [
+      'Post on social media',
+      'Share that reading recommendations are available by age/grade',
+      'Mention recommendations available both on-site and online',
+      'Help families find books that fit their children',
+    ],
+    resources: [],
+  },
+  {
+    id: 'day-4',
+    daysFromFair: 3,
+    title: 'Day 4 - Top Sellers',
+    type: 'marketing',
+    description: 'Share the five most popular titles so far.',
+    tasks: [
+      'Check POS device or inventory for best sellers',
+      'Post the five most popular titles with your community',
+      'Build excitement around what others are buying',
+    ],
+    resources: [],
+  },
+  {
+    id: 'day-5',
     daysFromFair: 4,
-    title: 'Process Returns & Tally Results',
-    type: 'operations',
-    description: 'Process book returns and calculate initial results.',
-    tasks: [
-      'Process book returns',
-      'Reconcile sales with inventory',
-      'Calculate total sales and earnings',
-      'Prepare return shipment',
-    ],
-    resources: [
-      { title: 'Returns Process Guide' },
-      { title: 'Sales Report Template' },
-    ],
-  },
-  {
-    id: 'notes',
-    daysFromFair: 7,
-    title: 'Send Thank You Notes & Share Results',
+    title: 'Day 5 - Reading Habits Post',
     type: 'marketing',
-    description: 'Send formal thank you notes and share success metrics with the community.',
+    description: 'Share tips for fostering a love of reading at home.',
     tasks: [
-      'Send thank you notes to key volunteers',
-      'Share results with school administration',
-      'Post success metrics on social media',
-      'Send thank you to families for participating',
+      'Post about "Stop, Drop and Read" habit (20 minutes daily)',
+      'Suggest family reading together in same room',
+      'Recommend reading to children before bed',
+      'Share 5-10 minute morning devotion idea',
+      'Emphasize benefits of being read to at all ages',
     ],
-    resources: [
-      { title: 'Thank You Note Templates' },
-      { title: 'Results Announcement Template' },
-    ],
+    resources: [],
   },
   {
-    id: 'wrap-up',
-    daysFromFair: 14,
-    title: 'Final Wrap-Up & Lessons Learned',
-    type: 'operations',
-    description: 'Complete final wrap-up, document lessons learned, and submit feedback.',
+    id: 'day-6',
+    daysFromFair: 5,
+    title: 'Day 6 - Thank You Preview',
+    type: 'marketing',
+    description: 'Thank community and ask for book recommendations.',
     tasks: [
-      'Hold debrief meeting with volunteers',
-      'Document what worked and what to improve',
-      'Submit feedback to Ignatius Book Fairs',
-      'Archive materials for next year',
-      'Celebrate your success!',
+      'Post thank you to everyone who stopped by',
+      'Mention excitement about adding new library titles',
+      'Express gratitude for purchases and support',
+      'Ask families to share book recommendations in comments',
+      'Have volunteers respond with titles they purchased/liked',
     ],
-    resources: [
-      { title: 'Feedback Form' },
-      { title: 'Lessons Learned Template' },
+    resources: [],
+  },
+  {
+    id: 'day-7',
+    daysFromFair: 6,
+    title: 'Day 7 - Last Day Push',
+    type: 'marketing',
+    description: 'Final day of the book fair - encourage last-minute shoppers.',
+    tasks: [
+      'Post that today is the last day',
+      'Share progress toward goal of purchasing new books',
+      'Remind about percentage of sales going back to school',
+      'Express appreciation for community support',
+      'Celebrate watching families find new favorites and classics',
     ],
+    resources: [],
   },
 ];
 
@@ -554,9 +637,19 @@ function EventDetailModal({
             </h4>
             <div className="space-y-2">
               {event.resources.map((resource, i) => (
-                <div
+                <a
                   key={i}
-                  className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                  href={resource.url || '#'}
+                  onClick={(e) => {
+                    if (resource.url) {
+                      window.location.href = resource.url;
+                    } else {
+                      e.preventDefault();
+                    }
+                  }}
+                  className={`flex items-center gap-3 p-3 bg-gray-50 rounded-lg transition-colors ${
+                    resource.url ? 'hover:bg-gray-100 cursor-pointer' : 'opacity-50 cursor-not-allowed'
+                  }`}
                 >
                   <div className="w-8 h-8 rounded bg-[#0066ff] flex items-center justify-center flex-shrink-0">
                     <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -564,15 +657,14 @@ function EventDetailModal({
                     </svg>
                   </div>
                   <span className="text-sm text-[#02176f] font-medium">{resource.title}</span>
-                  <svg className="w-4 h-4 text-gray-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
+                  {resource.url && (
+                    <svg className="w-4 h-4 text-gray-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  )}
+                </a>
               ))}
             </div>
-            <p className="text-xs text-gray-400 mt-3 italic">
-              Resource links coming soon
-            </p>
           </div>
         </div>
       </div>
