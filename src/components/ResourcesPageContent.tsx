@@ -84,6 +84,7 @@ export default function ResourcesPageContent({ resources }: ResourcesPageContent
     'coloring-sheet-2',
     'coloring-sheet-3',
     'you-caption-it-social-media-story',
+    'parish-flyer',
   ]);
 
   const publicGuideChildren = new Set([
