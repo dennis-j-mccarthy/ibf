@@ -1,17 +1,20 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 
 interface FAQ {
   question: string;
   answer: string;
+  image?: string;
 }
 
 const faqs: FAQ[] = [
   {
     question: 'Find a Book Fair Near You!',
     answer: 'Check our events page to find upcoming Ignatius Book Fairs in your area.',
+    image: '/images/anim-map.gif',
   },
   {
     question: 'Why did Ave Maria University and Ignatius Press start book fairs?',
@@ -80,7 +83,18 @@ const HomeFAQs = () => {
               </button>
               {openIndex === index && (
                 <div className="bg-white px-6 py-4 border-l-4 border-[#0088ff]">
-                  <p className="text-gray-700">{faq.answer}</p>
+                  {faq.image ? (
+                    <Image
+                      src={faq.image}
+                      alt={faq.question}
+                      width={800}
+                      height={500}
+                      className="w-full h-auto rounded-lg"
+                      unoptimized
+                    />
+                  ) : (
+                    <p className="text-gray-700">{faq.answer}</p>
+                  )}
                 </div>
               )}
             </div>
