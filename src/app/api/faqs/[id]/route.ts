@@ -32,6 +32,29 @@ export async function PATCH(
   }
 }
 
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const faqId = parseInt(id, 10);
+
+    if (isNaN(faqId)) {
+      return NextResponse.json({ error: 'Invalid FAQ ID' }, { status: 400 });
+    }
+
+    await prisma.fAQ.delete({
+      where: { id: faqId },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting FAQ:', error);
+    return NextResponse.json({ error: 'Failed to delete FAQ' }, { status: 500 });
+  }
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

@@ -208,6 +208,17 @@ export default function FAQsPageContent({ catholicFaqs, publicFaqs }: FAQsPageCo
     setAllFaqs((prev) => prev.map((f) => (f.id === faqId ? { ...f, version: newVersion } : f)));
   };
 
+  // Delete FAQ (tagging mode only)
+  const handleDeleteFaq = async (faqId: number) => {
+    if (!confirm('Delete this FAQ? This cannot be undone.')) return;
+    setAllFaqs((prev) => prev.filter((f) => f.id !== faqId));
+    try {
+      await fetch(`/api/faqs/${faqId}`, { method: 'DELETE' });
+    } catch (error) {
+      console.error('Error deleting FAQ:', error);
+    }
+  };
+
   // Inline tag toggle for tagging mode (auto-saves)
   const handleInlineTagToggle = async (faq: FAQ, toggleType: 'catholic' | 'public') => {
     const tags = getVersionTags(faq.version);
@@ -396,6 +407,11 @@ export default function FAQsPageContent({ catholicFaqs, publicFaqs }: FAQsPageCo
                                 className={`w-7 h-7 rounded-md flex items-center justify-center text-xs font-bold transition-all ${tags.public ? 'bg-[#ff6445] text-white' : 'bg-gray-200 text-gray-500 hover:bg-gray-300'}`}
                                 title="Public"
                               >P</button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleDeleteFaq(faq.id); }}
+                                className="w-7 h-7 rounded-md flex items-center justify-center text-xs font-bold transition-all bg-gray-200 text-red-500 hover:bg-red-500 hover:text-white"
+                                title="Delete FAQ"
+                              >✕</button>
                             </div>
                           )}
                           <button
