@@ -1,8 +1,10 @@
-import { getBlogBySlug, getBlogs } from '@/lib/data';
+import { getBlogBySlug } from '@/lib/data';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Metadata } from 'next';
+
+export const dynamic = 'force-dynamic';
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
@@ -27,13 +29,6 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
       images: blog.thumbnail ? [blog.thumbnail] : undefined,
     },
   };
-}
-
-export async function generateStaticParams() {
-  const blogs = await getBlogs();
-  return blogs.map((blog: { slug: string }) => ({
-    slug: blog.slug,
-  }));
 }
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {

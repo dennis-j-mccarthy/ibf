@@ -107,8 +107,8 @@ async function main() {
   // Verify counts
   const counts = await prisma.$queryRaw`
     SELECT category, COUNT(*) as count
-    FROM Resource
-    WHERE isActive = 1
+    FROM "Resource"
+    WHERE "isActive" = true
     GROUP BY category
     ORDER BY category
   `;

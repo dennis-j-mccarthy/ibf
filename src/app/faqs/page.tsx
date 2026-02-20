@@ -2,6 +2,8 @@ import { getFAQs } from '@/lib/data';
 import FAQsPageContent from '@/components/FAQsPageContent';
 import { Metadata } from 'next';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'FAQs | Ignatius Book Fairs',
   description: 'Frequently asked questions about hosting an Ignatius Book Fair. Learn about our process, rewards, and how to get started.',

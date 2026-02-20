@@ -1,6 +1,8 @@
 import { Metadata } from 'next';
 import { Suspense } from 'react';
 import { getResources } from '@/lib/data';
+
+export const dynamic = 'force-dynamic';
 import ResourcesPageContent from '@/components/ResourcesPageContent';
 
 export const metadata: Metadata = {
