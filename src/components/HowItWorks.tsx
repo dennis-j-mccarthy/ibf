@@ -17,7 +17,7 @@ const HowItWorks = () => {
   ];
 
   return (
-    <section className="relative">
+    <section className="relative" style={{ marginTop: '40px' }}>
       {/* White top portion */}
       <div className="bg-white pt-8 pb-0">
         <div className="max-w-6xl mx-auto px-4">
@@ -41,7 +41,7 @@ const HowItWorks = () => {
       
       {/* Blue bottom portion with captions */}
       <div className="bg-[#0088ff] pt-4 pb-12 -mt-24 sm:-mt-32 md:-mt-40">
-        <div className="max-w-6xl mx-auto px-4 pt-24 sm:pt-32 md:pt-40">
+        <div className="max-w-6xl mx-auto px-4 pt-24 sm:pt-32 md:pt-40" style={{ paddingTop: 'calc(6rem + 80px)', paddingBottom: '40px' }}>
           <div className="flex items-center justify-center gap-4 mb-[15px]">
             <div className="flex-1 h-[1px] bg-white max-w-[200px]"></div>
             <h2

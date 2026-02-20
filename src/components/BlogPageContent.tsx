@@ -4,21 +4,26 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Blog } from '@prisma/client';
+import { useVersion } from '@/contexts/VersionContext';
 
 interface BlogPageContentProps {
   blogs: Blog[];
 }
 
 export default function BlogPageContent({ blogs }: BlogPageContentProps) {
+  const { isCatholic } = useVersion();
   const [searchTerm, setSearchTerm] = useState('');
 
+  const versionCategory = isCatholic ? 'Catholic' : 'Public';
+  const versionBlogs = blogs.filter((blog) => blog.category === versionCategory);
+
   const filteredBlogs = searchTerm
-    ? blogs.filter(
+    ? versionBlogs.filter(
         (blog) =>
           blog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
           (blog.summary && blog.summary.toLowerCase().includes(searchTerm.toLowerCase()))
       )
-    : blogs;
+    : versionBlogs;
 
   const getCategoryColor = (color: string | null) => {
     const colorMap: Record<string, string> = {
@@ -47,9 +52,8 @@ export default function BlogPageContent({ blogs }: BlogPageContentProps) {
         
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
-            <h1 className="font-handsome text-4xl md:text-5xl lg:text-6xl mb-6">
-              <span className="text-[#ff6445]">CATHOLIC</span>{' '}
-              <span className="text-white">BOOK FAIR</span>{' '}
+            <h1 style={{ fontFamily: 'brother-1816, sans-serif', fontSize: '75px', fontWeight: 900, marginBottom: '20px', lineHeight: '105%' }}>
+              <span className="text-[#ff6445]">BOOK FAIR</span>{' '}
               <span className="text-[#00c853]">NEWS</span>
             </h1>
             <p className="text-white text-lg leading-relaxed max-w-2xl mx-auto">
@@ -88,7 +92,7 @@ export default function BlogPageContent({ blogs }: BlogPageContentProps) {
       {/* Blog Grid */}
       <section className="bg-[#f5f5eb] py-16">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 max-w-6xl mx-auto">
             {filteredBlogs.map((blog) => (
               <BlogCard key={blog.id} blog={blog} categoryColor={getCategoryColor(blog.color)} />
             ))}
@@ -149,7 +153,7 @@ function BlogCard({ blog, categoryColor }: BlogCardProps) {
 
         {/* Content */}
         <div className="p-5 flex flex-col flex-grow">
-          <h2 className="font-brother text-lg font-bold text-gray-800 mb-2 group-hover:text-[#0066ff] transition-colors line-clamp-2">
+          <h2 className="font-brother font-bold text-gray-800 mb-2 group-hover:text-[#0066ff] transition-colors line-clamp-2" style={{ fontSize: '20px', lineHeight: '120%' }}>
             {blog.title}
           </h2>
           

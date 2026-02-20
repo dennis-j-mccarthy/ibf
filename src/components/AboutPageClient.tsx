@@ -216,7 +216,7 @@ export default function AboutPageClient({ teamMembers, founders }: AboutPageClie
             {teamMembers.map((member, index) => (
               <ScrollReveal key={index} delay={(index % 3) * 100}>
                 <div className="text-center">
-                  <div className="w-40 h-40 mx-auto mb-3">
+                  <div className={`mx-auto mb-3 ${member.image.includes('julie-blob') ? 'w-48 h-48 -mt-10' : 'w-40 h-40'}`}>
                     {member.borderColor ? (
                       // Special styling for members with colored border (circular crop with border)
                       <div
@@ -235,7 +235,7 @@ export default function AboutPageClient({ teamMembers, founders }: AboutPageClie
                         />
                       </div>
                     ) : (
-                      <Image src={member.image} alt={member.name} width={160} height={160} className="w-full h-full object-contain" />
+                      <Image src={member.image} alt={member.name} width={192} height={192} className="w-full h-full object-contain" />
                     )}
                   </div>
                   <h4 className="font-brother font-semibold text-gray-800 text-base">{member.name}</h4>

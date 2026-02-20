@@ -52,16 +52,6 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       })
     : null;
 
-  const getCategoryColor = (color: string | null) => {
-    const colorMap: Record<string, string> = {
-      orange: 'bg-[#ff6445]',
-      green: 'bg-[#00c853]',
-      blue: 'bg-[#0066ff]',
-      red: 'bg-[#c83200]',
-    };
-    return colorMap[color || 'orange'] || 'bg-[#ff6445]';
-  };
-
   return (
     <>
       {/* Hero Section */}
@@ -92,16 +82,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               Back to News
             </Link>
 
-            {/* Category Badge */}
-            {blog.category && (
-              <div className={`inline-block ${getCategoryColor(blog.color)} px-4 py-1.5 rounded-full mb-4`}>
-                <span className="text-white text-sm font-brother font-semibold uppercase tracking-wide">
-                  {blog.category}
-                </span>
-              </div>
-            )}
-
-            <h1 className="font-handsome text-3xl md:text-4xl lg:text-5xl text-white mb-4">
+            <h1 className="font-brother font-bold text-white mb-4" style={{ fontSize: '30px', lineHeight: '120%' }}>
               {blog.title}
             </h1>
 
@@ -146,7 +127,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             {/* Main Content */}
             {blog.content && (
               <div 
-                className="prose prose-lg max-w-none prose-headings:font-brother prose-headings:text-gray-800 prose-p:text-gray-600 prose-a:text-[#0066ff] prose-a:no-underline hover:prose-a:underline"
+                className="prose prose-lg max-w-none font-normal prose-headings:font-brother prose-headings:text-gray-800 prose-p:text-gray-600 prose-p:font-normal prose-a:text-[#0066ff] prose-a:no-underline hover:prose-a:underline prose-img:max-w-full prose-img:h-auto"
                 dangerouslySetInnerHTML={{ __html: blog.content }} 
               />
             )}

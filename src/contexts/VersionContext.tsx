@@ -73,6 +73,13 @@ export function VersionProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      // Ctrl+Shift+R → navigate to /bookfair-resources
+      if (e.ctrlKey && e.shiftKey && e.code === 'KeyR') {
+        e.preventDefault();
+        window.location.href = '/bookfair-resources';
+        return;
+      }
+
       if (e.key === 'c' || e.key === 'C') {
         setVersion('Catholic');
       } else if (e.key === 'p' || e.key === 'P') {

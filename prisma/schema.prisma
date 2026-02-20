@@ -31,6 +31,7 @@ model Resource {
   thumbnail    String?  // Image URL
   fileUrl      String?  // Direct file URL
   category     String?  // Operational, Advertising, Public, Tutorials
+  audience     String?  // "Catholic In Person", "Catholic Virtual", "Parish In Person", "Public In Person"
   resourceType String?  // PDF, Video, Image, etc.
   embedCode    String?  // For YouTube/Loom embeds
   featured     Boolean  @default(false)

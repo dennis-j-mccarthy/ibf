@@ -218,34 +218,6 @@ const SignUpForm = () => {
 
   const [hubspotData, setHubspotData] = useState<HubSpotData | null>(null);
   const [isLookingUp, setIsLookingUp] = useState(false);
-  const [hubspotTestMode, setHubspotTestMode] = useState(false);
-
-  // Fetch HubSpot test mode status in development
-  useEffect(() => {
-    if (process.env.NODE_ENV !== 'development') return;
-
-    fetch('/api/hubspot/test-mode')
-      .then(res => res.json())
-      .then(data => setHubspotTestMode(data.testMode))
-      .catch(() => {});
-  }, []);
-
-  // Toggle HubSpot test mode
-  const toggleTestMode = async () => {
-    if (process.env.NODE_ENV !== 'development') return;
-
-    try {
-      const res = await fetch('/api/hubspot/test-mode', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enabled: !hubspotTestMode }),
-      });
-      const data = await res.json();
-      setHubspotTestMode(data.testMode);
-    } catch (err) {
-      console.error('Failed to toggle test mode:', err);
-    }
-  };
 
   // Dev-only: Auto-fill form with test data using keyboard shortcuts
   useEffect(() => {
@@ -630,34 +602,103 @@ const SignUpForm = () => {
     );
   }
 
-  // Show test mode banner in development
-  const isDev = process.env.NODE_ENV === 'development';
-
   return (
-    <section id="signup" className={`relative overflow-hidden transition-all duration-700 ease-in-out ${formData.previouslyHadFair === null && currentStep === 1 ? 'py-8' : 'py-16 md:py-24'}`}>
-      {/* Background image in absolute div - gets clipped by overflow-hidden */}
-      <div
-        className="absolute inset-0 bg-contain bg-top bg-no-repeat pointer-events-none"
-        style={{ backgroundImage: "url('/images/header-blob2.png')" }}
-      />
+    <section id="signup" className={`relative overflow-hidden transition-all duration-700 ease-in-out ${formData.previouslyHadFair === null && currentStep === 1 ? 'py-8' : 'py-16 md:py-24'}`} style={{ marginTop: '-1px', paddingTop: '50px', paddingBottom: '60px', backgroundColor: '#F3FDF5' }}>
+      {/* Lava lamp background */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div style={{ filter: 'blur(60px)' }} className="absolute inset-0">
+          <div
+            className="absolute rounded-full"
+            style={{
+              width: '350px', height: '350px',
+              background: 'radial-gradient(circle, rgba(0,136,255,0.6) 0%, rgba(0,136,255,0.2) 60%, transparent 70%)',
+              top: '-5%', left: '5%',
+              animation: 'lava1 16s ease-in-out infinite',
+            }}
+          />
+          <div
+            className="absolute rounded-full"
+            style={{
+              width: '300px', height: '300px',
+              background: 'radial-gradient(circle, rgba(80,219,146,0.55) 0%, rgba(80,219,146,0.15) 60%, transparent 70%)',
+              bottom: '0%', right: '5%',
+              animation: 'lava2 14s ease-in-out infinite',
+            }}
+          />
+          <div
+            className="absolute rounded-full"
+            style={{
+              width: '280px', height: '280px',
+              background: 'radial-gradient(circle, rgba(255,212,29,0.5) 0%, rgba(255,212,29,0.1) 60%, transparent 70%)',
+              top: '40%', left: '50%',
+              animation: 'lava3 18s ease-in-out infinite',
+            }}
+          />
+          <div
+            className="absolute rounded-full"
+            style={{
+              width: '250px', height: '250px',
+              background: 'radial-gradient(circle, rgba(255,100,69,0.4) 0%, rgba(255,100,69,0.1) 60%, transparent 70%)',
+              top: '10%', right: '15%',
+              animation: 'lava4 12s ease-in-out infinite',
+            }}
+          />
+          <div
+            className="absolute rounded-full"
+            style={{
+              width: '320px', height: '320px',
+              background: 'radial-gradient(circle, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.2) 50%, transparent 70%)',
+              top: '20%', left: '30%',
+              animation: 'lava5 20s ease-in-out infinite',
+            }}
+          />
+          <div
+            className="absolute rounded-full"
+            style={{
+              width: '200px', height: '200px',
+              background: 'radial-gradient(circle, rgba(0,136,255,0.45) 0%, rgba(80,219,146,0.2) 60%, transparent 70%)',
+              bottom: '15%', left: '20%',
+              animation: 'lava6 15s ease-in-out infinite',
+            }}
+          />
+        </div>
+      </div>
+      <style jsx>{`
+        @keyframes lava1 {
+          0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); border-radius: 40% 60% 60% 40% / 60% 30% 70% 40%; }
+          25% { transform: translate(150px, 80px) scale(1.3) rotate(45deg); border-radius: 60% 40% 30% 70% / 40% 60% 40% 60%; }
+          50% { transform: translate(80px, 160px) scale(0.8) rotate(90deg); border-radius: 30% 70% 50% 50% / 50% 50% 50% 50%; }
+          75% { transform: translate(-30px, 100px) scale(1.1) rotate(135deg); border-radius: 50% 50% 40% 60% / 60% 40% 60% 40%; }
+        }
+        @keyframes lava2 {
+          0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); border-radius: 50% 50% 40% 60% / 40% 60% 40% 60%; }
+          25% { transform: translate(-120px, -60px) scale(1.2) rotate(-60deg); border-radius: 40% 60% 60% 40% / 60% 40% 60% 40%; }
+          50% { transform: translate(-60px, -130px) scale(0.85) rotate(-120deg); border-radius: 60% 40% 40% 60% / 40% 60% 40% 60%; }
+          75% { transform: translate(40px, -80px) scale(1.15) rotate(-180deg); border-radius: 30% 70% 60% 40% / 50% 50% 50% 50%; }
+        }
+        @keyframes lava3 {
+          0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); border-radius: 60% 40% 50% 50% / 50% 50% 40% 60%; }
+          33% { transform: translate(-100px, 60px) scale(1.25) rotate(60deg); border-radius: 40% 60% 40% 60% / 60% 40% 60% 40%; }
+          66% { transform: translate(70px, -50px) scale(0.9) rotate(120deg); border-radius: 50% 50% 60% 40% / 40% 60% 40% 60%; }
+        }
+        @keyframes lava4 {
+          0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); border-radius: 40% 60% 40% 60% / 60% 40% 60% 40%; }
+          50% { transform: translate(-130px, 90px) scale(1.3) rotate(90deg); border-radius: 60% 40% 60% 40% / 40% 60% 40% 60%; }
+        }
+        @keyframes lava5 {
+          0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%; }
+          25% { transform: translate(80px, 60px) scale(1.15) rotate(-30deg); border-radius: 40% 60% 60% 40% / 60% 40% 40% 60%; }
+          50% { transform: translate(-50px, 100px) scale(0.9) rotate(-60deg); border-radius: 60% 40% 40% 60% / 40% 60% 60% 40%; }
+          75% { transform: translate(-100px, 30px) scale(1.1) rotate(-90deg); border-radius: 50% 50% 60% 40% / 40% 60% 50% 50%; }
+        }
+        @keyframes lava6 {
+          0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); border-radius: 60% 40% 50% 50% / 50% 50% 40% 60%; }
+          33% { transform: translate(100px, -40px) scale(1.2) rotate(45deg); border-radius: 40% 60% 40% 60% / 60% 40% 60% 40%; }
+          66% { transform: translate(50px, 70px) scale(0.85) rotate(90deg); border-radius: 50% 50% 60% 40% / 40% 60% 40% 60%; }
+        }
+      `}</style>
       <div className="max-w-[850px] mx-auto px-4 relative z-10">
-        {/* Test Mode Banner - clickable to toggle */}
-        {isDev && (
-          <button
-            onClick={toggleTestMode}
-            className={`w-full text-center py-2 px-4 rounded-t-md font-bold text-sm cursor-pointer transition-colors ${
-              hubspotTestMode
-                ? 'bg-yellow-400 text-yellow-900 hover:bg-yellow-300'
-                : 'bg-green-500 text-white hover:bg-green-400'
-            }`}
-            style={{ fontFamily: 'brother-1816, sans-serif' }}
-          >
-            {hubspotTestMode
-              ? '🧪 TEST MODE ON - Click to send to HubSpot'
-              : '✅ LIVE MODE - Click to enable test mode'}
-          </button>
-        )}
-        <div className={`bg-white/90 ${isDev ? 'rounded-b-md border-x border-b' : 'rounded-md border'} border-[#0087ff] transition-all duration-700 ease-in-out ${formData.previouslyHadFair === null && currentStep === 1 ? 'p-6 md:p-8' : 'p-10 md:p-12'}`}>
+        <div className={`bg-white/90 rounded-md border border-[#0087ff] transition-all duration-700 ease-in-out ${formData.previouslyHadFair === null && currentStep === 1 ? 'p-6 md:p-8' : 'p-10 md:p-12'}`}>
           {/* Header */}
           <div className={`text-center transition-all duration-700 ease-in-out ${formData.previouslyHadFair === null && currentStep === 1 ? 'mb-4' : 'mb-8'}`}>
             <h1
@@ -720,9 +761,16 @@ const SignUpForm = () => {
 
           {/* Form Steps Container with Slide Animation - hidden until radio is selected */}
           <div
-            className={`relative overflow-hidden transition-all duration-700 ease-in-out ${formData.previouslyHadFair === null && currentStep === 1 ? 'max-h-0 opacity-0' : 'max-h-[2000px] opacity-100'}`}
-            style={{ willChange: formData.previouslyHadFair === null ? 'max-height, opacity' : 'auto' }}
+            className="relative overflow-hidden transition-all ease-[cubic-bezier(0.34,1.56,0.64,1)]"
+            style={{
+              display: 'grid',
+              gridTemplateRows: formData.previouslyHadFair === null && currentStep === 1 ? '0fr' : '1fr',
+              opacity: formData.previouslyHadFair === null && currentStep === 1 ? 0 : 1,
+              transitionDuration: '800ms',
+              transitionProperty: 'grid-template-rows, opacity',
+            }}
           >
+            <div className="min-h-0 overflow-hidden">
             <div
               className="flex transition-transform duration-500 ease-out"
               style={{ transform: `translateX(${currentStep === 1 ? '0%' : '-50%'})`, width: '200%' }}
@@ -733,11 +781,17 @@ const SignUpForm = () => {
 
               {/* Returning customer lookup (Yes) - with slide-down animation */}
               <div
-                className={`overflow-hidden transition-all duration-700 ease-in-out ${
-                  formData.previouslyHadFair === true ? 'max-h-[1000px] opacity-100 mt-6' : 'max-h-0 opacity-0 mt-0'
-                }`}
-                style={{ willChange: formData.previouslyHadFair === null ? 'max-height, opacity' : 'auto' }}
+                className="overflow-hidden transition-all ease-[cubic-bezier(0.34,1.56,0.64,1)]"
+                style={{
+                  display: 'grid',
+                  gridTemplateRows: formData.previouslyHadFair === true ? '1fr' : '0fr',
+                  opacity: formData.previouslyHadFair === true ? 1 : 0,
+                  transitionDuration: '600ms',
+                  transitionProperty: 'grid-template-rows, opacity',
+                  marginTop: formData.previouslyHadFair === true ? '24px' : '0',
+                }}
               >
+                <div className="min-h-0 overflow-hidden">
                 <div className="space-y-4">
                   <p className="text-gray-600 text-sm text-center" style={{ fontFamily: 'brother-1816, sans-serif' }}>
                     Enter your email or school website to find your account:
@@ -768,22 +822,22 @@ const SignUpForm = () => {
 
                   {/* Welcome message when HubSpot finds the customer */}
                   {hubspotData?.found && (
-                    <div className="bg-[#50db92] rounded-lg p-4 text-center text-white">
-                      <p className="text-lg font-bold" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+                    <div className="bg-[#42ADE2] rounded-lg p-4 text-center text-white">
+                      <p className="font-bold" style={{ fontFamily: 'brother-1816, sans-serif', fontSize: '1.43rem' }}>
                         Welcome back{hubspotData.contact?.firstname ? `, ${hubspotData.contact.firstname}` : ''}!
                       </p>
                       {hubspotData.company?.name && (
-                        <p className="text-base" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+                        <p style={{ fontFamily: 'brother-1816, sans-serif', fontSize: '1.3rem' }}>
                           {hubspotData.company.name}
                         </p>
                       )}
                       {hubspotData.company?.city && hubspotData.company?.state && (
-                        <p className="text-sm opacity-90" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+                        <p className="opacity-90" style={{ fontFamily: 'brother-1816, sans-serif', fontSize: '1.14rem' }}>
                           {hubspotData.company.city}, {hubspotData.company.state}
                         </p>
                       )}
                       {hubspotData.lastDeal?.dealname && (
-                        <p className="text-sm mt-2 opacity-90" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+                        <p className="mt-2 opacity-90" style={{ fontFamily: 'brother-1816, sans-serif', fontSize: '1.14rem' }}>
                           Last fair: {hubspotData.lastDeal.dealname}
                           {(hubspotData.lastDeal.fair_date || hubspotData.lastDeal.closedate) && (
                             <> ({new Date(hubspotData.lastDeal.fair_date || hubspotData.lastDeal.closedate!).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })})</>
@@ -791,7 +845,7 @@ const SignUpForm = () => {
                         </p>
                       )}
                       {hubspotData.owner && (
-                        <p className="text-sm mt-2" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+                        <p className="mt-2" style={{ fontFamily: 'brother-1816, sans-serif', fontSize: '1.14rem' }}>
                           Your rep: {hubspotData.owner.firstName} {hubspotData.owner.lastName}
                         </p>
                       )}
@@ -829,15 +883,22 @@ const SignUpForm = () => {
                     </div>
                   )}
                 </div>
+                </div>
               </div>
 
               {/* New customer fields (No) - with slide-down animation */}
               <div
-                className={`overflow-hidden transition-all duration-700 ease-in-out ${
-                  formData.previouslyHadFair === false ? 'max-h-[1200px] opacity-100 mt-6' : 'max-h-0 opacity-0 mt-0'
-                }`}
-                style={{ willChange: formData.previouslyHadFair === null ? 'max-height, opacity' : 'auto' }}
+                className="overflow-hidden transition-all ease-[cubic-bezier(0.34,1.56,0.64,1)]"
+                style={{
+                  display: 'grid',
+                  gridTemplateRows: formData.previouslyHadFair === false ? '1fr' : '0fr',
+                  opacity: formData.previouslyHadFair === false ? 1 : 0,
+                  transitionDuration: '600ms',
+                  transitionProperty: 'grid-template-rows, opacity',
+                  marginTop: formData.previouslyHadFair === false ? '24px' : '0',
+                }}
               >
+                <div className="min-h-0 overflow-hidden">
                 <div>
                   {/* Salutation, First Name, Last Name */}
                   <div className="grid grid-cols-[100px_1fr_1fr] gap-3 mb-2.5">
@@ -967,12 +1028,13 @@ const SignUpForm = () => {
                     </button>
                   </div>
                 </div>
+                </div>
               </div>
                 </form>
               </div>
 
               {/* Step 2: Organization Info */}
-              <div className="w-1/2 px-4">
+              <div className={`w-1/2 px-4 ${currentStep === 1 ? 'h-0 overflow-hidden' : ''}`}>
                 <form onSubmit={handleStep2Submit} className="max-w-lg mx-auto">
               {/* Email field at top - prefilled from step 1, not editable */}
               <div className="mb-4">
@@ -1408,6 +1470,7 @@ const SignUpForm = () => {
               </div>
                 </form>
               </div>
+            </div>
             </div>
           </div>
         </div>

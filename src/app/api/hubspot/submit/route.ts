@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { isTestModeEnabled } from '@/lib/testMode';
 
 const HUBSPOT_PORTAL_ID = '44239293';
 // Form 1: Contact form (Step 1 - contact info: name, email, phone, etc.)
@@ -13,17 +12,6 @@ interface FormField {
 }
 
 async function submitToHubSpotForm(formId: string, fields: FormField[], context: { pageUri?: string; pageName?: string }) {
-  // TEST MODE: Log data instead of sending to HubSpot
-  if (isTestModeEnabled()) {
-    console.log('\n========== TEST MODE: HubSpot Form Submission ==========');
-    console.log('Form ID:', formId);
-    console.log('Context:', context);
-    console.log('Fields:');
-    fields.forEach(f => console.log(`  ${f.name}: ${f.value}`));
-    console.log('=========================================================\n');
-    return { testMode: true, message: 'Data logged to console (not sent to HubSpot)' };
-  }
-
   const requestBody = {
     fields,
     context: {
