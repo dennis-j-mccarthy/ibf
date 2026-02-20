@@ -98,6 +98,7 @@ function getVersionTags(version: string): { catholic: boolean; public: boolean }
 
 export default function FAQsPageContent({ catholicFaqs, publicFaqs }: FAQsPageContentProps) {
   const { taggingMode, isCatholic } = useVersion();
+  const [mapOpen, setMapOpen] = useState(true);
   const [openIndices, setOpenIndices] = useState<Record<string, number | null>>({});
   const [selectedFaqForTagging, setSelectedFaqForTagging] = useState<FAQ | null>(null);
   // Merged deduplicated list of all FAQs — single source of truth for version tags
@@ -312,6 +313,46 @@ export default function FAQsPageContent({ catholicFaqs, publicFaqs }: FAQsPageCo
               </p>
             </ScrollReveal>
           </div>
+        </div>
+      </section>
+
+      {/* Find a Book Fair Near You - Map Accordion */}
+      <section className="bg-[#0088ff] py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <ScrollReveal direction="up">
+            <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+              <button
+                onClick={() => setMapOpen(!mapOpen)}
+                className="w-full px-6 py-5 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+                style={{ fontFamily: 'brother-1816, sans-serif' }}
+              >
+                <span className="font-semibold text-[#02176f] text-lg">
+                  Find a Book Fair Near You!
+                </span>
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
+                    mapOpen ? 'bg-[#ff6445] rotate-180' : 'bg-[#0088ff]'
+                  }`}
+                >
+                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </button>
+              <div className={`overflow-hidden transition-all duration-300 ${mapOpen ? 'max-h-[2000px]' : 'max-h-0'}`}>
+                <div className="px-6 pb-6 pt-2 border-t border-gray-100">
+                  <Image
+                    src="/images/anim-map.gif"
+                    alt="Find a Book Fair Near You"
+                    width={800}
+                    height={500}
+                    className="w-full h-auto rounded-lg"
+                    unoptimized
+                  />
+                </div>
+              </div>
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 
