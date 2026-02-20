@@ -97,8 +97,7 @@ function getVersionTags(version: string): { catholic: boolean; public: boolean }
 }
 
 export default function FAQsPageContent({ catholicFaqs, publicFaqs }: FAQsPageContentProps) {
-  const { taggingMode } = useVersion();
-  const [isCatholic, setIsCatholic] = useState(true);
+  const { taggingMode, isCatholic } = useVersion();
   const [openIndices, setOpenIndices] = useState<Record<string, number | null>>({});
   const [selectedFaqForTagging, setSelectedFaqForTagging] = useState<FAQ | null>(null);
   // Merged deduplicated list of all FAQs — single source of truth for version tags
@@ -249,11 +248,6 @@ export default function FAQsPageContent({ catholicFaqs, publicFaqs }: FAQsPageCo
       ...prev,
       [category]: prev[category] === index ? null : index,
     }));
-  };
-
-  const handleVersionToggle = (catholic: boolean) => {
-    setIsCatholic(catholic);
-    setOpenIndices({}); // Reset open accordions when switching
   };
 
   // Define category order (categories not listed here will be hidden)
