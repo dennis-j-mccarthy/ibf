@@ -129,11 +129,22 @@ export default function FAQSectionWithToggle({ catholicFaqs, publicFaqs, showTog
                 </button>
                 {openIndex === index && (
                   <div className="px-6 pt-3 pb-5">
-                    <div 
-                      className="text-gray-600 text-base leading-relaxed"
-                      style={{ fontFamily: 'brother-1816, sans-serif' }}
-                      dangerouslySetInnerHTML={{ __html: faq.answer }}
-                    />
+                    {faq.question.includes('Find a Book Fair') ? (
+                      <Image
+                        src="/images/anim-map.gif"
+                        alt="Find a Book Fair Near You"
+                        width={800}
+                        height={500}
+                        className="w-full h-auto rounded-lg"
+                        unoptimized
+                      />
+                    ) : (
+                      <div
+                        className="text-gray-600 text-base leading-relaxed"
+                        style={{ fontFamily: 'brother-1816, sans-serif' }}
+                        dangerouslySetInnerHTML={{ __html: faq.answer }}
+                      />
+                    )}
                   </div>
                 )}
               </div>
