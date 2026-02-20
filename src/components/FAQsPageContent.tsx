@@ -5,6 +5,7 @@ import Image from 'next/image';
 import type { FAQ as PrismaFAQ } from '@prisma/client';
 import FAQTaggingModal from './FAQTaggingModal';
 import ScrollReveal from './ScrollReveal';
+import { useVersion } from '@/contexts/VersionContext';
 
 // Subtle dot pattern background
 const DotPattern = ({ opacity = 0.03 }: { opacity?: number }) => (
@@ -96,16 +97,29 @@ function getVersionTags(version: string): { catholic: boolean; public: boolean }
 }
 
 export default function FAQsPageContent({ catholicFaqs, publicFaqs }: FAQsPageContentProps) {
+  const { taggingMode } = useVersion();
   const [isCatholic, setIsCatholic] = useState(true);
   const [openIndices, setOpenIndices] = useState<Record<string, number | null>>({});
   const [selectedFaqForTagging, setSelectedFaqForTagging] = useState<FAQ | null>(null);
-  const [localFaqs, setLocalFaqs] = useState({ catholic: catholicFaqs, public: publicFaqs });
+  // Merged deduplicated list of all FAQs — single source of truth for version tags
+  const [allFaqs, setAllFaqs] = useState<FAQ[]>(() => {
+    const map = new Map<number, FAQ>();
+    catholicFaqs.forEach(f => map.set(f.id, f));
+    publicFaqs.forEach(f => map.set(f.id, f));
+    return Array.from(map.values());
+  });
   const [editMode, setEditMode] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authError, setAuthError] = useState('');
 
-  const faqs = isCatholic ? localFaqs.catholic : localFaqs.public;
+  // In tagging mode show all FAQs; otherwise filter by current version using live version data
+  const faqs = taggingMode
+    ? allFaqs
+    : allFaqs.filter(f => {
+        const t = getVersionTags(f.version);
+        return isCatholic ? t.catholic : t.public;
+      });
 
   // Check for existing auth on mount
   useEffect(() => {
@@ -190,12 +204,33 @@ export default function FAQsPageContent({ catholicFaqs, publicFaqs }: FAQsPageCo
 
   // Handle FAQ tag update
   const handleFaqTagUpdate = (faqId: number, newVersion: string) => {
-    // Update local state so UI reflects the change
-    setLocalFaqs((prev) => ({
-      catholic: prev.catholic.map((f) => (f.id === faqId ? { ...f, version: newVersion } : f)),
-      public: prev.public.map((f) => (f.id === faqId ? { ...f, version: newVersion } : f)),
-    }));
+    // Update the single source of truth — filtering derives from this
+    setAllFaqs((prev) => prev.map((f) => (f.id === faqId ? { ...f, version: newVersion } : f)));
   };
+
+  // Inline tag toggle for tagging mode (auto-saves)
+  const handleInlineTagToggle = async (faq: FAQ, toggleType: 'catholic' | 'public') => {
+    const tags = getVersionTags(faq.version);
+    const newTags = { ...tags };
+    newTags[toggleType] = !newTags[toggleType];
+
+    let newVersion = '';
+    if (newTags.catholic && newTags.public) newVersion = 'Both';
+    else if (newTags.catholic) newVersion = 'Catholic';
+    else if (newTags.public) newVersion = 'Public';
+
+    handleFaqTagUpdate(faq.id, newVersion);
+    try {
+      await fetch(`/api/faqs/${faq.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ version: newVersion }),
+      });
+    } catch (error) {
+      console.error('Error updating FAQ tag:', error);
+    }
+  };
+
   const groupedFaqs = groupByPageTitle(faqs);
 
   const toggleFAQ = (category: string, index: number) => {
@@ -347,6 +382,21 @@ export default function FAQsPageContent({ catholicFaqs, publicFaqs }: FAQsPageCo
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                               </svg>
                             </button>
+                          )}
+                          {/* Inline tag toggles - tagging mode */}
+                          {taggingMode && (
+                            <div className="absolute top-3 right-16 z-10 flex gap-1">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleInlineTagToggle(faq, 'catholic'); }}
+                                className={`w-7 h-7 rounded-md flex items-center justify-center text-xs font-bold transition-all ${tags.catholic ? 'bg-[#0088ff] text-white' : 'bg-gray-200 text-gray-500 hover:bg-gray-300'}`}
+                                title="Catholic"
+                              >C</button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleInlineTagToggle(faq, 'public'); }}
+                                className={`w-7 h-7 rounded-md flex items-center justify-center text-xs font-bold transition-all ${tags.public ? 'bg-[#ff6445] text-white' : 'bg-gray-200 text-gray-500 hover:bg-gray-300'}`}
+                                title="Public"
+                              >P</button>
+                            </div>
                           )}
                           <button
                             onClick={() => toggleFAQ(category, index)}
