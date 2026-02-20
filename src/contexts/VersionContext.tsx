@@ -83,8 +83,8 @@ export function VersionProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Ctrl+Shift+T or Cmd+Shift+T → toggle tagging mode
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.code === 'KeyT') {
+      // Ctrl+Option+Shift+T → toggle tagging mode
+      if (e.ctrlKey && e.altKey && e.shiftKey && e.code === 'KeyT') {
         e.preventDefault();
         if (taggingMode) {
           setTaggingMode(false);
@@ -133,7 +133,7 @@ export function VersionProvider({ children }: { children: ReactNode }) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
           </svg>
           Tag Mode
-          <span className="text-white/60 font-normal text-xs ml-1">⌘+Shift+T to exit</span>
+          <span className="text-white/60 font-normal text-xs ml-1">Ctrl+⌥+Shift+T to exit</span>
         </div>
       )}
       {showTagAuth && <TagAuthModal onLogin={handleTagAuth} onClose={() => setShowTagAuth(false)} />}
