@@ -107,6 +107,8 @@ export default function ResourcesPageContent({ resources }: ResourcesPageContent
     'pos-device-instructions',
     'public-last-copy',
     'public-social-media-post',
+    'you-caption-it-social-media-post',
+    'you-caption-it-social-media-print-ad-1',
     'social-feed-the-imagination-public',
     'coloring-sheet-1',
     'coloring-sheet-2',
