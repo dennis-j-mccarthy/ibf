@@ -179,27 +179,22 @@ export default function ResourcesPageContent({ resources }: ResourcesPageContent
     { key: 'Public In Person', label: 'PUBLIC IN PERSON' },
   ];
 
-  const hasAudience = (resource: Resource, targetAudience: string) => {
-    if (!resource.audience) return false;
-    return resource.audience.split(',').map(a => a.trim()).includes(targetAudience);
-  };
-
   const applyFilter = (list: Resource[], filter: ActiveFilter) => {
     if (filter === 'all') return list;
     if (filter === 'Catholic In Person') {
-      return list.filter(r => r.slug === 'book-fair-administrator-operational-guide' || r.parentGuide === 'book-fair-administrator-operational-guide' || hasAudience(r, 'Catholic In Person'));
+      return list.filter(r => r.slug === 'book-fair-administrator-operational-guide' || r.parentGuide === 'book-fair-administrator-operational-guide');
     }
     if (filter === 'Catholic Virtual') {
       return list.filter(r => virtualGuideChildren.has(r.slug) || r.parentGuide === 'virtual-book-fair-operational-guide');
     }
     if (filter === 'Parish In Person') {
-      return list.filter(r => parishGuideChildren.has(r.slug) || hasAudience(r, 'Parish In Person'));
+      return list.filter(r => parishGuideChildren.has(r.slug));
     }
     if (filter === 'Public In Person') {
-      return list.filter(r => r.audience === 'Public In Person' || publicGuideChildren.has(r.slug) || hasAudience(r, 'Public In Person'));
+      return list.filter(r => r.audience === 'Public In Person' || publicGuideChildren.has(r.slug));
     }
     if (audienceKeys.has(filter)) {
-      return list.filter(r => r.audience === filter || hasAudience(r, filter));
+      return list.filter(r => r.audience === filter);
     }
     return list.filter(r => r.category === filter);
   };
