@@ -219,9 +219,11 @@ const SignUpForm = () => {
   const [hubspotData, setHubspotData] = useState<HubSpotData | null>(null);
   const [isLookingUp, setIsLookingUp] = useState(false);
 
-  // Dev-only: Auto-fill form with test data using keyboard shortcuts
+  // Auto-fill form with test data using keyboard shortcuts
+  // Works in dev mode OR when ?testmode=true is in the URL
   useEffect(() => {
-    if (process.env.NODE_ENV !== 'development') return;
+    const isTestMode = process.env.NODE_ENV === 'development' || new URLSearchParams(window.location.search).has('testmode');
+    if (!isTestMode) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       // Option+Ctrl+1: Fill step 1
