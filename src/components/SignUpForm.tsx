@@ -116,15 +116,14 @@ const APPOINTMENT_URLS: Record<string, string> = {
   'kim': 'https://meetings.hubspot.com/kneumaier/ignatius-book-fair', // All Diocese
 };
 
-// Determine which rep/appointment page based on org type, school type, affiliation, and state
-function getAppointmentRedirect(orgType: string, schoolType: string, state: string, affiliation?: string): string | null {
+// Determine which rep/appointment page based on org type, school type, and state
+function getAppointmentRedirect(orgType: string, schoolType: string, state: string): string | null {
   const orgLower = orgType.toLowerCase();
   const schoolLower = schoolType.toLowerCase();
-  const affiliationLower = (affiliation || '').toLowerCase();
   const stateAbbrev = STATE_ABBREVS[state] || state.toUpperCase();
 
-  // Special case: All Public schools -> Marni
-  if (schoolLower === 'public') {
+  // Special case: All Public and Charter schools -> Marni
+  if (schoolLower === 'public' || schoolLower === 'charter') {
     return APPOINTMENT_URLS['marni'] || null; // Return null if URL not set yet
   }
 
@@ -133,14 +132,13 @@ function getAppointmentRedirect(orgType: string, schoolType: string, state: stri
     return APPOINTMENT_URLS['kim'] || null; // Return null if URL not set yet
   }
 
-  // For Catholic organizations (Private Catholic, Homeschool Catholic, Parish) -> Geographic split
-  // Also handle Business and other non-public school types
-  const isCatholic = affiliationLower === 'catholic' || orgLower === 'parish';
+  // For Catholic organizations (Catholic, Home school Catholic, Parish) -> Geographic split
+  // Also handle Business, Private, Christian, and other school types
+  const isCatholic = ['catholic', 'home school catholic'].includes(schoolLower) || orgLower === 'parish';
   const needsGeographicRouting =
     isCatholic ||
     orgLower === 'business' ||
-    schoolLower === 'private' ||
-    ['home school', 'homeschool', 'home-school'].includes(schoolLower);
+    ['private', 'christian', 'home school other', 'other'].includes(schoolLower);
 
   if (needsGeographicRouting) {
     // Northeast -> Julie
@@ -202,8 +200,7 @@ const SignUpForm = () => {
     smsConsent: false,
 
     // School-specific fields (conditional)
-    schoolType: '', // Public, Private, Home school
-    affiliation: '', // Catholic, Christian, Independent (for Private) or Non Charter, Other (for Public)
+    schoolType: '', // Catholic, Charter, Christian, Private, Home school Catholic, Home school other, Public, Other
     principalFirstName: '',
     principalLastName: '',
     principalEmail: '',
@@ -242,27 +239,24 @@ const SignUpForm = () => {
         console.log('[DEV] Form step 1 auto-filled');
       }
 
-      // Option+Ctrl+2: Fill step 2 (Catholic Private School - Southern)
+      // Option+Ctrl+2: Fill step 2 (Catholic School - Southern)
       if (e.altKey && e.ctrlKey && e.key === '2') {
         e.preventDefault();
         setFormData(prev => ({
           ...prev,
           representsOrg: 'Yes',
           roleInOrg: 'Administrator',
-          hasHostedBefore: 'No',
           preferredSeason: 'Fall 2026',
           orgName: 'St. Mary Catholic School',
           address1: '123 Main Street',
-          address2: 'Suite 100',
           city: 'Austin',
           state: 'Texas',
           zip: '78701',
-          website: 'www.stmarycatholic.edu',
+          website: 'stmarycatholic.edu',
           orgType: 'School',
-          schoolType: 'Private',
-          affiliation: 'Catholic',
+          schoolType: 'Catholic',
           studentsEnrolled: '450',
-          gradeLevels: 'PK-5',
+          gradeLevels: 'PreK-5',
           diocese: 'Austin',
           principalFirstName: 'Sister',
           principalLastName: 'Margaret',
@@ -270,28 +264,25 @@ const SignUpForm = () => {
           principalPhone: '555-987-6543',
           smsConsent: true,
         }));
-        console.log('[DEV] Form step 2 auto-filled (Catholic Private School - Southern → Jeanette)');
+        console.log('[DEV] Form step 2 auto-filled (Catholic School - Southern → Jeanette)');
       }
 
-      // Option+Ctrl+3: Fill step 2 (Public School - routes to Alma)
+      // Option+Ctrl+3: Fill step 2 (Public School - routes to Marni)
       if (e.altKey && e.ctrlKey && e.key === '3') {
         e.preventDefault();
         setFormData(prev => ({
           ...prev,
           representsOrg: 'Yes',
           roleInOrg: 'Teacher',
-          hasHostedBefore: 'Yes',
           preferredSeason: 'Spring 2026',
           orgName: 'Lincoln Elementary',
           address1: '456 Oak Avenue',
-          address2: '',
           city: 'Chicago',
           state: 'Illinois',
           zip: '60601',
-          website: 'www.lincolnelementary.edu',
+          website: 'lincolnelementary.edu',
           orgType: 'School',
           schoolType: 'Public',
-          affiliation: 'Non Charter',
           studentsEnrolled: '600',
           gradeLevels: 'K-12',
           diocese: '',
@@ -301,7 +292,7 @@ const SignUpForm = () => {
           principalPhone: '555-111-2222',
           smsConsent: false,
         }));
-        console.log('[DEV] Form step 2 auto-filled (Public School → Alma)');
+        console.log('[DEV] Form step 2 auto-filled (Public School → Marni)');
       }
 
       // Option+Ctrl+4: Fill step 2 (Parish - Northern)
@@ -311,18 +302,15 @@ const SignUpForm = () => {
           ...prev,
           representsOrg: 'Yes',
           roleInOrg: 'Pastor',
-          hasHostedBefore: 'Unsure',
           preferredSeason: 'Summer 2026',
           orgName: 'St. Patrick Parish',
           address1: '789 Church Street',
-          address2: '',
           city: 'Boston',
           state: 'Massachusetts',
           zip: '02101',
-          website: 'www.stpatrickboston.org',
+          website: 'stpatrickboston.org',
           orgType: 'Parish',
           schoolType: '',
-          affiliation: '',
           studentsEnrolled: '1200',
           gradeLevels: '',
           diocese: 'Boston',
@@ -335,25 +323,22 @@ const SignUpForm = () => {
         console.log('[DEV] Form step 2 auto-filled (Parish - Northern → K Neumaier)');
       }
 
-      // Option+Ctrl+5: Fill step 2 (Diocese - routes to Alma)
+      // Option+Ctrl+5: Fill step 2 (Diocese - routes to Kim)
       if (e.altKey && e.ctrlKey && e.key === '5') {
         e.preventDefault();
         setFormData(prev => ({
           ...prev,
           representsOrg: 'Yes',
           roleInOrg: 'Administrator',
-          hasHostedBefore: 'No',
           preferredSeason: 'Fall 2026',
           orgName: 'Diocese of San Antonio',
           address1: '2718 W Woodlawn Ave',
-          address2: '',
           city: 'San Antonio',
           state: 'Texas',
           zip: '78228',
-          website: 'www.archsa.org',
+          website: 'archsa.org',
           orgType: 'Diocese',
           schoolType: '',
-          affiliation: '',
           studentsEnrolled: '',
           gradeLevels: '',
           diocese: 'San Antonio',
@@ -363,7 +348,7 @@ const SignUpForm = () => {
           principalPhone: '',
           smsConsent: true,
         }));
-        console.log('[DEV] Form step 2 auto-filled (Diocese → Alma)');
+        console.log('[DEV] Form step 2 auto-filled (Diocese → Kim)');
       }
     };
 
@@ -485,7 +470,7 @@ const SignUpForm = () => {
 
       if (response.ok) {
         // Determine appointment URL based on org type, school type, and state
-        const baseAppointmentUrl = getAppointmentRedirect(formData.orgType, formData.schoolType, formData.state, formData.affiliation);
+        const baseAppointmentUrl = getAppointmentRedirect(formData.orgType, formData.schoolType, formData.state);
 
         if (baseAppointmentUrl) {
           // Build prefilled URL with contact info
@@ -509,7 +494,7 @@ const SignUpForm = () => {
           // Organization-specific fields
           if (formData.orgType) params.set('type_of_organization', formData.orgType);
           if (formData.schoolType) params.set('school_type', formData.schoolType);
-          if (formData.affiliation) params.set('affiliation', formData.affiliation);
+
           if (formData.diocese) params.set('diocese', formData.diocese);
           if (formData.studentsEnrolled) params.set('students_enrolled', formData.studentsEnrolled);
           if (formData.gradeLevels) params.set('grade_levels', formData.gradeLevels);
@@ -1268,9 +1253,14 @@ const SignUpForm = () => {
                       style={{ fontFamily: 'brother-1816, sans-serif' }}
                     >
                       <option value="">School Type *</option>
+                      <option value="Catholic">Catholic</option>
+                      <option value="Charter">Charter</option>
+                      <option value="Christian">Christian</option>
                       <option value="Private">Private</option>
+                      <option value="Home school Catholic">Home school Catholic</option>
+                      <option value="Home school other">Home school other</option>
                       <option value="Public">Public</option>
-                      <option value="Home school">Home school</option>
+                      <option value="Other">Other</option>
                     </select>
                     <select
                       name="gradeLevels"
@@ -1282,63 +1272,15 @@ const SignUpForm = () => {
                     >
                       <option value="">Grade Levels *</option>
                       <option value="3PK-8">3PK-8</option>
-                      <option value="PK-5">PK-5</option>
+                      <option value="PreK-5">PreK-5</option>
                       <option value="K-12">K-12</option>
                       <option value="9-12">9-12</option>
                       <option value="Other">Other</option>
                     </select>
                   </div>
 
-                  {/* Affiliation - conditional based on school type */}
-                  {formData.schoolType === 'Private' && (
-                    <select
-                      name="affiliation"
-                      value={formData.affiliation}
-                      onChange={handleChange}
-                      required
-                      className="w-full h-11 px-4 rounded-lg border-0 bg-[#0088ff] text-white tracking-wide"
-                      style={{ fontFamily: 'brother-1816, sans-serif' }}
-                    >
-                      <option value="">Affiliation *</option>
-                      <option value="Catholic">Catholic</option>
-                      <option value="Christian">Christian</option>
-                      <option value="Independent">Independent</option>
-                    </select>
-                  )}
-
-                  {formData.schoolType === 'Public' && (
-                    <select
-                      name="affiliation"
-                      value={formData.affiliation}
-                      onChange={handleChange}
-                      required
-                      className="w-full h-11 px-4 rounded-lg border-0 bg-[#0088ff] text-white tracking-wide"
-                      style={{ fontFamily: 'brother-1816, sans-serif' }}
-                    >
-                      <option value="">Affiliation *</option>
-                      <option value="Non Charter">Non Charter</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  )}
-
-                  {formData.schoolType === 'Home school' && (
-                    <select
-                      name="affiliation"
-                      value={formData.affiliation}
-                      onChange={handleChange}
-                      required
-                      className="w-full h-11 px-4 rounded-lg border-0 bg-[#0088ff] text-white tracking-wide"
-                      style={{ fontFamily: 'brother-1816, sans-serif' }}
-                    >
-                      <option value="">Affiliation *</option>
-                      <option value="Catholic">Catholic</option>
-                      <option value="Christian">Christian</option>
-                      <option value="Independent">Independent</option>
-                    </select>
-                  )}
-
-                  {/* Number of students and Diocese - side by side for Catholic */}
-                  <div className={`grid gap-2 ${formData.affiliation === 'Catholic' ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                  {/* Number of students and Diocese - side by side for Catholic types */}
+                  <div className={`grid gap-2 ${['Catholic', 'Home school Catholic'].includes(formData.schoolType) ? 'grid-cols-2' : 'grid-cols-1'}`}>
                     <input
                       type="number"
                       name="studentsEnrolled"
@@ -1348,7 +1290,7 @@ const SignUpForm = () => {
                       className="w-full h-11 px-4 rounded-lg border-0 bg-[#0088ff] text-white placeholder-white tracking-wide"
                       style={{ fontFamily: 'brother-1816, sans-serif' }}
                     />
-                    {formData.affiliation === 'Catholic' && (
+                    {['Catholic', 'Home school Catholic'].includes(formData.schoolType) && (
                       <select
                         name="diocese"
                         value={formData.diocese}
