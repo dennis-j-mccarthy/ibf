@@ -61,6 +61,9 @@ export default function ResourcesPageContent({ resources }: ResourcesPageContent
     'you-caption-it-social-media-post',
     'how-to-invite-a-teacher-to-a-classroom',
     'creating-your-admin-account',
+    'save-the-date-post',
+    'you-caption-it',
+    'bookfair-sneak-peek',
   ]);
 
   const parishGuideChildren = new Set([
@@ -85,6 +88,8 @@ export default function ResourcesPageContent({ resources }: ResourcesPageContent
     'coloring-sheet-3',
     'you-caption-it-social-media-story',
     'parish-flyer',
+    'save-the-date-post',
+    'you-caption-it',
   ]);
 
   const publicGuideChildren = new Set([
@@ -110,6 +115,7 @@ export default function ResourcesPageContent({ resources }: ResourcesPageContent
     'you-caption-it-social-media-post',
     'you-caption-it-social-media-print-ad-1',
     'social-feed-the-imagination-public',
+    'save-the-date-post',
     'coloring-sheet-1',
     'coloring-sheet-2',
     'coloring-sheet-3',
@@ -136,6 +142,12 @@ export default function ResourcesPageContent({ resources }: ResourcesPageContent
     else if (resource.slug === 'public-book-fair-administrator-operational-guide') {
       related = resources.filter(r =>
         r.id !== resource.id && publicGuideChildren.has(r.slug)
+      );
+    }
+    // Coloring sheets: only relate to other coloring sheets
+    else if (resource.slug.startsWith('coloring-sheet')) {
+      related = resources.filter(r =>
+        r.id !== resource.id && r.slug.startsWith('coloring-sheet')
       );
     }
     // If this resource IS a parent guide, show its children
