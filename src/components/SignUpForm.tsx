@@ -409,10 +409,15 @@ const SignUpForm = () => {
   }, [formData.rebookEmail, formData.rebookWebsite, formData.previouslyHadFair, lookupHubSpot]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
+    const { name, type } = e.target;
+    let value = type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value;
+    // Strip protocol and www from website field
+    if (name === 'website' && typeof value === 'string') {
+      value = value.replace(/^https?:\/\//, '').replace(/^www\./, '');
+    }
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+      [name]: value
     }));
   };
 
@@ -1104,49 +1109,8 @@ const SignUpForm = () => {
                 )}
               </div>
 
-              {/* Have you hosted a book fair? + Preferred season */}
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-[#0088ff] text-sm mb-2" style={{ fontFamily: 'brother-1816, sans-serif' }}>
-                    Have you hosted a book fair?
-                  </label>
-                  <div className="flex gap-3">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="hasHostedBefore"
-                        value="Yes"
-                        checked={formData.hasHostedBefore === 'Yes'}
-                        onChange={handleChange}
-                        className="w-5 h-5 accent-[#0088ff]"
-                      />
-                      <span style={{ fontFamily: 'brother-1816, sans-serif' }}>Yes</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="hasHostedBefore"
-                        value="No"
-                        checked={formData.hasHostedBefore === 'No'}
-                        onChange={handleChange}
-                        className="w-5 h-5 accent-[#0088ff]"
-                      />
-                      <span style={{ fontFamily: 'brother-1816, sans-serif' }}>No</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="hasHostedBefore"
-                        value="Unsure"
-                        checked={formData.hasHostedBefore === 'Unsure'}
-                        onChange={handleChange}
-                        className="w-5 h-5 accent-[#0088ff]"
-                      />
-                      <span style={{ fontFamily: 'brother-1816, sans-serif' }}>Unsure</span>
-                    </label>
-                  </div>
-                </div>
-
+              {/* Preferred season */}
+              <div className="mb-4">
                 <div>
                   <label className="block text-[#0088ff] text-sm mb-2" style={{ fontFamily: 'brother-1816, sans-serif' }}>
                     Preferred book fair season
@@ -1209,16 +1173,6 @@ const SignUpForm = () => {
                 value={formData.address1}
                 onChange={handleChange}
                 required
-                className="w-full h-11 px-4 rounded-lg border-0 bg-[#0088ff] text-white placeholder-white tracking-wide mb-2.5"
-                style={{ fontFamily: 'brother-1816, sans-serif' }}
-              />
-
-              <input
-                type="text"
-                name="address2"
-                placeholder="Address 2"
-                value={formData.address2}
-                onChange={handleChange}
                 className="w-full h-11 px-4 rounded-lg border-0 bg-[#0088ff] text-white placeholder-white tracking-wide mb-2.5"
                 style={{ fontFamily: 'brother-1816, sans-serif' }}
               />
