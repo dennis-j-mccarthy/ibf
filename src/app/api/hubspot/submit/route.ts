@@ -69,6 +69,7 @@ export async function POST(request: NextRequest) {
     // Step 1: Submit to Form 1 - Contact form (a4499abe)
     if (step === 1 || step === 'contact') {
       const contactFields: FormField[] = [
+        { name: 'salutation', value: formData.salutation || '' },
         { name: 'firstname', value: formData.firstName || '' },
         { name: 'lastname', value: formData.lastName || '' },
         { name: 'email', value: formData.email || '' },
@@ -132,6 +133,7 @@ export async function POST(request: NextRequest) {
     if (step === 'both') {
       // Form 1 (Contact form - a4499abe) fields
       const contactFields: FormField[] = [
+        { name: 'salutation', value: formData.salutation || '' },
         { name: 'firstname', value: formData.firstName || '' },
         { name: 'lastname', value: formData.lastName || '' },
         { name: 'email', value: formData.email || '' },
