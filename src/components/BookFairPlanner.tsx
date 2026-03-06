@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import type { Resource } from '@prisma/client';
 
@@ -1264,11 +1265,30 @@ function getFirstDayOfMonth(date: Date): number {
 }
 
 export default function BookFairPlanner({ resources }: { resources: Resource[] }) {
+  const searchParams = useSearchParams();
   const [fairDate, setFairDate] = useState<Date | null>(null);
   const [fairType, setFairType] = useState<FairType | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<PlannerEvent | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<Resource | null>(null);
   const [dateInput, setDateInput] = useState('');
+
+  // Auto-populate from URL query params (e.g., ?type=catholic-in-person&date=2026-03-01)
+  useEffect(() => {
+    const typeParam = searchParams.get('type');
+    const dateParam = searchParams.get('date');
+    if (typeParam && dateParam && Object.keys(FAIR_TYPE_LABELS).includes(typeParam)) {
+      const parsed = new Date(dateParam + 'T12:00:00');
+      if (!isNaN(parsed.getTime())) {
+        setFairType(typeParam as FairType);
+        setDateInput(dateParam);
+        setFairDate(parsed);
+        // Scroll to planner after render
+        setTimeout(() => {
+          document.getElementById('planning-calendar')?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  }, [searchParams]);
 
   const handleSetDate = () => {
     if (dateInput && fairType) {
@@ -1330,7 +1350,7 @@ export default function BookFairPlanner({ resources }: { resources: Resource[] }
 
   if (!fairDate) {
     return (
-      <section className="bg-gradient-to-b from-[#02176f] to-[#0066ff] py-16">
+      <section id="planning-calendar" className="bg-gradient-to-b from-[#02176f] to-[#0066ff] py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-xl mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4" style={{ fontFamily: 'barlo, sans-serif' }}>
@@ -1385,7 +1405,7 @@ export default function BookFairPlanner({ resources }: { resources: Resource[] }
   }
 
   return (
-    <section className="bg-gradient-to-b from-[#02176f] to-[#0066ff] py-16">
+    <section id="planning-calendar" className="bg-gradient-to-b from-[#02176f] to-[#0066ff] py-16">
       <div className="container mx-auto px-4">
         <div className="max-w-6xl mx-auto">
           {/* Header */}

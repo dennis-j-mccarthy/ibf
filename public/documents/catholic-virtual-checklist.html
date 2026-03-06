@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Virtual Book Fair Checklist – Ignatius Book Fairs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    @page {
+      size: letter;
+      margin: 0.75in 1.25in;
+    }
+    body {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 400;
+      font-size: 11pt;
+      color: #2a2a2a;
+      line-height: 1.5;
+      margin: 0;
+      padding: 0.75in 1.5in;
+    }
+    a {
+      color: #ff6445;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 3px solid #02176f;
+    }
+    .header img {
+      height: 39px;
+      margin-bottom: 8px;
+    }
+    .header h1 {
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 900;
+      font-size: 26pt;
+      color: #02176f;
+      margin: 6px 0 4px;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+    .header p {
+      font-family: 'Outfit', sans-serif;
+      font-size: 11pt;
+      color: #666;
+      margin: 0;
+    }
+    h2 {
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 600;
+      font-size: 15pt;
+      color: #02176f;
+      margin: 22px 0 8px;
+      padding-left: 0;
+    }
+    h3 {
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 600;
+      font-size: 12.5pt;
+      color: #02176f;
+      margin: 16px 0 6px;
+      padding-left: 2px;
+    }
+    .step-label {
+      display: inline-block;
+      font-family: 'Fredoka', sans-serif;
+      background: #ff6445;
+      color: white;
+      font-size: 9pt;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 6px;
+      margin-right: 6px;
+      vertical-align: middle;
+      letter-spacing: 0.5px;
+    }
+    .icon {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      vertical-align: middle;
+      margin-right: 4px;
+    }
+    .checklist {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 6px;
+    }
+    .checklist li {
+      position: relative;
+      padding: 4px 0 4px 32px;
+      page-break-inside: avoid;
+    }
+    .checklist li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 7px;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #42ADE2;
+      border-radius: 4px;
+      background: #f0f8ff;
+    }
+    .checklist li:hover::before {
+      background: #ddf0fc;
+    }
+    .checklist li.checked::before {
+      content: '\2713';
+      background: #42ADE2;
+      color: white;
+      font-size: 11pt;
+      font-weight: bold;
+      text-align: center;
+      line-height: 16px;
+      border-color: #42ADE2;
+    }
+    .checklist li .note {
+      display: block;
+      font-size: 9.5pt;
+      color: #666;
+      font-style: italic;
+      margin-top: 2px;
+    }
+    .time-label {
+      font-weight: 600;
+      color: #02176f;
+    }
+    .rewards-table {
+      margin: 8px 0 4px 0;
+      border-collapse: collapse;
+      font-size: 10pt;
+      width: auto;
+    }
+    .rewards-table th, .rewards-table td {
+      padding: 5px 40px 5px 12px;
+      text-align: left;
+      white-space: nowrap;
+    }
+    .rewards-table th {
+      background: #02176f;
+      color: white;
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 600;
+      font-size: 9pt;
+      letter-spacing: 0.5px;
+    }
+    .rewards-table td {
+      border-bottom: 1px solid #e0e0e0;
+      font-weight: 500;
+    }
+    .final-section {
+      margin-top: 20px;
+      padding: 12px 16px;
+      background: #fff5f3;
+      border-left: 5px solid #ff6445;
+      border-radius: 0 8px 8px 0;
+    }
+    .final-section h2 {
+      margin: 0 0 4px;
+    }
+    .final-section p {
+      margin: 0;
+      font-size: 10.5pt;
+      color: #444;
+    }
+    .footer {
+      text-align: center;
+      font-family: 'Outfit', sans-serif;
+      font-size: 8.5pt;
+      color: #aaa;
+      margin-top: 28px;
+      border-top: 1px solid #e0e0e0;
+      padding-top: 8px;
+    }
+    h2, h3 {
+      page-break-after: avoid;
+      break-after: avoid;
+    }
+    .checklist {
+      page-break-before: avoid;
+      break-before: avoid;
+    }
+    .final-section {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    .page-break {
+      page-break-before: always;
+      break-before: always;
+    }
+    @media print {
+      body { padding: 0; }
+      a { color: #ff6445; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <img src="../images/ibf-logo-blue.png" alt="Ignatius Book Fairs">
+  <h1>Virtual Book Fair Checklist</h1>
+  <p>Your step-by-step guide to a successful Catholic virtual book fair</p>
+</div>
+
+<h2><span class="step-label">STEP 1</span> <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#50db92" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> You Did It!</h2>
+<ul class="checklist">
+  <li class="checked">Choose Ignatius Book Fairs and set your virtual fair dates
+    <span class="note">You've already accomplished this step! Check out our <a href="https://www.ignatiusbookfairs.com/resources" target="_blank">Resources</a> throughout this guide.</span>
+  </li>
+</ul>
+
+<h2><span class="step-label">STEP 2</span> <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#ff6445" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Advertise Early &amp; Often</h2>
+<ul class="checklist">
+  <li>Advertising is the biggest predictor of success &mdash; you cannot over-advertise a virtual fair!</li>
+  <li>Use your social media and email lists to spread the word; our <a href="https://www.ignatiusbookfairs.com/resources" target="_blank">Advertising Resources</a> make it effortless</li>
+  <li>Create your <a href="https://ignatiusbookfairs.com/resources/creating-your-admin-account" target="_blank">Book Fair Coordinator account</a></li>
+  <li><a href="https://ignatiusbookfairs.com/resources/how-to-invite-a-teacher-to-a-classroom" target="_blank">Invite teachers</a> to claim classrooms, make reading recommendations, and set up wish lists
+    <span class="note">Confirm all teachers have logged in before parents start creating accounts</span>
+  </li>
+</ul>
+
+<h2><span class="step-label">STEP 3</span> <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#42ADE2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Share Links</h2>
+<ul class="checklist">
+  <li>Distribute the <a href="https://ignatius-book-fair.s3.us-east-2.amazonaws.com/ibf-digital-catalog-2-12-25.pdf" target="_blank">Digital Flyer</a> link to all parents and parishioners</li>
+  <li>Share the <a href="https://store.ignatiusbookfairs.com" target="_blank">Shopping Website</a> link widely</li>
+</ul>
+
+<h2 class="page-break"><span class="step-label">STEP 4</span> <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#ffd41d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Set a Sales Goal</h2>
+<ul class="checklist">
+  <li>Set a sales goal and communicate it to your community
+    <table class="rewards-table">
+      <tr><th>Sales</th><th>30% Ave Dollars</th></tr>
+      <tr><td>$1,000</td><td>$300</td></tr>
+      <tr><td>$2,000</td><td>$600</td></tr>
+      <tr><td>$3,000</td><td>$900</td></tr>
+    </table>
+  </li>
+</ul>
+
+<h2><span class="step-label">STEP 5</span> <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#50db92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Display Sample Books</h2>
+<ul class="checklist">
+  <li>If you ordered a sample box, set up books in the main foyer or a prominent location</li>
+  <li>Make the display inviting: use the colorful tablecloth, add balloons or twinkle lights</li>
+  <li>Add signage with fair dates and how the school benefits from orders</li>
+</ul>
+
+<h2><span class="step-label">STEP 6</span> <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#ff6445" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Fun Incentives</h2>
+<ul class="checklist">
+  <li>Plan a fun event or incentive to get students excited: art contest, guessing game, reading day, or similar
+    <span class="note">Prizes can be free books purchased with your Ave Dollars rewards</span>
+  </li>
+</ul>
+
+<h2><span class="step-label">STEP 7</span> <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#42ADE2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg> Receive &amp; Distribute Orders</h2>
+<ul class="checklist">
+  <li>Orders arrive labeled by customer name ~7&ndash;10 days after fair ends</li>
+  <li>Distribute books or notify customers for pickup</li>
+</ul>
+
+<h2><span class="step-label">STEP 8</span> <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#ffd41d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Spend Your Rewards</h2>
+<ul class="checklist">
+  <li>Log in to check your growing Ave Dollars balance (updates daily)</li>
+  <li>Start spending rewards immediately &mdash; available right away
+    <span class="note">Virtual fair rewards are in Ave Dollars only (not convertible to cash)</span>
+  </li>
+</ul>
+
+<h3 class="page-break"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#ff6445" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg> Advertising Schedule</h3>
+<ul class="checklist">
+  <li><span class="time-label">7 weeks before:</span> Invite teachers to claim classrooms and create wish lists
+    <span class="note">Videos: <a href="https://ignatiusbookfairs.com/resources/creating-your-admin-account" target="_blank">Create Coordinator Account</a> &bull; <a href="https://ignatiusbookfairs.com/resources/how-to-invite-a-teacher-to-a-classroom" target="_blank">Invite Teachers</a></span>
+  </li>
+  <li><span class="time-label">6 weeks before:</span> Post <a href="https://ignatius-book-fair.s3.us-east-2.amazonaws.com/DigitalPackage-SocialPost-03.jpg" target="_blank">Save the Date</a> on all social media, parish bulletin, and newsletter</li>
+  <li><span class="time-label">5 weeks before:</span> Share <a href="https://ignatiusbookfairs.com/resources/creating-a-parent-account" target="_blank">this video</a> on social media; include <a href="https://store.ignatiusbookfairs.com/?signup=true" target="_blank">sign-up link</a> for parents to create accounts</li>
+  <li><span class="time-label">4 weeks before:</span> Post another Save the Date reminder with <a href="https://ignatius-book-fair.s3.us-east-2.amazonaws.com/DigitalPackage-08.jpg" target="_blank">this graphic</a></li>
+  <li><span class="time-label">3 weeks before:</span> Highlight select titles your staff or children enjoy; explain how sales benefit the school</li>
+  <li><span class="time-label">2 weeks before:</span> Have principal or pastor send the <a href="https://ignatius-book-fair.s3.us-east-2.amazonaws.com/Virtual-Book-Fair-Principal-Letter-To-Parents.pdf" target="_blank">Letter to Parents</a></li>
+  <li><span class="time-label">1 week before:</span> Edit and send home the <a href="https://cdn.prod.website-files.com/650a4643218ed1f5974ed6ee/660f4b5d4323ff35a200e024_flyer-virtual.pdf" target="_blank">backpack flyer</a> (1 per family)
+    <span class="note">Can be inserted inside the catalog you receive</span>
+  </li>
+  <li><span class="time-label">Evening before:</span> Post <a href="https://ignatius-book-fair.s3.us-east-2.amazonaws.com/DigitalPackage-08.jpg" target="_blank">kickoff graphic</a> on social media
+    <span class="note">Videos: <a href="https://ignatiusbookfairs.com/resources/creating-a-parent-account" target="_blank">How to Create a Parent Account</a> &bull; <a href="https://ignatiusbookfairs.com/resources/how-your-orders-benefit-your-school" target="_blank">How Orders Benefit Your School</a></span>
+  </li>
+</ul>
+
+<h3><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#50db92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> During the Fair (Daily Posts)</h3>
+<ul class="checklist">
+  <li><span class="time-label">Day 1:</span> Kick off with the <a href="https://ignatius-book-fair.s3.us-east-2.amazonaws.com/Reading-Challenge-Campaign.pdf" target="_blank">Reading Challenge</a> announcement</li>
+  <li><span class="time-label">Day 2:</span> Post <a href="https://ignatius-book-fair.s3.us-east-2.amazonaws.com/DigitalPackage-08.jpg" target="_blank">this graphic</a>; remind community about free shipping to school during fair dates + <a href="https://store.ignatiusbookfairs.com" target="_blank">online ordering link</a></li>
+  <li><span class="time-label">Day 3:</span> Highlight reading recommendations by age/grade and teacher wish lists</li>
+  <li><span class="time-label">Day 4:</span> Share staff top picks for fun, interesting, and thought-provoking books</li>
+  <li><span class="time-label">Day 5:</span> Encourage "Stop, Drop and Read" &mdash; 20 min daily family reading habit</li>
+  <li><span class="time-label">Day 6:</span> Thank supporters; ask for book recommendations from parents</li>
+  <li><span class="time-label">Day 7:</span> Final day reminder &mdash; last chance to order; mention 30% earnings for school</li>
+</ul>
+
+<div class="final-section">
+  <h2><span class="step-label">FINAL</span> <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#ff6445" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Have a Wonderful Virtual Book Fair!</h2>
+  <p>Reach out to your Book Fair Manager if any issues arise &mdash; we're here to cheer you on and give you advice and support along the way!</p>
+</div>
+
+<div class="footer">
+  Ignatius Book Fairs &bull; A division of Ave Maria Press &bull; ignatiusbookfairs.com
+</div>
+
+</body>
+</html>

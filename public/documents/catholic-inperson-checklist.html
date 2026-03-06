@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>In-Person Book Fair Checklist – Ignatius Book Fairs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    @page {
+      size: letter;
+      margin: 0.75in 1.25in;
+    }
+    body {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 400;
+      font-size: 11pt;
+      color: #2a2a2a;
+      line-height: 1.5;
+      margin: 0;
+      padding: 0.75in 1.5in;
+    }
+    a {
+      color: #ff6445;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 3px solid #02176f;
+    }
+    .header img {
+      height: 39px;
+      margin-bottom: 8px;
+    }
+    .header h1 {
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 900;
+      font-size: 26pt;
+      color: #02176f;
+      margin: 6px 0 4px;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+    .header p {
+      font-family: 'Outfit', sans-serif;
+      font-size: 11pt;
+      color: #666;
+      margin: 0;
+    }
+    h2 {
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 600;
+      font-size: 15pt;
+      color: #02176f;
+      margin: 22px 0 8px;
+      padding-left: 0;
+    }
+    h3 {
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 600;
+      font-size: 12.5pt;
+      color: #02176f;
+      margin: 16px 0 6px;
+      padding-left: 2px;
+    }
+    .step-label {
+      display: inline-block;
+      font-family: 'Fredoka', sans-serif;
+      background: #ff6445;
+      color: white;
+      font-size: 9pt;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 6px;
+      margin-right: 6px;
+      vertical-align: middle;
+      letter-spacing: 0.5px;
+    }
+    .icon {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      vertical-align: middle;
+      margin-right: 4px;
+    }
+    .checklist {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 6px;
+    }
+    .checklist li {
+      position: relative;
+      padding: 4px 0 4px 32px;
+      page-break-inside: avoid;
+    }
+    .checklist li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 7px;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #42ADE2;
+      border-radius: 4px;
+      background: #f0f8ff;
+    }
+    .checklist li:hover::before {
+      background: #ddf0fc;
+    }
+    .checklist li.checked::before {
+      content: '\2713';
+      background: #42ADE2;
+      color: white;
+      font-size: 11pt;
+      font-weight: bold;
+      text-align: center;
+      line-height: 16px;
+      border-color: #42ADE2;
+    }
+    .checklist li .note {
+      display: block;
+      font-size: 9.5pt;
+      color: #666;
+      font-style: italic;
+      margin-top: 2px;
+    }
+    .time-label {
+      font-weight: 600;
+      color: #02176f;
+    }
+    .detail-list {
+      list-style: none;
+      padding: 0;
+      margin: 4px 0 2px 32px;
+      font-size: 10pt;
+    }
+    .detail-list li {
+      padding: 2px 0 2px 20px;
+      position: relative;
+    }
+    .detail-list li::before {
+      content: '\2022';
+      position: absolute;
+      left: 4px;
+      top: 2px;
+      color: #ff6445;
+      font-size: 12pt;
+    }
+    .table-layout {
+      margin: 8px 0 4px 32px;
+      font-size: 10pt;
+      color: #444;
+    }
+    .table-layout .row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 2px 0;
+    }
+    .table-layout .label {
+      min-width: 180px;
+      font-weight: 500;
+    }
+    .table-layout .count {
+      color: #02176f;
+      font-weight: 600;
+      min-width: 70px;
+    }
+    .table-layout .dots {
+      display: flex;
+      gap: 4px;
+    }
+    .table-layout .dots span {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    .final-section {
+      margin-top: 20px;
+      padding: 12px 16px;
+      background: #fff5f3;
+      border-left: 5px solid #ff6445;
+      border-radius: 0 8px 8px 0;
+    }
+    .final-section h2 {
+      margin: 0 0 4px;
+    }
+    .final-section p {
+      margin: 0;
+      font-size: 10.5pt;
+      color: #444;
+    }
+    .footer {
+      text-align: center;
+      font-family: 'Outfit', sans-serif;
+      font-size: 8.5pt;
+      color: #aaa;
+      margin-top: 28px;
+      border-top: 1px solid #e0e0e0;
+      padding-top: 8px;
+    }
+    h2, h3 {
+      page-break-after: avoid;
+      break-after: avoid;
+    }
+    .checklist {
+      page-break-before: avoid;
+      break-before: avoid;
+    }
+    .final-section {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    .page-break {
+      page-break-before: always;
+      break-before: always;
+    }
+    @media print {
+      body { padding: 0; }
+      a { color: #ff6445; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <img src="../images/ibf-logo-blue.png" alt="Ignatius Book Fairs">
+  <h1>In-Person Book Fair Checklist</h1>
+  <p>Your step-by-step guide to a successful Catholic in-person book fair</p>
+</div>
+
+<h2><span class="step-label">STEP 1</span> <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#50db92" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> You Did It!</h2>
+<ul class="checklist">
+  <li class="checked">Choose Ignatius Book Fairs and set your fair dates
+    <span class="note">You've already accomplished this step! Check out our <a href="https://www.ignatiusbookfairs.com/resources" target="_blank">Resources</a> throughout this guide.</span>
+  </li>
+</ul>
+
+<h2><span class="step-label">STEP 2</span> <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#42ADE2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V22c0 0 2.5-2 4-4.5 1.5.5 3.2.5 4.5-.5 1.5-1.2 1.5-3.3 0-4.5-.8-.7-2-.9-3-.5C17.5 8.5 15 2 12 2z"/><circle cx="7.5" cy="10" r="1.2" fill="#ff6445" stroke="none"/><circle cx="11" cy="7" r="1.2" fill="#ffd41d" stroke="none"/><circle cx="15" cy="9.5" r="1.2" fill="#50db92" stroke="none"/><circle cx="9" cy="14" r="1.2" fill="#42ADE2" stroke="none"/></svg> Design Your Book Fair Experience</h2>
+<ul class="checklist">
+  <li>Give your community advance notice of the book fair schedule so they can plan their visit</li>
+  <li>Share the <a href="https://ignatius-book-fair.s3.us-east-2.amazonaws.com/03-02_IBF_OnePageCatalog_V1.pdf" target="_blank">Backpack Flyer</a> the week before your fair opens</li>
+  <li>Keep your fair open one or more evenings and/or over the weekend
+    <span class="note">Consider hosting an evening event with snacks, beverages, and socializing</span>
+  </li>
+  <li>Consider being open around the Mass schedule to reach more families</li>
+  <li>Extend advertising to homeschoolers, co-ops, and families at neighboring parishes</li>
+</ul>
+
+<h2><span class="step-label">STEP 3</span> <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#ff6445" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Recruit Volunteers</h2>
+<ul class="checklist">
+  <li>Create an online sign-up using a free service like <a href="https://www.signupgenius.com" target="_blank">SignUpGenius</a></li>
+  <li>Recruit volunteers to help with: unboxing and setup, scanning in boxes, decorating the space, working the floor suggesting books, running the check-out station, organizing refreshments, running a craft table for kids, promoting on social media, and packing up</li>
+</ul>
+
+<h2 class="page-break"><span class="step-label">STEP 4</span> <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#ffd41d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg> Set Up Your Space</h2>
+<ul class="checklist">
+  <li>Arrange tables away from walls in a space of at least 800 sq ft</li>
+  <li>Plan for 12&ndash;16 six-foot tables (or equivalent):
+    <div class="table-layout">
+      <div class="row"><span class="label">Early Readers</span><span class="count">1 table</span><span class="dots"><span style="background:#42ADE2"></span></span></div>
+      <div class="row"><span class="label">Picture Books</span><span class="count">2&ndash;3 tables</span><span class="dots"><span style="background:#ff6445"></span><span style="background:#50db92"></span><span style="background:#ffd41d"></span></span></div>
+      <div class="row"><span class="label">Elementary Books</span><span class="count">3 tables</span><span class="dots"><span style="background:#50db92"></span><span style="background:#42ADE2"></span><span style="background:#ff6445"></span></span></div>
+      <div class="row"><span class="label">Middle School Books</span><span class="count">1&ndash;3 tables</span><span class="dots"><span style="background:#ffd41d"></span><span style="background:#ff6445"></span><span style="background:#42ADE2"></span></span></div>
+      <div class="row"><span class="label">Seasonal / Comic Books</span><span class="count">1&ndash;2 tables</span><span class="dots"><span style="background:#ff6445"></span><span style="background:#50db92"></span></span></div>
+      <div class="row"><span class="label">Crafts &amp; Activities / Toys</span><span class="count">1&ndash;2 tables</span><span class="dots"><span style="background:#42ADE2"></span><span style="background:#ffd41d"></span></span></div>
+      <div class="row"><span class="label">Older Readers &amp; Adults</span><span class="count">1 table</span><span class="dots"><span style="background:#50db92"></span></span></div>
+      <div class="row"><span class="label">Check-out Station</span><span class="count">1&ndash;2 tables</span><span class="dots"><span style="background:#ffd41d"></span><span style="background:#ff6445"></span></span></div>
+    </div>
+  </li>
+  <li>Plan additional tables for snacks/beverages or a <a href="https://www.ignatiusbookfairs.com/bookfair-resources?resource=coloring-sheet-1" target="_blank">coloring page</a> station for younger kids</li>
+  <li>Have on hand: bags for purchases, a cashbox for cash sales, a Sharpie, packing tape</li>
+</ul>
+
+<h2><span class="step-label">STEP 5</span> <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#42ADE2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Calendars &amp; Scheduling</h2>
+<ul class="checklist">
+  <li>Add fair details (times, dates, location) to the school and parish calendars</li>
+  <li>Use our <a href="https://www.ignatiusbookfairs.com/bookfair-resources?filter=advertising" target="_blank">Advertising Resources</a> for help with graphics</li>
+</ul>
+
+<h2><span class="step-label">STEP 6</span> <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#ff6445" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Advertise Early &amp; Often</h2>
+<ul class="checklist">
+  <li>Post a Save-the-Date announcement 4&ndash;6 weeks before the fair</li>
+  <li>Advertise weekly leading up to opening day using our <a href="https://www.ignatiusbookfairs.com/bookfair-resources?filter=advertising" target="_blank">Advertising Resources</a></li>
+  <li>During the fair, post photos of what's available</li>
+  <li>Before the last day, remind your community of their last chance to shop</li>
+  <li>Places to advertise: parish bulletin, calendar, and email list; announcement from the pulpit; invitation to local parishes in the diocese; school newsletter and paper; school &amp; parish websites, Facebook, Instagram, X; library flyers; announcements to homeschoolers and co-ops</li>
+</ul>
+
+<h2><span class="step-label">STEP 7</span> <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#50db92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg> Join Our Live Workshop</h2>
+<ul class="checklist">
+  <li>Watch for email invitations to our 3-part live workshop series
+    <span class="note">Part 1: ~90 days out &bull; Part 2: ~60 days out &bull; Part 3: month of your fair</span>
+  </li>
+  <li>RSVP yes to receive recordings even if you can't attend live</li>
+  <li>Invite your volunteer team to join</li>
+</ul>
+
+<h2><span class="step-label">STEP 8</span> <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#ffd41d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> Receive Your Book Fair Supplies</h2>
+<ul class="checklist">
+  <li>One week before your fair, we deliver: all books and items for sale, 2 payment devices, table category signs in acrylic frames, 50 book stands, colorful tablecloths (mint, yellow, orange), and 5 decorative posters. Add your own flair with seasonal themes, student art, balloons, or twinkle lights!</li>
+</ul>
+
+<h2><span class="step-label">STEP 9</span> <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#42ADE2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg> Delivery &amp; Set-Up</h2>
+<ul class="checklist">
+  <li>Confirm receipt of 20&ndash;38 boxes delivered one week before your fair</li>
+  <li>Find the box marked <strong>Open First</strong> &mdash; plug in payment devices to charge</li>
+  <li>Find the marketing box and set up tablecloths, category signs, and book stands</li>
+  <li>Log in to the payment device with your unique code and scan in the boxes
+    <span class="note">For POS device instructions, click <a href="https://ignatiusbookfairs.com/resources/pos-device-instructions" target="_blank">here</a></span>
+  </li>
+  <li>Sort boxes by category, place in front of corresponding tables, and unbox</li>
+  <li>Arrange books for maximum viewing &mdash; bring tables away from walls</li>
+</ul>
+
+<h3 class="page-break"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#ff6445" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg> Advertising Schedule</h3>
+<ul class="checklist">
+  <li><span class="time-label">6 weeks before:</span> Post <a href="https://www.ignatiusbookfairs.com/resources/you-caption-it---social-media-post" target="_blank">Save the Date</a> on all social media, parish bulletin, and newsletter</li>
+  <li><span class="time-label">5 weeks before:</span> Share <a href="https://ignatiusbookfairs.com/resources/creating-a-parent-account" target="_blank">this video</a> on social media; include <a href="https://store.ignatiusbookfairs.com/?signup=true" target="_blank">sign-up link</a> for parents to create accounts</li>
+  <li><span class="time-label">4 weeks before:</span> Post another Save the Date reminder with <a href="https://ignatius-book-fair.s3.us-east-2.amazonaws.com/DigitalPackage-08.jpg" target="_blank">this graphic</a></li>
+  <li><span class="time-label">3 weeks before:</span> Highlight select titles your staff and teachers enjoy; explain how sales benefit the school</li>
+  <li><span class="time-label">2 weeks before:</span> Have principal send an invitation to the community with fair schedule</li>
+  <li><span class="time-label">1 week before:</span> Set out <a href="https://ignatiusbookfairs.com/resources/bookfair-sneak-peek" target="_blank">Sneak Peek flyers</a> in common areas and school newsletter</li>
+  <li><span class="time-label">Evening before:</span> Post <a href="https://ignatius-book-fair.s3.us-east-2.amazonaws.com/DigitalPackage-SocialPost-01_v2.pdf" target="_blank">kickoff graphic</a> on social media</li>
+</ul>
+
+<h3><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#50db92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> During the Fair (Daily Posts)</h3>
+<ul class="checklist">
+  <li><span class="time-label">Day 1:</span> Kick off with the <a href="https://ignatius-book-fair.s3.us-east-2.amazonaws.com/Reading-Challenge-Campaign.pdf" target="_blank">Reading Challenge</a></li>
+  <li><span class="time-label">Day 2:</span> Post <a href="https://ignatiusbookfairs.com/resources/you-caption-it-social-media-or-print-ad-1" target="_blank">this graphic</a>; remind community about in-person times/location + <a href="https://store.ignatiusbookfairs.com/?signup=true" target="_blank">online ordering</a></li>
+  <li><span class="time-label">Day 3:</span> Share reading recommendations by age and grade level</li>
+  <li><span class="time-label">Day 4:</span> Share the top 5 most popular titles so far</li>
+  <li><span class="time-label">Day 5:</span> Encourage "Stop, Drop and Read" &mdash; 20 min daily family reading habit</li>
+  <li><span class="time-label">Day 6:</span> Thank everyone; ask parents to share their favorite picks</li>
+  <li><span class="time-label">Day 7:</span> Last day &mdash; final reminder that purchases earn 30% back for the school</li>
+</ul>
+
+<div class="final-section">
+  <h2><span class="step-label">FINAL</span> <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#ff6445" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Have a Wonderful Book Fair!</h2>
+  <p>Reach out to your Book Fair Manager if any issues arise &mdash; we're here to cheer you on and give you advice and support along the way!</p>
+</div>
+
+<div class="footer">
+  Ignatius Book Fairs &bull; A division of Ave Maria Press &bull; ignatiusbookfairs.com
+</div>
+
+</body>
+</html>

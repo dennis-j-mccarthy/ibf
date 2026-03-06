@@ -5,22 +5,22 @@ import { trackFunnelEvent, getRepName } from '@/lib/analytics';
 
 interface HubSpotData {
   found: boolean;
-  contact?: {
-    firstname?: string;
-    lastname?: string;
-    company?: string;
-  };
+  contactName?: string;
   company?: {
     name?: string;
     city?: string;
     state?: string;
+    book_fair_dates?: string;
+    book_fair_status?: string;
+  };
+  upcomingDeal?: {
+    dealname?: string;
+    book_fair_start_date?: string;
+    dealtype?: string;
   };
   lastDeal?: {
     dealname?: string;
-    closedate?: string;
-    dealstage?: string;
-    amount?: string;
-    fair_date?: string;
+    book_fair_start_date?: string;
   };
   owner?: {
     firstName?: string;
@@ -28,6 +28,10 @@ interface HubSpotData {
     email?: string;
   };
   bookingUrl?: string;
+  debug?: {
+    allCompanyProperties: Record<string, string>;
+    allDeals: { id: string; properties: Record<string, string> }[];
+  };
 }
 
 // US States for dropdown
@@ -112,7 +116,7 @@ const APPOINTMENT_URLS: Record<string, string> = {
   'julie': 'https://meetings.hubspot.com/julie-degregoria?uuid=f012da76-1f7b-4474-be12-2d6ba4a4524d', // Northeast
   'jeanette': 'https://meetings.hubspot.com/jeanette-pohl1/ignatius-book-fair', // Northwest
   'alma': 'https://meetings.hubspot.com/alma-cue', // Southeast & Southwest
-  'marni': '', // TODO: Add Marni's booking URL - handles all Public schools
+  'marni': 'https://meetings.hubspot.com/marni-spewock', // Public, Private, Home school other, Other
   'kim': 'https://meetings.hubspot.com/kneumaier/ignatius-book-fair', // All Diocese
 };
 
@@ -122,9 +126,9 @@ function getAppointmentRedirect(orgType: string, schoolType: string, state: stri
   const schoolLower = schoolType.toLowerCase();
   const stateAbbrev = STATE_ABBREVS[state] || state.toUpperCase();
 
-  // Special case: All Public and Charter schools -> Marni
-  if (schoolLower === 'public' || schoolLower === 'charter') {
-    return APPOINTMENT_URLS['marni'] || null; // Return null if URL not set yet
+  // Public, Private, Home school other, Other -> Marni
+  if (['public', 'private', 'home school other', 'other'].includes(schoolLower)) {
+    return APPOINTMENT_URLS['marni'];
   }
 
   // Special case: All Diocese -> Kim
@@ -132,13 +136,11 @@ function getAppointmentRedirect(orgType: string, schoolType: string, state: stri
     return APPOINTMENT_URLS['kim'] || null; // Return null if URL not set yet
   }
 
-  // For Catholic organizations (Catholic, Home school Catholic, Parish) -> Geographic split
-  // Also handle Business, Private, Christian, and other school types
-  const isCatholic = ['catholic', 'home school catholic'].includes(schoolLower) || orgLower === 'parish';
+  // Catholic, Christian, Home school Catholic, Parish, Business -> Geographic split
   const needsGeographicRouting =
-    isCatholic ||
-    orgLower === 'business' ||
-    ['private', 'christian', 'home school other', 'other'].includes(schoolLower);
+    ['catholic', 'christian', 'home school catholic'].includes(schoolLower) ||
+    orgLower === 'parish' ||
+    orgLower === 'business';
 
   if (needsGeographicRouting) {
     // Northeast -> Julie
@@ -200,7 +202,7 @@ const SignUpForm = () => {
     smsConsent: false,
 
     // School-specific fields (conditional)
-    schoolType: '', // Catholic, Charter, Christian, Private, Home school Catholic, Home school other, Public, Other
+    schoolType: '', // Catholic, Christian, Private, Home school Catholic, Home school other, Public, Other
     principalFirstName: '',
     principalLastName: '',
     principalEmail: '',
@@ -387,13 +389,13 @@ const SignUpForm = () => {
     if (formData.previouslyHadFair !== true) return;
 
     const timer = setTimeout(() => {
-      if (formData.rebookEmail || formData.rebookWebsite) {
-        lookupHubSpot(formData.rebookEmail, formData.rebookWebsite);
+      if (formData.rebookWebsite) {
+        lookupHubSpot('', formData.rebookWebsite);
       }
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [formData.rebookEmail, formData.rebookWebsite, formData.previouslyHadFair, lookupHubSpot]);
+  }, [formData.rebookWebsite, formData.previouslyHadFair, lookupHubSpot]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, type } = e.target;
@@ -786,22 +788,8 @@ const SignUpForm = () => {
                 <div className="min-h-0 overflow-hidden">
                 <div className="space-y-4">
                   <p className="text-gray-600 text-sm text-center" style={{ fontFamily: 'brother-1816, sans-serif' }}>
-                    Enter your email or school website to find your account:
+                    Enter your school or organization domain name to find your account:
                   </p>
-                  <input
-                    type="email"
-                    name="rebookEmail"
-                    placeholder="Email Address"
-                    value={formData.rebookEmail}
-                    onChange={handleChange}
-                    className="w-full h-11 px-4 rounded-lg border-0 bg-[#0088ff] text-white placeholder-white tracking-wide"
-                    style={{ fontFamily: 'brother-1816, sans-serif' }}
-                  />
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 h-px bg-gray-300"></div>
-                    <span className="text-gray-400 text-sm" style={{ fontFamily: 'brother-1816, sans-serif' }}>or</span>
-                    <div className="flex-1 h-px bg-gray-300"></div>
-                  </div>
                   <input
                     type="text"
                     name="rebookWebsite"
@@ -814,32 +802,89 @@ const SignUpForm = () => {
 
                   {/* Welcome message when HubSpot finds the customer */}
                   {hubspotData?.found && (
-                    <div className="bg-[#42ADE2] rounded-lg p-4 text-center text-white">
+                    <div className="bg-[#ff6445] rounded-lg p-4 text-center text-white">
                       <p className="font-bold" style={{ fontFamily: 'brother-1816, sans-serif', fontSize: '1.43rem' }}>
-                        Welcome back{hubspotData.contact?.firstname ? `, ${hubspotData.contact.firstname}` : ''}!
+                        Welcome back{hubspotData.contactName ? `, ${hubspotData.contactName}` : ''}!
                       </p>
                       {hubspotData.company?.name && (
-                        <p style={{ fontFamily: 'brother-1816, sans-serif', fontSize: '1.3rem' }}>
+                        <p className="leading-tight" style={{ fontFamily: 'brother-1816, sans-serif', fontSize: '1.3rem' }}>
                           {hubspotData.company.name}
-                        </p>
-                      )}
-                      {hubspotData.company?.city && hubspotData.company?.state && (
-                        <p className="opacity-90" style={{ fontFamily: 'brother-1816, sans-serif', fontSize: '1.14rem' }}>
-                          {hubspotData.company.city}, {hubspotData.company.state}
-                        </p>
-                      )}
-                      {hubspotData.lastDeal?.dealname && (
-                        <p className="mt-2 opacity-90" style={{ fontFamily: 'brother-1816, sans-serif', fontSize: '1.14rem' }}>
-                          Last fair: {hubspotData.lastDeal.dealname}
-                          {(hubspotData.lastDeal.fair_date || hubspotData.lastDeal.closedate) && (
-                            <> ({new Date(hubspotData.lastDeal.fair_date || hubspotData.lastDeal.closedate!).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })})</>
+                          {hubspotData.company?.city && hubspotData.company?.state && (
+                            <span className="opacity-90" style={{ fontSize: '0.9rem' }}>
+                              {' '}&mdash; {hubspotData.company.city}, {hubspotData.company.state}
+                            </span>
                           )}
+                        </p>
+                      )}
+                      {hubspotData.company?.book_fair_dates && (
+                        <p className="mt-2 font-bold" style={{ fontFamily: 'brother-1816, sans-serif', fontSize: '1.14rem' }}>
+                          Upcoming fair! {hubspotData.company.book_fair_dates}
+                        </p>
+                      )}
+                      {hubspotData.lastDeal?.book_fair_start_date && (
+                        <p className="mt-1 opacity-90" style={{ fontFamily: 'brother-1816, sans-serif', fontSize: '1.14rem' }}>
+                          Last fair: {new Date(hubspotData.lastDeal.book_fair_start_date + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                         </p>
                       )}
                       {hubspotData.owner && (
                         <p className="mt-2" style={{ fontFamily: 'brother-1816, sans-serif', fontSize: '1.14rem' }}>
-                          Your rep: {hubspotData.owner.firstName} {hubspotData.owner.lastName}
+                          Your rep:{' '}
+                          {hubspotData.owner.email ? (
+                            <a
+                              href={`mailto:${hubspotData.owner.email}`}
+                              className="text-white underline underline-offset-2 decoration-white/60 hover:decoration-white transition-colors"
+                              style={{ cursor: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'white\' stroke=\'%23333\' stroke-width=\'1\'%3E%3Crect x=\'2\' y=\'4\' width=\'20\' height=\'16\' rx=\'2\'/%3E%3Cpath d=\'M22 4L12 13 2 4\'/%3E%3C/svg%3E") 12 12, pointer' }}
+                            >
+                              {hubspotData.owner.firstName} {hubspotData.owner.lastName}
+                            </a>
+                          ) : (
+                            <>{hubspotData.owner.firstName} {hubspotData.owner.lastName}</>
+                          )}
+                          {hubspotData.owner.email && (
+                            <span className="ml-1 opacity-80">&#9993;</span>
+                          )}
                         </p>
+                      )}
+                      {hubspotData.company?.book_fair_dates && (() => {
+                        // Parse start date from text like "March 1-8, 2026"
+                        const dateText = hubspotData.company.book_fair_dates!;
+                        const monthDayMatch = dateText.match(/^(\w+)\s+(\d+)/);
+                        const yearMatch = dateText.match(/(\d{4})/);
+                        // Map HubSpot dealtype to planner fair type
+                        const dealTypeMap: Record<string, string> = {
+                          'school book fair': 'catholic-in-person',
+                          'parish book fair': 'parish-in-person',
+                          'public book fair': 'public-in-person',
+                          'virtual book fair': 'catholic-virtual',
+                        };
+                        const fairType = dealTypeMap[(hubspotData.upcomingDeal?.dealtype || '').toLowerCase()] || 'catholic-in-person';
+                        if (monthDayMatch && yearMatch) {
+                          const parsed = new Date(`${monthDayMatch[1]} ${monthDayMatch[2]}, ${yearMatch[1]}`);
+                          if (!isNaN(parsed.getTime())) {
+                            const dateParam = parsed.toISOString().split('T')[0];
+                            return (
+                              <a
+                                href={`/bookfair-resources?type=${fairType}&date=${dateParam}#planning-calendar`}
+                                className="inline-block mt-3 bg-white text-[#ff6445] font-bold py-2 px-6 rounded-full hover:bg-gray-100 transition-colors"
+                                style={{ fontFamily: 'brother-1816, sans-serif', fontSize: '0.95rem' }}
+                              >
+                                View My Planning Calendar
+                              </a>
+                            );
+                          }
+                        }
+                        return null;
+                      })()}
+                      {hubspotData.bookingUrl && (
+                        <div className="mt-4 overflow-hidden">
+                          <iframe
+                            src={`${hubspotData.bookingUrl}?embed=true`}
+                            width="100%"
+                            height="600"
+                            className="border-0"
+                            title="Book a meeting"
+                          />
+                        </div>
                       )}
                     </div>
                   )}
@@ -850,19 +895,7 @@ const SignUpForm = () => {
                     </div>
                   )}
 
-                  {hubspotData?.bookingUrl && (
-                    <div className="mt-4 bg-white rounded-lg overflow-hidden">
-                      <iframe
-                        src={`${hubspotData.bookingUrl}?embed=true`}
-                        width="100%"
-                        height="600"
-                        className="rounded-lg border-0"
-                        title="Book a meeting"
-                      />
-                    </div>
-                  )}
-
-                  {!hubspotData?.bookingUrl && (formData.rebookEmail || formData.rebookWebsite) && !isLookingUp && !hubspotData?.found && (
+                  {!hubspotData?.bookingUrl && formData.rebookWebsite && !isLookingUp && !hubspotData?.found && (
                     <div className="text-center pt-2">
                       <button
                         type="submit"
@@ -975,7 +1008,7 @@ const SignUpForm = () => {
                       <option value="Social media">Social media</option>
                       <option value="Event">Event</option>
                       <option value="Email">Email</option>
-                      <option value="Contacted by a rep">Contacted by a rep</option>
+                      <option value="Contacted by a Representative">Contacted by a Representative</option>
                       <option value="Other">Other</option>
                     </select>
                   </div>
@@ -1254,7 +1287,6 @@ const SignUpForm = () => {
                     >
                       <option value="">School Type *</option>
                       <option value="Catholic">Catholic</option>
-                      <option value="Charter">Charter</option>
                       <option value="Christian">Christian</option>
                       <option value="Private">Private</option>
                       <option value="Home school Catholic">Home school Catholic</option>
