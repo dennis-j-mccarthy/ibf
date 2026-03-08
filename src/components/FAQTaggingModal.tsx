@@ -48,7 +48,7 @@ export default function FAQTaggingModal({ faq, onClose, onUpdate }: FAQTaggingMo
     try {
       const response = await fetch(`/api/faqs/${faq.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-admin-key': 'ibf-admin-2024' },
         body: JSON.stringify({ version: newVersion }),
       });
 

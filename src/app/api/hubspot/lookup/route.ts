@@ -147,26 +147,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ found: false });
     }
 
-    // Fetch ALL company properties by ID (including custom fields)
-    let allCompanyProperties: Record<string, string> = {};
-    const companyPropsResponse = await fetch(
-      'https://api.hubapi.com/crm/v3/properties/companies',
-      { headers: { 'Authorization': `Bearer ${HUBSPOT_ACCESS_TOKEN}` } }
-    );
-    let companyPropNames: string[] = [];
-    if (companyPropsResponse.ok) {
-      const companyPropsResult = await companyPropsResponse.json();
-      companyPropNames = companyPropsResult.results.map((p: { name: string }) => p.name);
-    }
-    const companyFullResponse = await fetch(
-      `https://api.hubapi.com/crm/v3/objects/companies/${companyId}?properties=${companyPropNames.join(',')}`,
-      { headers: { 'Authorization': `Bearer ${HUBSPOT_ACCESS_TOKEN}` } }
-    );
-    if (companyFullResponse.ok) {
-      const companyFull = await companyFullResponse.json();
-      allCompanyProperties = companyFull.properties || {};
-    }
-
     // Get owner info
     let ownerData = null;
     let bookingUrl = null;
@@ -183,8 +163,6 @@ export async function POST(request: NextRequest) {
     let lastDeal = null;
     let upcomingDeal = null;
     let contactName: string | null = null;
-    let allDealProperties: { id: string; properties: Record<string, string> }[] = [];
-
     const dealsResponse = await fetch(
       `https://api.hubapi.com/crm/v3/objects/companies/${companyId}/associations/deals`,
       { headers: { 'Authorization': `Bearer ${HUBSPOT_ACCESS_TOKEN}` } }
@@ -197,25 +175,10 @@ export async function POST(request: NextRequest) {
       if (dealsResult.results?.length > 0) {
         const dealIds = dealsResult.results.map((r: { id: string }) => r.id);
 
-        // Get all deal property names so we can fetch everything including custom fields
-        const propsResponse = await fetch(
-          'https://api.hubapi.com/crm/v3/properties/deals',
-          { headers: { 'Authorization': `Bearer ${HUBSPOT_ACCESS_TOKEN}` } }
-        );
-        let allPropNames = ['dealname', 'closedate', 'dealstage', 'amount', 'book_fair_start_date'];
-        if (propsResponse.ok) {
-          const propsResult = await propsResponse.json();
-          allPropNames = propsResult.results.map((p: { name: string }) => p.name);
-          // Log custom properties (ones containing "fair" or "book")
-          const fairProps = propsResult.results
-            .filter((p: { name: string; label: string }) =>
-              p.name.toLowerCase().includes('fair') || p.name.toLowerCase().includes('book') ||
-              p.label.toLowerCase().includes('fair') || p.label.toLowerCase().includes('book'))
-            .map((p: { name: string; label: string }) => `${p.name} (${p.label})`);
-          console.log('Deal properties related to fair/book:', fairProps);
-        }
+        // Only fetch the deal properties we actually need
+        const neededDealProps = ['dealname', 'dealtype', 'dealstage', 'book_fair_start_date', 'book_fair_end_date'];
 
-        // Fetch deal details with ALL properties
+        // Fetch deal details
         const dealDetailsResponse = await fetch(
           'https://api.hubapi.com/crm/v3/objects/deals/batch/read',
           {
@@ -225,7 +188,7 @@ export async function POST(request: NextRequest) {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              properties: allPropNames,
+              properties: neededDealProps,
               inputs: dealIds.map((id: string) => ({ id })),
             }),
           }
@@ -239,10 +202,6 @@ export async function POST(request: NextRequest) {
           today.setHours(0, 0, 0, 0);
 
           const allDeals = dealDetailsResult.results;
-          allDealProperties = allDeals.map((d: { id: string; properties: Record<string, string> }) => ({
-            id: d.id,
-            properties: d.properties,
-          }));
 
           // Log all deals for debugging
           allDeals.forEach((d: { id: string; properties: Record<string, string> }) => {
@@ -271,7 +230,8 @@ export async function POST(request: NextRequest) {
               parseDate(b.properties.book_fair_start_date!).getTime() - parseDate(a.properties.book_fair_start_date!).getTime());
 
           if (upcoming.length > 0) {
-            upcomingDeal = upcoming[0].properties;
+            const up = upcoming[0].properties;
+            upcomingDeal = { dealname: up.dealname, dealtype: up.dealtype, book_fair_start_date: up.book_fair_start_date, book_fair_end_date: up.book_fair_end_date };
             const contact = await getDealContact(upcoming[0].id);
             if (contact?.firstname) {
               contactName = contact.firstname;
@@ -279,7 +239,8 @@ export async function POST(request: NextRequest) {
           }
 
           if (past.length > 0) {
-            lastDeal = past[0].properties;
+            const pd = past[0].properties;
+            lastDeal = { dealname: pd.dealname, dealtype: pd.dealtype, book_fair_start_date: pd.book_fair_start_date, book_fair_end_date: pd.book_fair_end_date };
             if (!contactName) {
               const contact = await getDealContact(past[0].id);
               if (contact?.firstname) {
@@ -302,10 +263,6 @@ export async function POST(request: NextRequest) {
       lastDeal,
       owner: ownerData,
       bookingUrl,
-      debug: {
-        allCompanyProperties,
-        allDeals: allDealProperties,
-      },
     });
 
   } catch (error) {

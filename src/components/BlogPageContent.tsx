@@ -70,7 +70,7 @@ export default function BlogPageContent({ blogs: initialBlogs }: BlogPageContent
     try {
       await fetch(`/api/blogs/${blogId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-admin-key': 'ibf-admin-2024' },
         body: JSON.stringify({ category: newCategory }),
       });
     } catch (error) {
