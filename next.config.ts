@@ -46,6 +46,12 @@ const nextConfig: NextConfig = {
         destination: '/bookfair-resources',
         permanent: true,
       },
+      // Old /operational-resources route from Webflow site
+      {
+        source: '/operational-resources',
+        destination: '/bookfair-resources',
+        permanent: true,
+      },
     ];
   },
 };
