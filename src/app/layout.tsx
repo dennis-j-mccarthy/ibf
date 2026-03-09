@@ -32,7 +32,7 @@ export default function RootLayout({
       <body className="antialiased">
         <VersionProvider>
           <KeyboardShortcuts />
-          <ModeIndicator />
+          {/* <ModeIndicator /> */}
           <Header />
           <main>{children}</main>
           <Footer />
