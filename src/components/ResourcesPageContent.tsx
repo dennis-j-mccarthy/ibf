@@ -398,7 +398,7 @@ function ResourceCard({ resource, onVideoClick, onDetailsClick }: { resource: Re
 
   return (
     <div
-      className={`relative bg-white rounded-xl p-4 pb-10 flex flex-col items-center text-center shadow-sm ${isVideo ? '' : 'border border-[#dddddd]'} ${isVideo ? 'cursor-pointer' : hasDetails ? 'cursor-zoom-in' : resource.fileUrl ? 'cursor-pointer' : ''} group`}
+      className={`relative bg-white rounded-xl p-4 pb-10 flex flex-col items-center text-center shadow-sm ${isVideo ? '' : 'border border-[#dddddd]'} group`}
       onClick={handleCardClick}
     >
       {/* Download icon - top right */}
