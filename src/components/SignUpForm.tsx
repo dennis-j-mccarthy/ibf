@@ -131,16 +131,15 @@ function getAppointmentRedirect(orgType: string, schoolType: string, state: stri
     return APPOINTMENT_URLS['marni'];
   }
 
-  // Special case: All Diocese -> Kim
-  if (orgLower === 'diocese') {
-    return APPOINTMENT_URLS['kim'] || null; // Return null if URL not set yet
+  // Diocese, Business, Other org types -> Kim
+  if (orgLower === 'diocese' || orgLower === 'business' || orgLower === 'other') {
+    return APPOINTMENT_URLS['kim'] || null;
   }
 
-  // Catholic, Christian, Home school Catholic, Parish, Business -> Geographic split
+  // Catholic, Christian, Home school Catholic, Parish -> Geographic split
   const needsGeographicRouting =
     ['catholic', 'christian', 'home school catholic'].includes(schoolLower) ||
-    orgLower === 'parish' ||
-    orgLower === 'business';
+    orgLower === 'parish';
 
   if (needsGeographicRouting) {
     // Northeast -> Julie
