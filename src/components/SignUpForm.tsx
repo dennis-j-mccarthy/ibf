@@ -98,13 +98,13 @@ const STATE_ABBREVS: Record<string, string> = {
 
 // Rep assignment regions based on territory map
 // Northeast - Julie
-const NORTHEAST_STATES = ['ME', 'NH', 'VT', 'MA', 'CT', 'RI', 'NY', 'PA', 'NJ', 'DE', 'MD', 'DC'];
+const NORTHEAST_STATES = ['ME', 'NH', 'VT', 'MA', 'CT', 'RI', 'NY', 'PA', 'NJ', 'DE', 'MD', 'DC', 'VA', 'OH'];
 // Northwest - Jeanette
-const NORTHWEST_STATES = ['WA', 'OR', 'ID', 'MT', 'WY', 'ND', 'SD', 'MN', 'WI', 'MI', 'IA', 'NE', 'IL', 'IN', 'OH'];
+const NORTHWEST_STATES = ['WA', 'OR', 'ID', 'MT', 'ND', 'SD', 'MN', 'WI', 'MI', 'IA', 'IL', 'IN'];
 // Southeast - Alma
-const SOUTHEAST_STATES = ['VA', 'WV', 'KY', 'TN', 'NC', 'SC', 'GA', 'FL', 'AL', 'MS', 'AR', 'LA'];
+const SOUTHEAST_STATES = ['WV', 'KY', 'TN', 'NC', 'SC', 'GA', 'FL', 'AL', 'MS', 'AR', 'LA'];
 // Southwest - Alma
-const SOUTHWEST_STATES = ['CA', 'NV', 'UT', 'AZ', 'CO', 'NM', 'TX', 'OK', 'KS', 'MO'];
+const SOUTHWEST_STATES = ['CA', 'NV', 'UT', 'AZ', 'CO', 'NM', 'TX', 'OK', 'KS', 'MO', 'WY', 'NE'];
 // Alma covers both Southeast and Southwest
 const ALMA_STATES = [...SOUTHEAST_STATES, ...SOUTHWEST_STATES];
 
@@ -1210,7 +1210,7 @@ const SignUpForm = () => {
                   value={formData.state}
                   onChange={handleChange}
                   required
-                  className="w-full h-11 px-2 rounded-lg border-0 bg-[#0088ff] text-white tracking-wide"
+                  className="w-24 h-11 px-2 rounded-lg border-0 bg-[#0088ff] text-white tracking-wide"
                   style={{ fontFamily: 'brother-1816, sans-serif' }}
                 >
                   <option value="">State *</option>
