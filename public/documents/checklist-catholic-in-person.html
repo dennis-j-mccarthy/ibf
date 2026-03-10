@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Planning Checklist – Ignatius Book Fairs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    @page {
+      size: letter;
+      margin: 0.6in 0.7in;
+    }
+    body {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 400;
+      font-size: 10.5pt;
+      color: #2a2a2a;
+      line-height: 1.45;
+      margin: 0;
+      padding: 0.5in 1in;
+    }
+    a {
+      color: #ff6445;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 3px solid #02176f;
+      position: relative;
+    }
+    .header img {
+      height: 39px;
+      margin-bottom: 6px;
+    }
+    .version-pill {
+      position: absolute;
+      top: 0;
+      right: 0;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 8pt;
+      font-weight: 600;
+      color: white;
+      background: #02176f;
+      padding: 3px 12px;
+      border-radius: 12px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .header h1 {
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 900;
+      font-size: 26pt;
+      color: #02176f;
+      margin: 4px 0 2px;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+    .header p {
+      font-family: 'Outfit', sans-serif;
+      font-size: 10.5pt;
+      color: #666;
+      margin: 0;
+    }
+    h2 {
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 600;
+      font-size: 14pt;
+      color: #02176f;
+      margin: 18px 0 6px;
+      padding-left: 0;
+    }
+    .section-label {
+      display: inline-block;
+      font-family: 'Fredoka', sans-serif;
+      background: #ff6445;
+      color: white;
+      font-size: 8.5pt;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 10px;
+      margin-right: 6px;
+      vertical-align: middle;
+      letter-spacing: 0.5px;
+    }
+    .icon {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      vertical-align: -3px;
+      margin: 0 6px;
+    }
+    .checklist {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 4px;
+    }
+    .checklist li {
+      position: relative;
+      padding: 3px 0 3px 30px;
+      page-break-inside: avoid;
+    }
+    .checklist li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 6px;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #42ADE2;
+      border-radius: 4px;
+      background: #f0f8ff;
+    }
+    .checklist li.checked::before {
+      content: '\2713';
+      background: #42ADE2;
+      color: white;
+      font-size: 11pt;
+      font-weight: bold;
+      text-align: center;
+      line-height: 16px;
+      border-color: #42ADE2;
+    }
+    .checklist li .note {
+      display: block;
+      font-size: 9pt;
+      color: #666;
+      font-style: italic;
+      margin-top: 1px;
+    }
+    .checklist li .sub {
+      display: block;
+      font-size: 9.5pt;
+      color: #444;
+      margin-top: 1px;
+      padding-left: 8px;
+    }
+    .checklist li .sub::before {
+      content: '\2022';
+      color: #ff6445;
+      margin-right: 6px;
+    }
+    .time-label {
+      font-weight: 600;
+      color: #02176f;
+    }
+    .final-section {
+      margin-top: 16px;
+      padding: 10px 14px;
+      background: #fff5f3;
+      border-left: 5px solid #ff6445;
+      border-radius: 0 8px 8px 0;
+      page-break-inside: avoid;
+    }
+    .final-section p {
+      margin: 0;
+      font-size: 10pt;
+      color: #444;
+    }
+    .footer {
+      text-align: center;
+      font-family: 'Outfit', sans-serif;
+      font-size: 8.5pt;
+      color: #aaa;
+      margin-top: 20px;
+      border-top: 1px solid #e0e0e0;
+      padding-top: 6px;
+    }
+    h2 {
+      page-break-after: avoid;
+      break-after: avoid;
+    }
+    .checklist {
+      page-break-before: avoid;
+      break-before: avoid;
+    }
+    .final-section {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    .page-break {
+      page-break-before: always;
+      break-before: always;
+    }
+    @media print {
+      body { padding: 0; }
+      a { color: #ff6445; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <span class="version-pill">Catholic In-Person</span>
+  <img src="../images/ibf-logo-blue.png" alt="Ignatius Book Fairs">
+  <h1>Planning Checklist</h1>
+  <p>Your step-by-step guide to planning a successful in-person book fair</p>
+</div>
+
+<!-- ===== SECTION 1: Initial Prep and Planning ===== -->
+<h2><span class="section-label">Initial Prep and Planning</span>
+  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#42ADE2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+</h2>
+<ul class="checklist">
+  <li>Using the password <strong>ignatius</strong>, read through and print out <a href="https://ignatius-book-fair.s3.us-east-2.amazonaws.com/ignatius-bookfair-guide-1-28-25.pdf" target="_blank">THE GUIDE</a></li>
+  <li>Read through and print out the <a href="https://www.ignatiusbookfairs.com/faqs" target="_blank">FAQS</a></li>
+  <li>Familiarize yourself with the <a href="https://ignatiusbookfairs.com/bookfair-resources?type=ad" target="_blank">ADVERTISING RESOURCES</a></li>
+  <li>Ensure that the space you'll be using for the fair is reserved and free of conflicting events</li>
+  <li>Create a free account on our <a href="https://store.ignatiusbookfairs.com/?signup=true" target="_blank">WEBSITE</a> before you get busy
+    <span class="sub">Choose <strong>Book Fair Coordinator</strong> as your role</span>
+    <span class="sub">Other roles (teachers, volunteers, etc.) can be added later</span>
+    <span class="sub">This makes it easy to guide others in creating their own accounts</span>
+  </li>
+  <li>Invite staff, teachers, and parent/community partners to volunteer
+    <span class="sub">Plan for 8&ndash;10 volunteers to help with planning, set-up, running, and clean-up of your fair</span>
+    <span class="sub">Use a free service like <a href="https://www.signupgenius.com/" target="_blank">SIGNUPGENIUS</a> to keep everyone organized</span>
+  </li>
+  <li>Look for invitations to our 3-part workshop series and RSVP
+    <span class="sub">Please RSVP "yes" even if you cannot attend &mdash; the recording will then be sent automatically</span>
+    <span class="sub">Encourage volunteers to join you</span>
+  </li>
+  <li>Inside your <strong>School Hub</strong> (on your Ignatius Book Fairs account), update classroom names and add any additional active classrooms (use blue link "Add Classrooms" in upper right corner of the School Hub)
+    <span class="sub">Use the <strong>invite</strong> feature to invite teachers</span>
+    <span class="sub">Resource: <a href="https://www.ignatiusbookfairs.com/bookfair-resources?resource=how-to-invite-a-teacher-to-a-classroom" target="_blank">HOW TO INVITE TEACHERS TO THEIR CLASSROOMS</a></span>
+  </li>
+  <li>Send an email to teachers encouraging them to look for the invitation (Step 8) and follow the prompts in this video: <a href="https://www.ignatiusbookfairs.com/bookfair-resources?resource=features-for-teachers" target="_blank">FEATURES FOR TEACHERS</a>
+    <span class="note">How to create accounts, claim classrooms, select reading recommendations for students, and build classroom wish lists</span>
+  </li>
+  <li>Decide whether to host an evening shopping event for parents (and community members)
+    <span class="sub">Begin planning the event now using <a href="https://www.signupgenius.com/" target="_blank">SIGNUPGENIUS</a> (or a similar service) to keep your tasks and volunteers organized</span>
+  </li>
+</ul>
+
+<!-- ===== SECTION 2: Advertising Your Fair ===== -->
+<h2 class="page-break"><span class="section-label">Advertising Your Fair</span>
+  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#ff6445" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+</h2>
+<ul class="checklist">
+  <li>Ensure the <strong>date, times, and location</strong> of your fair are posted on the <strong>school or parish calendar</strong>
+    <span class="sub">Be as descriptive as space allows (include building name, room, and evening shopping details if applicable)</span>
+  </li>
+  <li>Recruit a <strong>dedicated volunteer</strong> to manage fair advertising
+    <span class="sub">This person will post regularly on <strong>social media</strong> (Facebook, Instagram, parish/school groups, etc.) and ensure announcements appear in newsletters, bulletins, or other community outlets (<a href="https://www.ignatiusbookfairs.com/bookfair-resources?resource=social-media" target="_blank">SOCIAL MEDIA GUIDELINES</a>)</span>
+  </li>
+</ul>
+
+<h2>Sample Advertising Schedule
+  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#ff6445" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+</h2>
+<ul class="checklist">
+  <li><span class="time-label">Parish Bulletin</span> &ndash; If you are connected to a parish, check the deadline for bulletin ads. Submit your ad in time so it is published directly before your fair begins. Prepare the ad early.</li>
+  <li><span class="time-label">6 Weeks Out</span> &ndash; Post a Save the Date announcement including dates/times/location of your fair
+    <span class="note">Resource: <a href="https://ignatius-book-fair.s3.us-east-2.amazonaws.com/DigitalPackage-SocialStory-04.jpg" target="_blank">SAVE THE DATE GRAPHIC</a></span>
+  </li>
+  <li><span class="time-label">5 Weeks Out</span> &ndash; Share what makes Ignatius Book Fairs special
+    <span class="note">Resource: <a href="https://www.ignatiusbookfairs.com/bookfair-resources?resource=what-makes-an-ignatius-book-fair-special" target="_blank">WHAT MAKES IGNATIUS BOOK FAIRS SPECIAL</a></span>
+  </li>
+  <li><span class="time-label">4 Weeks Out</span> &ndash; Post details about your fair:
+    <span class="sub"><strong>Dates, times, and location</strong></span>
+    <span class="sub"><strong>Accepted payment methods</strong> (cash, check, credit card, and FACTS transactions if your school uses this system)</span>
+    <span class="sub">Let your community know about the opportunity to <strong>shop online</strong> if they cannot attend in person. You can share your organization's personal shopping link (found in the upper right corner of the School Hub, underneath your initials)</span>
+  </li>
+  <li><span class="time-label">3 Weeks Out</span> &ndash; Introduce the <strong>Family Reading Challenge</strong>. Let everyone know they can find beautiful books for the challenge at the fair
+    <span class="note">Resource: <a href="https://ignatius-book-fair.s3.us-east-2.amazonaws.com/Reading-Challenge-Campaign.pdf" target="_blank">FAMILY READING CHALLENGE</a></span>
+  </li>
+  <li><span class="time-label">15 Days Out</span> &ndash; Use the <strong>parent letter template</strong> to draft an announcement. Include dates/times of the fair and have the principal or pastor send the letter to families 1 week before the fair begins
+    <span class="note">Resource: Edit and email <a href="https://ignatius-book-fair.s3.us-east-2.amazonaws.com/In-Person-Principal-Letter-To-Parents.pdf" target="_blank">THIS LETTER</a> to your community</span>
+  </li>
+  <li><span class="time-label">1 Week Out</span> &ndash; Post: "We are getting excited for our Ignatius Book Fair!" Include a fun picture of the boxes you received and let families know that a sneak peek will be coming soon!</li>
+  <li><span class="time-label">Night Before Opening</span> &ndash; Share a photo of some featured titles on the tables. Remind your community about preview opportunities for students and shopping times for parents. You can also remind them that they can see teacher wish lists by creating an account online and connecting with your school, and then connecting their child to the classroom. A link to your school can be found in the upper right corner of the School Hub, underneath your initials.</li>
+  <li><span class="time-label">Opening Day</span> &ndash; Share your excitement! Post a photo of children enjoying Preview Day. Remind parents that wish lists are coming home and should be returned the next morning with the chosen payment method. Checks should be made out to your organization.</li>
+  <li><span class="time-label">Day Two</span> &ndash; Post: "Your children enjoyed the fair yesterday. We would love to see you too!" Post shopping times and your school's online shopping link for those who cannot attend in person and include more photos.</li>
+  <li><span class="time-label">Day Three</span> &ndash; Post a thank-you graphic for shoppers so far. Remind families of the last opportunity to shop.</li>
+  <li><span class="time-label">Last Day of the Fair</span> &ndash; Post a reminder: "Today is the last chance to shop in person!" Thank everyone who has come out, share your excitement about earning many free books for your school and classroom, and remind families that your school continues to receive rewards from all online shopping orders year-round! Encourage them to keep your school's link handy and shop anytime.</li>
+</ul>
+
+<!-- ===== SECTION 3: Logistics ===== -->
+<h2 class="page-break"><span class="section-label">Logistics to Consider</span>
+  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#ffd41d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+  <span style="font-size: 10pt; font-weight: 400; color: #666;">(Within 3 Weeks of Opening)</span>
+</h2>
+<ul class="checklist">
+  <li>Print <strong>Student Wish Lists</strong> (enough for each child in PreK&ndash;8th grade). These will be handed out on the opening day of your fair when students stop by for their preview
+    <span class="note">Resource: <a href="https://ignatius-book-fair.s3.us-east-2.amazonaws.com/student-wishlist-1-25.pdf" target="_blank">STUDENT WISH LIST</a></span>
+  </li>
+  <li>Create <strong>reminder labels</strong> for PreK&ndash;3rd grade. Simple stick-on labels can be placed on uniforms at dismissal the day before your fair opens. Include fair dates, times, and location &mdash; this is the <strong>final reminder</strong> before the fair begins, but not the last way you'll keep families engaged.</li>
+  <li>Prepare <strong>starting cash/change</strong> for sales
+    <span class="note">Recommended: $200 in smaller bills and $30 in assorted coins</span>
+  </li>
+  <li>Have a <strong>secure cash box</strong> (or similar solution) ready to organize cash and checks</li>
+  <li>Order or gather <strong>shopping bags</strong> for customer purchases. Examples:
+    <span class="sub"><a href="https://www.amazon.com/TashiBox-plastic-Shopping-Reusable-Disposable/dp/B0F2SS5SX6/" target="_blank">TRADITIONAL PLASTIC BAG</a></span>
+    <span class="sub"><a href="https://www.amazon.com/Recyclable-Compostable-Reusable-Biodegradable-Restaurant/dp/B09DY634YC/" target="_blank">BIODEGRADABLE SHOPPING BAG</a></span>
+    <span class="sub"><a href="https://www.amazon.com/BagDream-Grocery-12x7x14-Handles-Shopping/dp/B0D3PXGLCJ/" target="_blank">PAPER SHOPPING BAG EXAMPLE</a></span>
+  </li>
+  <li><strong>Decor (optional)</strong>: If you'd like to add beyond what is provided, consider balloons, twinkle lights, or streamers
+    <span class="note">Tip: This is a good time to order or request donations for these items</span>
+  </li>
+  <li>Distribute <strong>Sneak Peek flyers</strong> (they arrive with your shipment about 1 week before fair). Send one flyer home with each family. Extra flyers can be kept by the checkout station and given to customers. Include a letter with shopping dates and times to build excitement and remind parents.</li>
+</ul>
+
+<!-- ===== SECTION 4: Set-Up ===== -->
+<h2><span class="section-label">Set-Up</span>
+  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#42ADE2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+  <span style="font-size: 10pt; font-weight: 400; color: #666;">(After Your Books Are Delivered)</span>
+</h2>
+<ul class="checklist">
+  <li>Locate the box marked "<strong>Open First</strong>"</li>
+  <li>Plug in the <strong>payment devices</strong> and <strong>external credit card readers</strong> so they can fully charge</li>
+  <li>Find the labeled <strong>Marketing Kit</strong> and place the <strong>tablecloths</strong> on the tables</li>
+  <li>Locate the <strong>5 posters</strong> (found at the bottom of one of the marketing boxes) and hang them on the walls</li>
+  <li>Use the <strong>table category signs</strong> to mark where specific categories of books will be displayed</li>
+  <li>Set out <strong>2&ndash;3 metal book stands</strong> on each table</li>
+  <li>Check the <strong>packing slips</strong> on the boxes to identify which category of books is inside</li>
+  <li>Place each box in front of the table where that category will be displayed</li>
+  <li>Log in to the <strong>payment device</strong> using your organization's <strong>unique PIN</strong> (which will be emailed to you 8 days before your fair begins)</li>
+  <li>Use the payment device to scan the <strong>packing slips</strong> on the outside of the merchandise boxes. <em>Do not scan boxes containing set-up materials.</em></li>
+  <li>Unpack and set up the books on the tables</li>
+  <li>Store empty boxes neatly &mdash; they will be needed for <strong>returns after the fair ends</strong></li>
+  <li>Perform a <strong>test sale</strong> on the payment device to ensure everything is working properly</li>
+</ul>
+
+<div class="final-section">
+  <p><strong>If you get stuck or have questions, please contact us at 888-771-2321.</strong></p>
+</div>
+
+<div class="footer">
+  Ignatius Book Fairs &bull; A division of Ave Maria Press &bull; ignatiusbookfairs.com
+</div>
+
+</body>
+</html>

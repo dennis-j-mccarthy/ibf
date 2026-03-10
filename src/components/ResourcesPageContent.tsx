@@ -28,16 +28,23 @@ export default function ResourcesPageContent({ resources }: ResourcesPageContent
   const [selectedVideo, setSelectedVideo] = useState<Resource | null>(null);
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
 
-  // Handle URL-based modal opening
+  // Handle URL-based modal opening (detail view or video modal)
   useEffect(() => {
     const resourceSlug = searchParams.get('resource');
     if (resourceSlug) {
       const resource = resources.find(r => r.slug === resourceSlug);
       if (resource) {
-        setSelectedResource(resource);
+        if (resource.resourceType === 'Video') {
+          setSelectedVideo(resource);
+          setSelectedResource(null);
+        } else {
+          setSelectedResource(resource);
+          setSelectedVideo(null);
+        }
       }
     } else {
       setSelectedResource(null);
+      setSelectedVideo(null);
     }
   }, [searchParams, resources]);
 
@@ -364,7 +371,7 @@ export default function ResourcesPageContent({ resources }: ResourcesPageContent
       {selectedVideo && (
         <VideoModal
           resource={selectedVideo}
-          onClose={() => setSelectedVideo(null)}
+          onClose={() => { setSelectedVideo(null); router.push('/bookfair-resources', { scroll: false }); }}
         />
       )}
 
