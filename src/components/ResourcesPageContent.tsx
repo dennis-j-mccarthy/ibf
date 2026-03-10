@@ -418,7 +418,7 @@ function ResourceCard({ resource, onVideoClick, onDetailsClick }: { resource: Re
       )}
 
       {/* Thumbnail */}
-      <div className="relative w-full max-w-[180px] aspect-[3/4] mt-4 border border-[#b9dbc5] rounded-lg overflow-hidden p-[5%] group-hover:ring-2 ring-[#0066ff] transition-all">
+      <div className="relative w-full max-w-[180px] aspect-[3/4] mt-4 border border-[#b9dbc5] rounded-lg overflow-hidden p-[5%]">
         {resource.thumbnail ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -440,12 +440,20 @@ function ResourceCard({ resource, onVideoClick, onDetailsClick }: { resource: Re
           </div>
         )}
 
-        {/* Video play button overlay */}
-        {isVideo && (
+        {/* Hover overlay - magnifying glass for non-video, play button for video */}
+        {isVideo ? (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="w-12 h-12 rounded-full bg-white/95 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
               <svg className="w-6 h-6 text-[#ff6445] ml-0.5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z"/>
+              </svg>
+            </div>
+          </div>
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-all duration-300">
+            <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg opacity-0 scale-50 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300">
+              <svg className="w-7 h-7 text-[#ff6445]" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
               </svg>
             </div>
           </div>
