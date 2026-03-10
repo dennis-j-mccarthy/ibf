@@ -1288,11 +1288,9 @@ const SignUpForm = () => {
                       <option value="">School Type *</option>
                       <option value="Catholic">Catholic</option>
                       <option value="Christian">Christian</option>
-                      <option value="Private">Private</option>
+                      <option value="Public">Public</option>
                       <option value="Home school Catholic">Home school Catholic</option>
                       <option value="Home school other">Home school other</option>
-                      <option value="Public">Public</option>
-                      <option value="Other">Other</option>
                     </select>
                     <select
                       name="gradeLevels"
