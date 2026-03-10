@@ -526,7 +526,7 @@ function ResourceDetailModal({
             {/* Thumbnail */}
             <div className="flex-shrink-0 w-40">
               {resource.fileUrl ? (
-                <a href={resource.fileUrl} target="_blank" rel="noopener noreferrer" className="block cursor-pointer hover:opacity-80 transition-opacity">
+                <a href={resource.fileUrl} target="_blank" rel="noopener noreferrer" className="group/thumb relative block">
                   <div className="aspect-[3/4] bg-white rounded-lg overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.10)]">
                     {resource.thumbnail ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -542,6 +542,14 @@ function ResourceDetailModal({
                         </svg>
                       </div>
                     )}
+                    {/* Download overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover/thumb:bg-black/20 transition-all duration-300 rounded-lg">
+                      <div className="w-10 h-10 rounded-full bg-[#00c853] flex items-center justify-center shadow-lg opacity-0 scale-50 group-hover/thumb:opacity-100 group-hover/thumb:scale-100 transition-all duration-300">
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                      </div>
+                    </div>
                   </div>
                 </a>
               ) : (
