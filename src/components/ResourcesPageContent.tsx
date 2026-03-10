@@ -384,43 +384,41 @@ export default function ResourcesPageContent({ resources }: ResourcesPageContent
 
 function ResourceCard({ resource, onVideoClick, onDetailsClick }: { resource: Resource; onVideoClick: () => void; onDetailsClick: () => void }) {
   const isVideo = resource.resourceType === 'Video';
-  const isTutorial = resource.category === 'Tutorials';
+  const hasDetails = resource.description || resource.parentGuide || resource.slug.endsWith('operational-guide');
+
+  const handleCardClick = () => {
+    if (isVideo) {
+      onVideoClick();
+    } else if (hasDetails) {
+      onDetailsClick();
+    } else if (resource.fileUrl) {
+      window.open(resource.fileUrl, '_blank');
+    }
+  };
 
   return (
-    <div className={`relative bg-white rounded-xl p-4 pb-10 flex flex-col items-center text-center shadow-sm ${isVideo ? '' : 'border border-[#dddddd]'}`}>
-      {/* Top action icons - positioned at card corners */}
-      {!isVideo && (
-        <>
-          {/* Details icon - top left */}
-          <button
-            onClick={onDetailsClick}
-            className="absolute top-2 left-2 w-8 h-8 rounded-full bg-[#0066ff] hover:bg-[#0052cc] flex items-center justify-center shadow-md transition-all hover:scale-110 z-10"
-            title="View details"
-          >
-            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </button>
-
-          {/* Download icon - top right */}
-          {resource.fileUrl && (
-            <a
-              href={resource.fileUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="absolute top-2 right-2 w-8 h-8 rounded-full bg-[#00c853] hover:bg-[#00a843] flex items-center justify-center shadow-md transition-all hover:scale-110 z-10"
-              title="Download"
-            >
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-            </a>
-          )}
-        </>
+    <div
+      className={`relative bg-white rounded-xl p-4 pb-10 flex flex-col items-center text-center shadow-sm ${isVideo ? '' : 'border border-[#dddddd]'} ${isVideo ? 'cursor-pointer' : hasDetails ? 'cursor-zoom-in' : resource.fileUrl ? 'cursor-pointer' : ''} group`}
+      onClick={handleCardClick}
+    >
+      {/* Download icon - top right */}
+      {!isVideo && resource.fileUrl && (
+        <a
+          href={resource.fileUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="absolute top-2 right-2 w-8 h-8 rounded-full bg-[#00c853] hover:bg-[#00a843] flex items-center justify-center shadow-md transition-all hover:scale-110 z-10"
+          title="Download"
+        >
+          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+        </a>
       )}
 
       {/* Thumbnail */}
-      <div className="relative w-full max-w-[180px] aspect-[3/4] mt-4 border border-[#b9dbc5] rounded-lg overflow-hidden p-[5%]">
+      <div className="relative w-full max-w-[180px] aspect-[3/4] mt-4 border border-[#b9dbc5] rounded-lg overflow-hidden p-[5%] group-hover:ring-2 ring-[#0066ff] transition-all">
         {resource.thumbnail ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -444,16 +442,13 @@ function ResourceCard({ resource, onVideoClick, onDetailsClick }: { resource: Re
 
         {/* Video play button overlay */}
         {isVideo && (
-          <button
-            onClick={onVideoClick}
-            className="absolute inset-0 flex items-center justify-center"
-          >
-            <div className="w-12 h-12 rounded-full bg-white/95 flex items-center justify-center hover:scale-110 transition-transform shadow-lg">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-white/95 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
               <svg className="w-6 h-6 text-[#ff6445] ml-0.5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z"/>
               </svg>
             </div>
-          </button>
+          </div>
         )}
       </div>
 
@@ -593,11 +588,21 @@ function ResourceDetailModal({
               <div className="grid grid-cols-3 md:grid-cols-4 gap-6">
                 {relatedResources.map((related) => {
                   const isVideo = related.resourceType === 'Video';
+                  const handleRelatedClick = () => {
+                    if (isVideo) {
+                      onClose();
+                      onVideoClick(related);
+                    } else if (related.fileUrl) {
+                      window.open(related.fileUrl, '_blank');
+                    } else {
+                      onRelatedClick(related);
+                    }
+                  };
                   return (
                   <button
                     key={related.id}
-                    onClick={() => { if (isVideo) { onClose(); onVideoClick(related); } else { onRelatedClick(related); } }}
-                    className="group text-left"
+                    onClick={handleRelatedClick}
+                    className="group text-left cursor-pointer"
                   >
                     <div className="relative aspect-[3/4] bg-white rounded-lg overflow-hidden mb-2 shadow-[0_2px_8px_rgba(0,0,0,0.10)] group-hover:ring-2 ring-[#0066ff] transition-all max-w-[100px] mx-auto">
                       {related.thumbnail ? (
