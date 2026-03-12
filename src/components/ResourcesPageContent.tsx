@@ -151,6 +151,12 @@ export default function ResourcesPageContent({ resources }: ResourcesPageContent
         r.id !== resource.id && publicGuideChildren.has(r.slug)
       );
     }
+    // Sacramental Gifts: relate to Sneak Peek and Lent Flyer
+    else if (resource.slug === 'sacramental-gifts-2026') {
+      related = resources.filter(r =>
+        r.slug === 'bookfair-sneak-peek' || r.slug === 'lent-flyer-2026'
+      );
+    }
     // Coloring sheets: only relate to other coloring sheets
     else if (resource.slug.startsWith('coloring-sheet')) {
       related = resources.filter(r =>
