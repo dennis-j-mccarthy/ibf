@@ -28,8 +28,17 @@ export default function ResourcesPageContent({ resources }: ResourcesPageContent
   const [selectedVideo, setSelectedVideo] = useState<Resource | null>(null);
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
 
-  // Handle URL-based modal opening (detail view or video modal)
+  // Handle URL-based category filter and modal opening
   useEffect(() => {
+    const categoryParam = searchParams.get('category');
+    if (categoryParam) {
+      const validFilters: ActiveFilter[] = ['Catholic In Person', 'Catholic Virtual', 'Parish In Person', 'Public In Person', 'Operational', 'Advertising', 'Tutorials', 'Public'];
+      const match = validFilters.find(f => f.toLowerCase() === categoryParam.toLowerCase());
+      if (match) {
+        setActiveFilter(match);
+      }
+    }
+
     const resourceSlug = searchParams.get('resource');
     if (resourceSlug) {
       const resource = resources.find(r => r.slug === resourceSlug);
