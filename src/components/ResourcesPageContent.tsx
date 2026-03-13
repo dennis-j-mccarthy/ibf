@@ -356,7 +356,7 @@ export default function ResourcesPageContent({ resources }: ResourcesPageContent
               <ResourceCard
                 key={resource.id}
                 resource={resource}
-                onVideoClick={() => resource.resourceType === 'Video' && setSelectedVideo(resource)}
+                onVideoClick={() => resource.resourceType === 'Video' && openResourceModal(resource)}
                 onDetailsClick={() => openResourceModal(resource)}
               />
             ))}
@@ -754,7 +754,7 @@ function VideoModal({ resource, onClose }: { resource: Resource; onClose: () => 
           )}
         </div>
 
-        {/* Title and description */}
+        {/* Title, description, and share link */}
         <div className="p-6 bg-gradient-to-t from-black to-gray-900">
           <h3 className="text-white font-bold text-xl mb-2" style={{ fontFamily: 'brother-1816, sans-serif' }}>
             {resource.title}
@@ -762,6 +762,18 @@ function VideoModal({ resource, onClose }: { resource: Resource; onClose: () => 
           {resource.description && (
             <p className="text-gray-300 text-sm leading-relaxed">{resource.description}</p>
           )}
+          <button
+            onClick={() => {
+              const url = `${window.location.origin}/bookfair-resources?resource=${resource.slug}`;
+              navigator.clipboard.writeText(url);
+            }}
+            className="mt-3 inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-white transition-colors"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+            </svg>
+            Copy link
+          </button>
         </div>
       </div>
     </div>
