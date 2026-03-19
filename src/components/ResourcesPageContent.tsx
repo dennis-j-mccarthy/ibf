@@ -108,6 +108,7 @@ export default function ResourcesPageContent({ resources }: ResourcesPageContent
     'you-caption-it',
     'faqs-parish-in-person-coordinators',
     'parish-planning-checklist',
+    'parent-letter-parish-in-person',
   ]);
 
   const publicGuideChildren = new Set([
@@ -139,6 +140,7 @@ export default function ResourcesPageContent({ resources }: ResourcesPageContent
     'coloring-sheet-3',
     'faqs-public-in-person-coordinators',
     'public-school-planning-checklist',
+    'parent-letter-public-in-person',
   ]);
 
   // Get related resources (same parentGuide, excluding current)
