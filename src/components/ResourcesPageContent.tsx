@@ -137,6 +137,8 @@ export default function ResourcesPageContent({ resources }: ResourcesPageContent
     'coloring-sheet-1',
     'coloring-sheet-2',
     'coloring-sheet-3',
+    'faqs-public-in-person-coordinators',
+    'public-school-planning-checklist',
   ]);
 
   // Get related resources (same parentGuide, excluding current)
