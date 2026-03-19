@@ -255,13 +255,14 @@ export default function ResourcesPageContent({ resources }: ResourcesPageContent
       (r.category?.toLowerCase().includes(query) ?? false)
     );
   }).sort((a, b) => {
-    // Sort order: Guides first, then FAQs, then Checklists, then other docs, then videos
+    // Sort order: Guides, FAQs, Checklists, Parent Letters, other docs, videos
     const typeOrder = (r: Resource) => {
       if (r.slug.endsWith('operational-guide')) return 0; // Guides
       if (r.slug.startsWith('faqs-') || r.slug === 'faqs-virtual-coordinators') return 1; // FAQs
       if (r.slug.includes('planning-checklist') || r.slug.includes('book-fair-checklist')) return 2; // Checklists
-      if (r.resourceType === 'Video') return 4; // Videos last
-      return 3; // Other PDFs and Images
+      if (r.slug.startsWith('parent-letter-')) return 3; // Parent Letters
+      if (r.resourceType === 'Video') return 5; // Videos last
+      return 4; // Other PDFs and Images
     };
     const aOrder = typeOrder(a);
     const bOrder = typeOrder(b);
