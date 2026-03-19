@@ -106,6 +106,8 @@ export default function ResourcesPageContent({ resources }: ResourcesPageContent
     'parish-flyer',
     'save-the-date-post',
     'you-caption-it',
+    'faqs-parish-in-person-coordinators',
+    'parish-planning-checklist',
   ]);
 
   const publicGuideChildren = new Set([
