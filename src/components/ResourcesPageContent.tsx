@@ -253,11 +253,13 @@ export default function ResourcesPageContent({ resources }: ResourcesPageContent
       (r.category?.toLowerCase().includes(query) ?? false)
     );
   }).sort((a, b) => {
-    // Sort order: Guides first, then docs (PDF/Image), then videos
+    // Sort order: Guides first, then FAQs, then Checklists, then other docs, then videos
     const typeOrder = (r: Resource) => {
       if (r.slug.endsWith('operational-guide')) return 0; // Guides
-      if (r.resourceType === 'Video') return 2; // Videos last
-      return 1; // PDFs and Images in the middle
+      if (r.slug.startsWith('faqs-') || r.slug === 'faqs-virtual-coordinators') return 1; // FAQs
+      if (r.slug.includes('planning-checklist') || r.slug.includes('book-fair-checklist')) return 2; // Checklists
+      if (r.resourceType === 'Video') return 4; // Videos last
+      return 3; // Other PDFs and Images
     };
     const aOrder = typeOrder(a);
     const bOrder = typeOrder(b);
