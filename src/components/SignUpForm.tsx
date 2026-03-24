@@ -1039,6 +1039,9 @@ const SignUpForm = () => {
                   </div>
 
                   <div className="text-center pt-4">
+                    <p className="text-white/80 text-sm mb-3" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+                      We currently support contiguous United States only
+                    </p>
                     <button
                       type="submit"
                       disabled={isSubmitting}
