@@ -449,13 +449,13 @@ function ResourceCard({ resource, onVideoClick, onDetailsClick }: { resource: Re
       )}
 
       {/* Thumbnail */}
-      <div className="relative w-full max-w-[180px] aspect-[3/4] mt-4 border border-[#b9dbc5] rounded-lg overflow-hidden p-[5%]">
+      <div className={`relative mt-4 rounded-lg overflow-hidden ${isVideo ? 'w-[calc(100%-30px)] aspect-video' : 'w-full max-w-[180px] aspect-[3/4] border border-[#b9dbc5] p-[5%]'}`}>
         {resource.thumbnail ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={resource.thumbnail}
             alt={resource.title}
-            className="absolute inset-0 w-full h-full object-contain"
+            className={`absolute inset-0 w-full h-full ${isVideo ? 'object-cover' : 'object-contain'}`}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gray-50 rounded-lg">
@@ -492,7 +492,7 @@ function ResourceCard({ resource, onVideoClick, onDetailsClick }: { resource: Re
       </div>
 
       {/* Title - closer to thumbnail */}
-      <h3 className="font-brother text-[#02176f] font-semibold text-base max-w-[180px]" style={{ margin: '8px 0 0 0', lineHeight: '120%' }}>
+      <h3 className={`font-brother text-[#02176f] font-semibold text-base ${isVideo ? 'max-w-full px-2' : 'max-w-[180px]'}`} style={{ margin: '8px 0 0 0', lineHeight: '120%' }}>
         {resource.title}
       </h3>
 
