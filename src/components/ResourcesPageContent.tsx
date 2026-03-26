@@ -367,7 +367,7 @@ export default function ResourcesPageContent({ resources }: ResourcesPageContent
       </section>
 
       {/* Resources Grid */}
-      <section className="bg-[#b9dbc5] py-12">
+      <section className="bg-[#fafafa] py-12">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 max-w-5xl mx-auto">
             {filteredResources.map((resource) => (
