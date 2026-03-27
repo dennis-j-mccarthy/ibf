@@ -381,6 +381,22 @@ const SignUpForm = () => {
     }
   }, []);
 
+  // Auto-invoke returning customer flow when ?school= param is present
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const schoolDomain = params.get('school');
+    if (schoolDomain) {
+      setFormData(prev => ({
+        ...prev,
+        previouslyHadFair: true,
+        rebookWebsite: schoolDomain,
+      }));
+      setTimeout(() => {
+        document.getElementById('signup')?.scrollIntoView({ behavior: 'smooth' });
+      }, 300);
+    }
+  }, []);
+
   // Debounce the lookup for returning customers
   useEffect(() => {
     if (formData.previouslyHadFair !== true) return;
