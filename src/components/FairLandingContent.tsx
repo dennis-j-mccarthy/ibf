@@ -207,10 +207,10 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
     <div className="min-h-screen bg-[#F3FDF5]">
       {/* Hero — two-column layout */}
       <section className="relative overflow-hidden bg-gradient-to-br from-[#ff6445] to-[#e04520] text-white">
-        <div className="max-w-6xl mx-auto px-4 py-10 md:py-16">
-          {/* School logo above the two-column area */}
+        <div className="max-w-6xl mx-auto px-4 py-10 md:py-14">
+          {/* School logo */}
           {schoolLogo && (
-            <div className="inline-block rounded-2xl p-3 shadow-lg bg-[#42ADE2] mb-6 md:mb-8">
+            <div className="inline-block rounded-2xl p-3 shadow-lg bg-[#42ADE2] mb-5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={schoolLogo}
@@ -219,10 +219,10 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
               />
             </div>
           )}
-          {/* Two-column: text left, photo right — aligned top and bottom */}
-          <div className="flex flex-col md:flex-row items-stretch gap-8 md:gap-10">
+          {/* Grid: text left, photo right — photo spans from headline to bottom of fair card */}
+          <div className="md:grid md:grid-cols-[1fr_42%] md:gap-10">
             {/* Left: text content */}
-            <div className="flex-1 flex flex-col text-center md:text-left">
+            <div className="text-center md:text-left mb-8 md:mb-0">
               <h1
                 className="text-3xl md:text-5xl font-bold mb-1"
                 style={{ fontFamily: 'brother-1816, sans-serif' }}
@@ -230,12 +230,12 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
                 Welcome{data.company?.name ? `, ${data.company.name}` : ''}!
               </h1>
               {data.company?.city && data.company?.state && (
-                <p className="text-lg opacity-80 mb-4" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+                <p className="text-lg opacity-80 mb-6" style={{ fontFamily: 'brother-1816, sans-serif' }}>
                   {data.company.city}, {data.company.state}
                 </p>
               )}
               {data.upcomingDeal && data.company?.book_fair_dates && (
-                <div className="bg-white rounded-2xl inline-block px-8 py-5 mt-auto">
+                <div className="bg-white rounded-2xl inline-block px-8 py-5">
                   <p className="text-[#ff6445] uppercase tracking-widest text-xs font-bold mb-1" style={{ fontFamily: 'brother-1816, sans-serif' }}>
                     Your Upcoming Fair
                   </p>
@@ -256,13 +256,14 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
                 </div>
               )}
             </div>
-            {/* Right: book fair photo — stretches to match left column height */}
-            <div className="w-full md:w-[45%] flex-shrink-0 relative rounded-2xl overflow-hidden shadow-2xl min-h-[200px]">
+            {/* Right: book fair photo — fills full grid row height */}
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl min-h-[250px]">
               <Image
                 src="/images/bookfair-hero.png"
                 alt="Kids reading at a book fair"
                 fill
                 className="object-cover"
+                sizes="(max-width: 768px) 100vw, 42vw"
                 priority
               />
             </div>
