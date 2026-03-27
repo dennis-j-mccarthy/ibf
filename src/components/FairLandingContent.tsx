@@ -92,18 +92,11 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
       return;
     }
 
-    // Try to fetch school logo from Clearbit
-    let domain = school.trim().toLowerCase();
-    try {
-      if (domain.includes('://')) domain = new URL(domain).hostname;
-      else if (domain.includes('/')) domain = domain.split('/')[0];
-    } catch { /* use as-is */ }
-    domain = domain.replace(/^www\./, '');
-    const logoUrl = `https://logo.clearbit.com/${domain}`;
-    const img = new window.Image();
-    img.onload = () => setSchoolLogo(logoUrl);
-    img.onerror = () => setSchoolLogo(null);
-    img.src = logoUrl;
+    // Fetch school logo via our API (tries Clearbit, then scrapes site)
+    fetch(`/api/school-logo?domain=${encodeURIComponent(school)}`)
+      .then(res => res.json())
+      .then(result => { if (result.logo) setSchoolLogo(result.logo); })
+      .catch(() => {});
 
     async function lookup() {
       try {
