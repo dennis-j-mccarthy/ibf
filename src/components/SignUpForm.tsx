@@ -836,6 +836,7 @@ const SignUpForm = () => {
                     placeholder="School or Organization Website"
                     value={formData.rebookWebsite}
                     onChange={handleChange}
+                    onBlur={() => { if (formData.rebookWebsite) lookupHubSpot('', formData.rebookWebsite); }}
                     className="w-full h-11 px-4 rounded-lg border-0 bg-[#0088ff] text-white placeholder-white tracking-wide"
                     style={{ fontFamily: 'brother-1816, sans-serif' }}
                   />
