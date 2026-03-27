@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
               value: strategy.value,
             }],
           }],
-          properties: ['name', 'domain', 'city', 'state', 'hubspot_owner_id', 'book_fair_dates', 'book_fair_status'],
+          properties: ['name', 'domain', 'city', 'state', 'hubspot_owner_id', 'book_fair_dates', 'book_fair_status', 'tax_exempt_form'],
         }),
       });
 

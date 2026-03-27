@@ -17,6 +17,7 @@ interface FairData {
     state?: string;
     book_fair_dates?: string;
     book_fair_status?: string;
+    tax_exempt_form?: string;
   };
   upcomingDeal?: {
     dealname?: string;
@@ -85,7 +86,6 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
   const [data, setData] = useState<FairData | null>(null);
   const [loading, setLoading] = useState(true);
   const [schoolLogo, setSchoolLogo] = useState<string | null>(null);
-  const [logoBgColor, setLogoBgColor] = useState('bg-white');
 
   useEffect(() => {
     if (!school) {
@@ -96,48 +96,7 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
     // Fetch school logo via our API (tries Clearbit, then scrapes site)
     fetch(`/api/school-logo?domain=${encodeURIComponent(school)}`, { cache: 'no-store' })
       .then(res => res.json())
-      .then(result => {
-        if (result.logo) {
-          // Analyze logo colors to pick the best background
-          const img = new window.Image();
-          img.crossOrigin = 'anonymous';
-          img.onload = () => {
-            try {
-              const canvas = document.createElement('canvas');
-              canvas.width = img.width;
-              canvas.height = img.height;
-              const ctx = canvas.getContext('2d');
-              if (ctx) {
-                ctx.drawImage(img, 0, 0);
-                const px = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-                let transparent = 0;
-                let lightPixels = 0;
-                let warmPixels = 0;
-                let total = 0;
-                let totalVisible = 0;
-                for (let i = 0; i < px.length; i += 16) {
-                  total++;
-                  const r = px[i], g = px[i + 1], b = px[i + 2], a = px[i + 3];
-                  if (a < 50) { transparent++; continue; }
-                  totalVisible++;
-                  if (r > 200 && g > 200 && b > 200) lightPixels++;
-                  if (r > 150 && r > g * 1.3 && r > b * 1.3) warmPixels++;
-                }
-                const mostlyTransparent = transparent / total > 0.6;
-                const mostlyLight = totalVisible > 0 && lightPixels / totalVisible > 0.5;
-                const mostlyWarm = totalVisible > 0 && warmPixels / totalVisible > 0.3;
-                // Use blue bg if logo is reversed (white) or warm-toned (red/orange) on transparent
-                if (mostlyLight || (mostlyTransparent && mostlyWarm)) {
-                  setLogoBgColor('bg-[#42ADE2]');
-                }
-              }
-            } catch { /* CORS — default to white */ }
-            setSchoolLogo(result.logo);
-          };
-          img.onerror = () => setSchoolLogo(result.logo);
-          img.src = result.logo;
-        }
-      })
+      .then(result => { if (result.logo) setSchoolLogo(result.logo); })
       .catch(() => {});
 
     async function lookup() {
@@ -250,7 +209,7 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
       <section className="relative overflow-hidden bg-gradient-to-br from-[#ff6445] to-[#e04520] text-white py-16 md:py-24">
         <div className="max-w-4xl mx-auto px-4 text-center">
           {schoolLogo && (
-            <div className={`inline-block rounded-2xl p-4 mb-8 shadow-lg ${logoBgColor}`}>
+            <div className="inline-block rounded-2xl p-4 mb-8 shadow-lg bg-[#42ADE2]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={schoolLogo}
@@ -332,6 +291,28 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
               </Link>
             ))}
           </div>
+          {/* Tax Exempt Reminder */}
+          {!data.company?.tax_exempt_form && (
+            <div className="mt-8 bg-[#FFF8E1] border border-[#FFE082] rounded-2xl p-5 flex items-center gap-4">
+              <span className="text-4xl flex-shrink-0" role="img" aria-label="reminder">
+                <svg className="w-10 h-10 text-[#FF8F00]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                </svg>
+              </span>
+              <div className="flex-1">
+                <p className="text-[#02176f] font-bold text-sm" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+                  Don&apos;t forget to upload your tax exempt docs!
+                </p>
+                <Link
+                  href="/upload-tax-document"
+                  className="text-[#0088ff] hover:text-[#0070dd] text-sm font-semibold underline underline-offset-2 transition-colors"
+                  style={{ fontFamily: 'brother-1816, sans-serif' }}
+                >
+                  Upload Tax Exempt Certificate
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
