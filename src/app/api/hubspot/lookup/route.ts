@@ -69,11 +69,15 @@ export async function POST(request: NextRequest) {
 
     console.log('Searching for company by domain:', domain);
 
-    // Strict exact match only — no alternate TLDs
+    // Strict exact match — try bare domain, with/without www, and full URL variants
+    // (HubSpot sometimes stores the full URL like "https://example.org/" in the domain field)
+    const bases = [domain, domainWithoutWww, domainWithWww];
     const exactCandidates = new Set([
-      domain,                    // as entered
-      domainWithoutWww,          // without www
-      domainWithWww,             // with www
+      ...bases,
+      ...bases.map(d => `https://${d}`),
+      ...bases.map(d => `https://${d}/`),
+      ...bases.map(d => `http://${d}`),
+      ...bases.map(d => `http://${d}/`),
     ]);
     const exactStrategies = [...exactCandidates].map(v => ({ value: v, description: `exact: ${v}` }));
 
