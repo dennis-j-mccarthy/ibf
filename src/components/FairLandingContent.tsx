@@ -216,13 +216,21 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
             </p>
           )}
           {data.upcomingDeal && data.company?.book_fair_dates && (
-            <div className="mt-8 bg-white/15 backdrop-blur-sm rounded-2xl inline-block px-10 py-6">
-              <p className="text-white/80 uppercase tracking-widest text-sm font-bold mb-1" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+            <div className="mt-8 bg-white rounded-2xl inline-block px-10 py-6">
+              <p className="text-[#ff6445] uppercase tracking-widest text-sm font-bold mb-1" style={{ fontFamily: 'brother-1816, sans-serif' }}>
                 Your Upcoming Fair
               </p>
-              <p className="text-3xl md:text-4xl font-bold" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+              <p className="text-3xl md:text-4xl font-bold text-[#ff6445]" style={{ fontFamily: 'brother-1816, sans-serif' }}>
                 {data.company.book_fair_dates}
               </p>
+              <a
+                href="#planning-calendar"
+                onClick={(e) => { e.preventDefault(); document.getElementById('planning-calendar')?.scrollIntoView({ behavior: 'smooth' }); }}
+                className="inline-block mt-4 text-[#ff6445] font-bold uppercase tracking-wider text-lg hover:text-[#e04520] transition-colors underline underline-offset-4 decoration-2"
+                style={{ fontFamily: 'brother-1816, sans-serif' }}
+              >
+                View Your Personalized Fair Calendar
+              </a>
             </div>
           )}
         </div>
