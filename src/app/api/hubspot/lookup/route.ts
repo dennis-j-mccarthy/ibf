@@ -51,30 +51,38 @@ export async function POST(request: NextRequest) {
     let companyData = null;
     let companyId = null;
 
-    // Extract domain from website URL
-    let domain = website;
+    // Extract domain from website URL — preserve www. for exact matching
+    let domain = website.trim().toLowerCase();
     try {
-      if (website.includes('://')) {
-        domain = new URL(website).hostname;
-      } else if (website.includes('/')) {
-        domain = website.split('/')[0];
+      if (domain.includes('://')) {
+        domain = new URL(domain).hostname;
+      } else if (domain.includes('/')) {
+        domain = domain.split('/')[0];
       }
-      domain = domain.replace(/^www\./, '');
     } catch {
       // Use as-is if URL parsing fails
     }
 
+    // Keep both variants for searching
+    const domainWithoutWww = domain.replace(/^www\./, '');
+    const domainWithWww = domain.startsWith('www.') ? domain : `www.${domain}`;
+
     console.log('Searching for company by domain:', domain);
 
     // Try exact domain matches first (including alternate TLDs), then fuzzy
-    const domainBase = domain.split('.')[0];
-    const domainTLD = domain.split('.').slice(1).join('.');
+    const domainBase = domainWithoutWww.split('.')[0];
+    const domainTLD = domainWithoutWww.split('.').slice(1).join('.');
     const alternateTLDs = ['com', 'org', 'edu', 'net', 'us'].filter(t => t !== domainTLD);
-    const exactStrategies = [
-      { value: domain, description: 'exact match' },
-      { value: `www.${domain}`, description: 'with www prefix' },
-      ...alternateTLDs.map(tld => ({ value: `${domainBase}.${tld}`, description: `alternate TLD .${tld}` })),
-    ];
+
+    // Build unique set of exact match candidates
+    const exactCandidates = new Set([
+      domain,                    // as entered
+      domainWithoutWww,          // without www
+      domainWithWww,             // with www
+      ...alternateTLDs.map(tld => `${domainBase}.${tld}`),
+      ...alternateTLDs.map(tld => `www.${domainBase}.${tld}`),
+    ]);
+    const exactStrategies = [...exactCandidates].map(v => ({ value: v, description: `exact: ${v}` }));
 
     // Phase 1: Try exact matches
     for (const strategy of exactStrategies) {
@@ -154,7 +162,7 @@ export async function POST(request: NextRequest) {
 
     // Strategy 4: Try searching by name
     if (!companyId) {
-      const domainName = domain.split('.')[0];
+      const domainName = domainBase;
       if (domainName.length > 3) {
         console.log(`Trying company name search: ${domainName}`);
         const nameSearchResponse = await fetch('https://api.hubapi.com/crm/v3/objects/companies/search', {
