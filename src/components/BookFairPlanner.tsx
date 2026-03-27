@@ -1264,7 +1264,7 @@ function getFirstDayOfMonth(date: Date): number {
   return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
 }
 
-export default function BookFairPlanner({ resources }: { resources: Resource[] }) {
+export default function BookFairPlanner({ resources, initialFairType, initialFairDate }: { resources: Resource[]; initialFairType?: string; initialFairDate?: string }) {
   const searchParams = useSearchParams();
   const [fairDate, setFairDate] = useState<Date | null>(null);
   const [fairType, setFairType] = useState<FairType | null>(null);
@@ -1272,23 +1272,25 @@ export default function BookFairPlanner({ resources }: { resources: Resource[] }
   const [selectedVideo, setSelectedVideo] = useState<Resource | null>(null);
   const [dateInput, setDateInput] = useState('');
 
-  // Auto-populate from URL query params (e.g., ?type=catholic-in-person&date=2026-03-01)
+  // Auto-populate from props (e.g., fair landing page) or URL query params
   useEffect(() => {
-    const typeParam = searchParams.get('type');
-    const dateParam = searchParams.get('date');
-    if (typeParam && dateParam && Object.keys(FAIR_TYPE_LABELS).includes(typeParam)) {
-      const parsed = new Date(dateParam + 'T12:00:00');
+    const typeVal = initialFairType || searchParams.get('type');
+    const dateVal = initialFairDate || searchParams.get('date');
+    if (typeVal && dateVal && Object.keys(FAIR_TYPE_LABELS).includes(typeVal)) {
+      const parsed = new Date(dateVal + 'T12:00:00');
       if (!isNaN(parsed.getTime())) {
-        setFairType(typeParam as FairType);
-        setDateInput(dateParam);
+        setFairType(typeVal as FairType);
+        setDateInput(dateVal);
         setFairDate(parsed);
-        // Scroll to planner after render
-        setTimeout(() => {
-          document.getElementById('planning-calendar')?.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
+        // Scroll to planner after render (only from URL params, not props)
+        if (!initialFairType) {
+          setTimeout(() => {
+            document.getElementById('planning-calendar')?.scrollIntoView({ behavior: 'smooth' });
+          }, 100);
+        }
       }
     }
-  }, [searchParams]);
+  }, [searchParams, initialFairType, initialFairDate]);
 
   const handleSetDate = () => {
     if (dateInput && fairType) {
