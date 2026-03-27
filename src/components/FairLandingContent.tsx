@@ -85,7 +85,7 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
   const [data, setData] = useState<FairData | null>(null);
   const [loading, setLoading] = useState(true);
   const [schoolLogo, setSchoolLogo] = useState<string | null>(null);
-  const [logoDark, setLogoDark] = useState(false);
+  const [logoBgColor, setLogoBgColor] = useState('bg-white');
 
   useEffect(() => {
     if (!school) {
@@ -98,7 +98,7 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
       .then(res => res.json())
       .then(result => {
         if (result.logo) {
-          // Check if the logo is primarily light/reversed
+          // Analyze logo colors to pick the best background
           const img = new window.Image();
           img.crossOrigin = 'anonymous';
           img.onload = () => {
@@ -109,21 +109,29 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
               const ctx = canvas.getContext('2d');
               if (ctx) {
                 ctx.drawImage(img, 0, 0);
-                const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+                const px = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+                let transparent = 0;
                 let lightPixels = 0;
+                let warmPixels = 0;
+                let total = 0;
                 let totalVisible = 0;
-                for (let i = 0; i < data.length; i += 16) { // sample every 4th pixel
-                  const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
-                  if (a > 50) { // non-transparent
-                    totalVisible++;
-                    if (r > 200 && g > 200 && b > 200) lightPixels++;
-                  }
+                for (let i = 0; i < px.length; i += 16) {
+                  total++;
+                  const r = px[i], g = px[i + 1], b = px[i + 2], a = px[i + 3];
+                  if (a < 50) { transparent++; continue; }
+                  totalVisible++;
+                  if (r > 200 && g > 200 && b > 200) lightPixels++;
+                  if (r > 150 && r > g * 1.3 && r > b * 1.3) warmPixels++;
                 }
-                if (totalVisible > 0 && lightPixels / totalVisible > 0.5) {
-                  setLogoDark(true);
+                const mostlyTransparent = transparent / total > 0.6;
+                const mostlyLight = totalVisible > 0 && lightPixels / totalVisible > 0.5;
+                const mostlyWarm = totalVisible > 0 && warmPixels / totalVisible > 0.3;
+                // Use blue bg if logo is reversed (white) or warm-toned (red/orange) on transparent
+                if (mostlyLight || (mostlyTransparent && mostlyWarm)) {
+                  setLogoBgColor('bg-[#42ADE2]');
                 }
               }
-            } catch { /* CORS or canvas error — default to white bg */ }
+            } catch { /* CORS — default to white */ }
             setSchoolLogo(result.logo);
           };
           img.onerror = () => setSchoolLogo(result.logo);
@@ -242,7 +250,7 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
       <section className="relative overflow-hidden bg-gradient-to-br from-[#ff6445] to-[#e04520] text-white py-16 md:py-24">
         <div className="max-w-4xl mx-auto px-4 text-center">
           {schoolLogo && (
-            <div className={`inline-block rounded-2xl p-4 mb-8 shadow-lg ${logoDark ? 'bg-[#42ADE2]' : 'bg-white'}`}>
+            <div className={`inline-block rounded-2xl p-4 mb-8 shadow-lg ${logoBgColor}`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={schoolLogo}
