@@ -85,6 +85,7 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
   const [data, setData] = useState<FairData | null>(null);
   const [loading, setLoading] = useState(true);
   const [schoolLogo, setSchoolLogo] = useState<string | null>(null);
+  const [logoDark, setLogoDark] = useState(false);
 
   useEffect(() => {
     if (!school) {
@@ -95,7 +96,40 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
     // Fetch school logo via our API (tries Clearbit, then scrapes site)
     fetch(`/api/school-logo?domain=${encodeURIComponent(school)}`, { cache: 'no-store' })
       .then(res => res.json())
-      .then(result => { if (result.logo) setSchoolLogo(result.logo); })
+      .then(result => {
+        if (result.logo) {
+          // Check if the logo is primarily light/reversed
+          const img = new window.Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => {
+            try {
+              const canvas = document.createElement('canvas');
+              canvas.width = img.width;
+              canvas.height = img.height;
+              const ctx = canvas.getContext('2d');
+              if (ctx) {
+                ctx.drawImage(img, 0, 0);
+                const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+                let lightPixels = 0;
+                let totalVisible = 0;
+                for (let i = 0; i < data.length; i += 16) { // sample every 4th pixel
+                  const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+                  if (a > 50) { // non-transparent
+                    totalVisible++;
+                    if (r > 200 && g > 200 && b > 200) lightPixels++;
+                  }
+                }
+                if (totalVisible > 0 && lightPixels / totalVisible > 0.5) {
+                  setLogoDark(true);
+                }
+              }
+            } catch { /* CORS or canvas error — default to white bg */ }
+            setSchoolLogo(result.logo);
+          };
+          img.onerror = () => setSchoolLogo(result.logo);
+          img.src = result.logo;
+        }
+      })
       .catch(() => {});
 
     async function lookup() {
@@ -208,7 +242,7 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
       <section className="relative overflow-hidden bg-gradient-to-br from-[#ff6445] to-[#e04520] text-white py-16 md:py-24">
         <div className="max-w-4xl mx-auto px-4 text-center">
           {schoolLogo && (
-            <div className="inline-block bg-white rounded-2xl p-4 mb-8 shadow-lg">
+            <div className={`inline-block rounded-2xl p-4 mb-8 shadow-lg ${logoDark ? 'bg-[#42ADE2]' : 'bg-white'}`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={schoolLogo}
@@ -239,7 +273,7 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
               <a
                 href="#planning-calendar"
                 onClick={(e) => { e.preventDefault(); document.getElementById('planning-calendar')?.scrollIntoView({ behavior: 'smooth' }); }}
-                className="inline-flex items-center gap-2 mt-4 bg-[#ff6445] text-white font-bold uppercase tracking-wider text-base px-6 py-3 rounded-xl hover:bg-[#e04520] transition-colors"
+                className="inline-flex items-center gap-2 mt-4 bg-[#42ADE2] text-white font-bold uppercase tracking-wider text-base px-6 py-3 rounded-xl hover:bg-[#3698c9] transition-colors"
                 style={{ fontFamily: 'brother-1816, sans-serif' }}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
