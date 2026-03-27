@@ -162,7 +162,7 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
     {
       title: 'Create Store Account',
       thumbnail: '/images/create-account-thumb.png',
-      href: 'https://shop.ignatiusbookfairs.com/',
+      href: 'https://store.ignatiusbookfairs.com/?signup=true',
       border: true,
     },
   ];
