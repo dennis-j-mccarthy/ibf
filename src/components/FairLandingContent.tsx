@@ -205,22 +205,22 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
 
   return (
     <div className="min-h-screen bg-[#F3FDF5]">
-      {/* Hero — includes welcome + fair dates */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#ff6445] to-[#e04520] text-white py-12 md:py-20">
-        <div className="max-w-4xl mx-auto px-4">
-          {/* Logo + Welcome — side by side on desktop */}
-          <div className={`flex flex-col ${schoolLogo ? 'md:flex-row' : ''} items-center gap-6 md:gap-8`}>
-            {schoolLogo && (
-              <div className="flex-shrink-0 rounded-2xl p-4 shadow-lg bg-[#42ADE2]">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={schoolLogo}
-                  alt={data.company?.name || 'School logo'}
-                  className="h-20 md:h-24 w-auto object-contain"
-                />
-              </div>
-            )}
-            <div className={schoolLogo ? 'text-center md:text-left' : 'text-center w-full'}>
+      {/* Hero — two-column layout */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#ff6445] to-[#e04520] text-white">
+        <div className="max-w-6xl mx-auto px-4 py-10 md:py-16">
+          <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
+            {/* Left: text content */}
+            <div className="flex-1 text-center md:text-left">
+              {schoolLogo && (
+                <div className="inline-block rounded-2xl p-3 shadow-lg bg-[#42ADE2] mb-5">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={schoolLogo}
+                    alt={data.company?.name || 'School logo'}
+                    className="h-14 md:h-16 w-auto object-contain"
+                  />
+                </div>
+              )}
               <h1
                 className="text-3xl md:text-5xl font-bold mb-1"
                 style={{ fontFamily: 'brother-1816, sans-serif' }}
@@ -228,36 +228,44 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
                 Welcome{data.company?.name ? `, ${data.company.name}` : ''}!
               </h1>
               {data.company?.city && data.company?.state && (
-                <p className="text-lg opacity-80" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+                <p className="text-lg opacity-80 mb-4" style={{ fontFamily: 'brother-1816, sans-serif' }}>
                   {data.company.city}, {data.company.state}
                 </p>
               )}
+              {data.upcomingDeal && data.company?.book_fair_dates && (
+                <div className="bg-white rounded-2xl inline-block px-8 py-5 mt-2">
+                  <p className="text-[#ff6445] uppercase tracking-widest text-xs font-bold mb-1" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+                    Your Upcoming Fair
+                  </p>
+                  <p className="text-2xl md:text-3xl font-bold text-[#ff6445]" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+                    {data.company.book_fair_dates}
+                  </p>
+                  <a
+                    href="#planning-calendar"
+                    onClick={(e) => { e.preventDefault(); document.getElementById('planning-calendar')?.scrollIntoView({ behavior: 'smooth' }); }}
+                    className="inline-flex items-center gap-2 mt-3 bg-[#42ADE2] text-white font-bold uppercase tracking-wider text-sm px-5 py-2.5 rounded-xl hover:bg-[#3698c9] transition-colors"
+                    style={{ fontFamily: 'brother-1816, sans-serif' }}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                    </svg>
+                    View Your Personalized Fair Calendar
+                  </a>
+                </div>
+              )}
+            </div>
+            {/* Right: book fair photo */}
+            <div className="flex-shrink-0 w-full md:w-[45%]">
+              <Image
+                src="/images/bookfair-hero.png"
+                alt="Kids reading at a book fair"
+                width={864}
+                height={455}
+                className="rounded-2xl shadow-2xl w-full h-auto object-cover"
+                priority
+              />
             </div>
           </div>
-          {/* Upcoming fair dates */}
-          {data.upcomingDeal && data.company?.book_fair_dates && (
-            <div className="mt-8 text-center">
-              <div className="bg-white rounded-2xl inline-block px-10 py-6">
-                <p className="text-[#ff6445] uppercase tracking-widest text-sm font-bold mb-1" style={{ fontFamily: 'brother-1816, sans-serif' }}>
-                  Your Upcoming Fair
-                </p>
-                <p className="text-3xl md:text-4xl font-bold text-[#ff6445]" style={{ fontFamily: 'brother-1816, sans-serif' }}>
-                  {data.company.book_fair_dates}
-                </p>
-                <a
-                  href="#planning-calendar"
-                  onClick={(e) => { e.preventDefault(); document.getElementById('planning-calendar')?.scrollIntoView({ behavior: 'smooth' }); }}
-                  className="inline-flex items-center gap-2 mt-4 bg-[#42ADE2] text-white font-bold uppercase tracking-wider text-base px-6 py-3 rounded-xl hover:bg-[#3698c9] transition-colors"
-                  style={{ fontFamily: 'brother-1816, sans-serif' }}
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-                  </svg>
-                  View Your Personalized Fair Calendar
-                </a>
-              </div>
-            </div>
-          )}
         </div>
       </section>
 
