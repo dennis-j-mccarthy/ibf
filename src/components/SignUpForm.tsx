@@ -8,6 +8,7 @@ interface HubSpotData {
   contactName?: string;
   company?: {
     name?: string;
+    domain?: string;
     city?: string;
     state?: string;
     book_fair_dates?: string;
