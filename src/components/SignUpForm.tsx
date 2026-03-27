@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { trackFunnelEvent, getRepName } from '@/lib/analytics';
 
 interface HubSpotData {
@@ -424,17 +424,13 @@ const SignUpForm = () => {
     }
   }, []);
 
-  // Debounce the lookup for returning customers
+  // Trigger lookup when rebookWebsite is set programmatically (e.g., from ?school= param)
+  const initialLookupDone = useRef(false);
   useEffect(() => {
-    if (formData.previouslyHadFair !== true) return;
-
-    const timer = setTimeout(() => {
-      if (formData.rebookWebsite) {
-        lookupHubSpot('', formData.rebookWebsite);
-      }
-    }, 500);
-
-    return () => clearTimeout(timer);
+    if (formData.previouslyHadFair === true && formData.rebookWebsite && !initialLookupDone.current) {
+      initialLookupDone.current = true;
+      lookupHubSpot('', formData.rebookWebsite);
+    }
   }, [formData.rebookWebsite, formData.previouslyHadFair, lookupHubSpot]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -830,16 +826,50 @@ const SignUpForm = () => {
                   <p className="text-gray-600 text-sm text-center" style={{ fontFamily: 'brother-1816, sans-serif' }}>
                     Enter your school or organization domain name to find your account:
                   </p>
-                  <input
-                    type="text"
-                    name="rebookWebsite"
-                    placeholder="School or Organization Website"
-                    value={formData.rebookWebsite}
-                    onChange={handleChange}
-                    onBlur={() => { if (formData.rebookWebsite) lookupHubSpot('', formData.rebookWebsite); }}
-                    className="w-full h-11 px-4 rounded-lg border-0 bg-[#0088ff] text-white placeholder-white tracking-wide"
-                    style={{ fontFamily: 'brother-1816, sans-serif' }}
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      name="rebookWebsite"
+                      placeholder="School or Organization Website"
+                      value={formData.rebookWebsite}
+                      onChange={handleChange}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); if (formData.rebookWebsite) lookupHubSpot('', formData.rebookWebsite); } }}
+                      disabled={!!hubspotData?.found}
+                      className="flex-1 h-11 px-4 rounded-lg border-0 bg-[#0088ff] text-white placeholder-white tracking-wide disabled:opacity-70"
+                      style={{ fontFamily: 'brother-1816, sans-serif' }}
+                    />
+                    {hubspotData?.found ? (
+                      <button
+                        type="button"
+                        onClick={() => { setHubspotData(null); setFormData(prev => ({ ...prev, rebookWebsite: '' })); initialLookupDone.current = false; }}
+                        className="h-11 w-11 flex-shrink-0 rounded-lg bg-[#ff6445] hover:bg-[#e04520] flex items-center justify-center transition-colors"
+                        title="Clear and search again"
+                      >
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => { if (formData.rebookWebsite) lookupHubSpot('', formData.rebookWebsite); }}
+                        disabled={!formData.rebookWebsite || isLookingUp}
+                        className="h-11 px-4 flex-shrink-0 rounded-lg bg-[#50db92] hover:bg-[#45c583] disabled:opacity-50 flex items-center justify-center transition-colors"
+                        style={{ fontFamily: 'brother-1816, sans-serif' }}
+                      >
+                        {isLookingUp ? (
+                          <svg className="w-5 h-5 text-white animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                          </svg>
+                        ) : (
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                          </svg>
+                        )}
+                      </button>
+                    )}
+                  </div>
 
                   {/* Welcome message when HubSpot finds the customer */}
                   {hubspotData?.found && (
@@ -937,7 +967,7 @@ const SignUpForm = () => {
                     </div>
                   )}
 
-                  {isLookingUp && (
+                  {isLookingUp && !hubspotData?.found && (
                     <div className="text-center text-[#0088ff]" style={{ fontFamily: 'brother-1816, sans-serif' }}>
                       <p className="text-sm">Looking up your information...</p>
                     </div>
