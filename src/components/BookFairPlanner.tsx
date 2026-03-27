@@ -1271,6 +1271,7 @@ export default function BookFairPlanner({ resources, initialFairType, initialFai
   const [selectedEvent, setSelectedEvent] = useState<PlannerEvent | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<Resource | null>(null);
   const [dateInput, setDateInput] = useState('');
+  const [hoveredEventId, setHoveredEventId] = useState<string | null>(null);
 
   // Auto-populate from props (e.g., fair landing page) or URL query params
   useEffect(() => {
@@ -1450,13 +1451,15 @@ export default function BookFairPlanner({ resources, initialFairType, initialFai
                 <button
                   key={event.id}
                   onClick={() => setSelectedEvent(event)}
+                  onMouseEnter={() => setHoveredEventId(event.id)}
+                  onMouseLeave={() => setHoveredEventId(null)}
                   className={`px-3 py-2 rounded-lg text-white text-sm font-medium transition-all hover:scale-105 ${
                     event.daysFromFair === 0
                       ? 'bg-[#ffc107] text-gray-900'
                       : event.type === 'operations'
                       ? 'bg-[#ff6445]'
                       : 'bg-[#00c853]'
-                  }`}
+                  } ${hoveredEventId === event.id ? 'ring-2 ring-white scale-105' : ''}`}
                 >
                   <div className="font-bold">{formatDate(event.date)}</div>
                   <div className="text-xs opacity-90 truncate max-w-[120px]">{event.title}</div>
@@ -1474,6 +1477,8 @@ export default function BookFairPlanner({ resources, initialFairType, initialFai
                 fairDate={fairDate}
                 getEventsForDate={getEventsForDate}
                 onEventClick={setSelectedEvent}
+                hoveredEventId={hoveredEventId}
+                onHoverEvent={setHoveredEventId}
               />
             ))}
           </div>
@@ -1507,11 +1512,15 @@ function MonthCalendar({
   fairDate,
   getEventsForDate,
   onEventClick,
+  hoveredEventId,
+  onHoverEvent,
 }: {
   month: Date;
   fairDate: Date;
   getEventsForDate: (date: Date) => (PlannerEvent & { date: Date })[];
   onEventClick: (event: PlannerEvent) => void;
+  hoveredEventId: string | null;
+  onHoverEvent: (id: string | null) => void;
 }) {
   const daysInMonth = getDaysInMonth(month);
   const firstDay = getFirstDayOfMonth(month);
@@ -1534,11 +1543,14 @@ function MonthCalendar({
           const date = new Date(month.getFullYear(), month.getMonth(), day);
           const events = getEventsForDate(date);
           const isFairDay = date.toDateString() === fairDate.toDateString();
+          const isHovered = events.length > 0 && events.some(e => e.id === hoveredEventId);
 
           return (
             <button
               key={day}
               onClick={() => events.length > 0 && onEventClick(events[0])}
+              onMouseEnter={() => events.length > 0 && onHoverEvent(events[0].id)}
+              onMouseLeave={() => onHoverEvent(null)}
               disabled={events.length === 0}
               className={`h-8 w-8 mx-auto rounded-full text-sm flex items-center justify-center transition-all ${
                 isFairDay
@@ -1548,7 +1560,7 @@ function MonthCalendar({
                     ? 'bg-[#ff6445] text-white hover:scale-110 cursor-pointer'
                     : 'bg-[#00c853] text-white hover:scale-110 cursor-pointer'
                   : 'text-gray-600 hover:bg-gray-100'
-              }`}
+              } ${isHovered ? 'ring-2 ring-white scale-110' : ''}`}
             >
               {day}
             </button>
