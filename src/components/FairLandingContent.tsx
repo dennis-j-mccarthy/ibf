@@ -199,13 +199,6 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
       {/* Hero — includes welcome + fair dates */}
       <section className="relative overflow-hidden bg-gradient-to-br from-[#ff6445] to-[#e04520] text-white py-16 md:py-24">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <Image
-            src="/images/IBF_Logo-white.png"
-            alt="Ignatius Book Fairs"
-            width={240}
-            height={60}
-            className="mx-auto mb-8"
-          />
           <h1
             className="text-4xl md:text-6xl font-bold mb-4"
             style={{ fontFamily: 'brother-1816, sans-serif' }}
@@ -238,6 +231,9 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
       {/* Quick Links — 4 cards in a row */}
       <section className="py-12 md:py-16">
         <div className="max-w-5xl mx-auto px-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-[#02176f] text-center mb-8" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+            Quick Links
+          </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
             {quickLinks.map((link) => (
               <Link
