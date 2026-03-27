@@ -66,17 +66,21 @@ export async function POST(request: NextRequest) {
 
     console.log('Searching for company by domain:', domain);
 
-    // Try multiple search strategies for domain matching
-    const searchStrategies = [
-      { operator: 'EQ', value: domain, description: 'exact match' },
-      { operator: 'CONTAINS_TOKEN', value: domain.split('.')[0], description: 'contains token' },
-      { operator: 'EQ', value: `www.${domain}`, description: 'with www prefix' },
+    // Try exact domain matches first (including alternate TLDs), then fuzzy
+    const domainBase = domain.split('.')[0];
+    const domainTLD = domain.split('.').slice(1).join('.');
+    const alternateTLDs = ['com', 'org', 'edu', 'net', 'us'].filter(t => t !== domainTLD);
+    const exactStrategies = [
+      { value: domain, description: 'exact match' },
+      { value: `www.${domain}`, description: 'with www prefix' },
+      ...alternateTLDs.map(tld => ({ value: `${domainBase}.${tld}`, description: `alternate TLD .${tld}` })),
     ];
 
-    for (const strategy of searchStrategies) {
+    // Phase 1: Try exact matches
+    for (const strategy of exactStrategies) {
       if (companyId) break;
 
-      console.log(`Trying domain search: ${strategy.description} (${strategy.operator}: ${strategy.value})`);
+      console.log(`Trying domain search: ${strategy.description} (EQ: ${strategy.value})`);
 
       const companyResponse = await fetch('https://api.hubapi.com/crm/v3/objects/companies/search', {
         method: 'POST',
@@ -88,7 +92,7 @@ export async function POST(request: NextRequest) {
           filterGroups: [{
             filters: [{
               propertyName: 'domain',
-              operator: strategy.operator,
+              operator: 'EQ',
               value: strategy.value,
             }],
           }],
@@ -103,6 +107,47 @@ export async function POST(request: NextRequest) {
           companyData = companyResult.results[0].properties;
           companyId = companyResult.results[0].id;
           console.log('Found company:', companyData.name, '(ID:', companyId, ')');
+        }
+      }
+    }
+
+    // Phase 2: Fuzzy search with CONTAINS_TOKEN — but if multiple results, prefer closest domain match
+    if (!companyId) {
+      console.log(`Trying domain search: contains token (CONTAINS_TOKEN: ${domainBase})`);
+
+      const companyResponse = await fetch('https://api.hubapi.com/crm/v3/objects/companies/search', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          filterGroups: [{
+            filters: [{
+              propertyName: 'domain',
+              operator: 'CONTAINS_TOKEN',
+              value: domainBase,
+            }],
+          }],
+          properties: ['name', 'domain', 'city', 'state', 'hubspot_owner_id', 'book_fair_dates', 'book_fair_status'],
+        }),
+      });
+
+      if (companyResponse.ok) {
+        const companyResult = await companyResponse.json();
+        console.log(`  Results: ${companyResult.results?.length || 0} found`);
+        if (companyResult.results?.length > 0) {
+          // If multiple results, prefer exact domain base match (e.g., sppschool.com → sppschool.org over sppschool.parish.org)
+          const bestMatch = companyResult.results.find(
+            (r: { properties: { domain?: string } }) => {
+              const d = (r.properties.domain || '').replace(/^www\./, '');
+              return d.split('.')[0] === domainBase;
+            }
+          ) || companyResult.results[0];
+
+          companyData = bestMatch.properties;
+          companyId = bestMatch.id;
+          console.log('Found company:', companyData.name, '(ID:', companyId, ') domain:', companyData.domain);
         }
       }
     }
