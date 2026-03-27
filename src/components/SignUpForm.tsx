@@ -382,18 +382,45 @@ const SignUpForm = () => {
   }, []);
 
   // Auto-invoke returning customer flow when ?school= param is present
+  // If they have an upcoming fair, redirect to dedicated fair landing page
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const schoolDomain = params.get('school');
     if (schoolDomain) {
-      setFormData(prev => ({
-        ...prev,
-        previouslyHadFair: true,
-        rebookWebsite: schoolDomain,
-      }));
-      setTimeout(() => {
-        document.getElementById('signup')?.scrollIntoView({ behavior: 'smooth' });
-      }, 300);
+      // Check if they have an upcoming fair first
+      fetch('/api/hubspot/lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ website: schoolDomain }),
+      })
+        .then(res => res.ok ? res.json() : null)
+        .then(result => {
+          if (result?.found && result?.upcomingDeal) {
+            // Redirect to fair landing page
+            window.location.href = `/fair?school=${encodeURIComponent(schoolDomain)}`;
+          } else {
+            // No upcoming fair — show returning customer flow inline
+            setFormData(prev => ({
+              ...prev,
+              previouslyHadFair: true,
+              rebookWebsite: schoolDomain,
+            }));
+            setTimeout(() => {
+              document.getElementById('signup')?.scrollIntoView({ behavior: 'smooth' });
+            }, 300);
+          }
+        })
+        .catch(() => {
+          // On error, fall back to inline flow
+          setFormData(prev => ({
+            ...prev,
+            previouslyHadFair: true,
+            rebookWebsite: schoolDomain,
+          }));
+          setTimeout(() => {
+            document.getElementById('signup')?.scrollIntoView({ behavior: 'smooth' });
+          }, 300);
+        });
     }
   }, []);
 
