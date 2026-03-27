@@ -38,15 +38,7 @@ export async function GET(request: NextRequest) {
 
       const html = await res.text();
 
-      // Try og:image first
-      const ogMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
-        || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
-      if (ogMatch?.[1]) {
-        const ogUrl = resolveUrl(ogMatch[1], siteUrl);
-        if (ogUrl) return NextResponse.json({ logo: ogUrl });
-      }
-
-      // Try img tags with "logo" in src, alt, class, or id
+      // Try img tags with "logo" in src, alt, class, or id (most reliable)
       const imgRegex = /<img[^>]*>/gi;
       let imgMatch;
       while ((imgMatch = imgRegex.exec(html)) !== null) {
@@ -61,11 +53,19 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // Try apple-touch-icon (usually a decent logo)
+      // Try apple-touch-icon
       const touchIcon = html.match(/<link[^>]+rel=["']apple-touch-icon["'][^>]+href=["']([^"']+)["']/i);
       if (touchIcon?.[1]) {
         const iconUrl = resolveUrl(touchIcon[1], siteUrl);
         if (iconUrl) return NextResponse.json({ logo: iconUrl });
+      }
+
+      // Fall back to og:image
+      const ogMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
+        || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+      if (ogMatch?.[1]) {
+        const ogUrl = resolveUrl(ogMatch[1], siteUrl);
+        if (ogUrl) return NextResponse.json({ logo: ogUrl });
       }
 
     } catch { /* try next URL */ }
