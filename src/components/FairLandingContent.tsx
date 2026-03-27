@@ -173,7 +173,7 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
       quickLinks.push({
         title: 'Your Guide',
         thumbnail: typeResources.guideThumbnail,
-        href: guideResource.fileUrl || `/bookfair-resources?resource=${typeResources.guide}`,
+        href: `/bookfair-resources?resource=${typeResources.guide}`,
       });
     }
     const checklistResource = resourceMap.get(typeResources.checklist);
@@ -181,7 +181,7 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
       quickLinks.push({
         title: 'Your Checklist',
         thumbnail: typeResources.checklistThumbnail,
-        href: checklistResource.fileUrl || `/bookfair-resources?resource=${typeResources.checklist}`,
+        href: `/bookfair-resources?resource=${typeResources.checklist}`,
       });
     }
     const faqResource = resourceMap.get(typeResources.faq);
@@ -189,7 +189,7 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
       quickLinks.push({
         title: 'Your FAQ',
         thumbnail: typeResources.faqThumbnail,
-        href: faqResource.fileUrl || `/bookfair-resources?resource=${typeResources.faq}`,
+        href: `/bookfair-resources?resource=${typeResources.faq}`,
       });
     }
   }
