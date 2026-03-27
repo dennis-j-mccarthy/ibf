@@ -208,19 +208,21 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
       {/* Hero — two-column layout */}
       <section className="relative overflow-hidden bg-gradient-to-br from-[#ff6445] to-[#e04520] text-white">
         <div className="max-w-6xl mx-auto px-4 py-10 md:py-16">
-          <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
+          {/* School logo above the two-column area */}
+          {schoolLogo && (
+            <div className="inline-block rounded-2xl p-3 shadow-lg bg-[#42ADE2] mb-6 md:mb-8">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={schoolLogo}
+                alt={data.company?.name || 'School logo'}
+                className="h-14 md:h-16 w-auto object-contain"
+              />
+            </div>
+          )}
+          {/* Two-column: text left, photo right — aligned top and bottom */}
+          <div className="flex flex-col md:flex-row items-stretch gap-8 md:gap-10">
             {/* Left: text content */}
-            <div className="flex-1 text-center md:text-left">
-              {schoolLogo && (
-                <div className="inline-block rounded-2xl p-3 shadow-lg bg-[#42ADE2] mb-5">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={schoolLogo}
-                    alt={data.company?.name || 'School logo'}
-                    className="h-14 md:h-16 w-auto object-contain"
-                  />
-                </div>
-              )}
+            <div className="flex-1 flex flex-col text-center md:text-left">
               <h1
                 className="text-3xl md:text-5xl font-bold mb-1"
                 style={{ fontFamily: 'brother-1816, sans-serif' }}
@@ -233,7 +235,7 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
                 </p>
               )}
               {data.upcomingDeal && data.company?.book_fair_dates && (
-                <div className="bg-white rounded-2xl inline-block px-8 py-5 mt-2">
+                <div className="bg-white rounded-2xl inline-block px-8 py-5 mt-auto">
                   <p className="text-[#ff6445] uppercase tracking-widest text-xs font-bold mb-1" style={{ fontFamily: 'brother-1816, sans-serif' }}>
                     Your Upcoming Fair
                   </p>
@@ -254,14 +256,13 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
                 </div>
               )}
             </div>
-            {/* Right: book fair photo */}
-            <div className="flex-shrink-0 w-full md:w-[45%]">
+            {/* Right: book fair photo — stretches to match left column height */}
+            <div className="w-full md:w-[45%] flex-shrink-0 relative rounded-2xl overflow-hidden shadow-2xl min-h-[200px]">
               <Image
                 src="/images/bookfair-hero.png"
                 alt="Kids reading at a book fair"
-                width={864}
-                height={455}
-                className="rounded-2xl shadow-2xl w-full h-auto object-cover"
+                fill
+                className="object-cover"
                 priority
               />
             </div>
