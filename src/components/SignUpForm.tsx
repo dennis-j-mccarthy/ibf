@@ -803,14 +803,21 @@ const SignUpForm = () => {
                         Welcome back{hubspotData.contactName ? `, ${hubspotData.contactName}` : ''}!
                       </p>
                       {hubspotData.company?.name && (
-                        <p className="leading-tight" style={{ fontFamily: 'brother-1816, sans-serif', fontSize: '1.3rem' }}>
-                          {hubspotData.company.name}
-                          {hubspotData.company?.city && hubspotData.company?.state && (
-                            <span className="opacity-90" style={{ fontSize: '0.9rem' }}>
-                              {' '}&mdash; {hubspotData.company.city}, {hubspotData.company.state}
-                            </span>
+                        <div className="leading-tight">
+                          <p style={{ fontFamily: 'brother-1816, sans-serif', fontSize: '1.3rem' }}>
+                            {hubspotData.company.name}
+                            {hubspotData.company?.city && hubspotData.company?.state && (
+                              <span className="opacity-90" style={{ fontSize: '0.9rem' }}>
+                                {' '}&mdash; {hubspotData.company.city}, {hubspotData.company.state}
+                              </span>
+                            )}
+                          </p>
+                          {hubspotData.company?.domain && (
+                            <p className="opacity-70" style={{ fontFamily: 'brother-1816, sans-serif', fontSize: '0.85rem' }}>
+                              {hubspotData.company.domain}
+                            </p>
                           )}
-                        </p>
+                        </div>
                       )}
                       {hubspotData.company?.book_fair_dates && (
                         <p className="mt-2 font-bold" style={{ fontFamily: 'brother-1816, sans-serif', fontSize: '1.14rem' }}>
