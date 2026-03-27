@@ -165,9 +165,10 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
   }
 
   // Build quick link cards
-  const quickLinks: { title: string; thumbnail: string; href: string; border?: boolean }[] = [
+  const quickLinks: { title: string; subtitle?: string; thumbnail: string; href: string; border?: boolean }[] = [
     {
       title: 'Create Store Account',
+      subtitle: data.company?.name ? `All purchases benefit ${data.company.name}` : undefined,
       thumbnail: '/images/create-account-thumb.png',
       href: 'https://store.ignatiusbookfairs.com/?signup=true',
       border: true,
@@ -283,6 +284,11 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
                 >
                   {link.title}
                 </p>
+                {link.subtitle && (
+                  <p className="text-xs text-gray-500 mt-1" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+                    {link.subtitle}
+                  </p>
+                )}
               </Link>
             ))}
           </div>
