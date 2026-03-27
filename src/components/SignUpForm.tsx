@@ -863,7 +863,7 @@ const SignUpForm = () => {
                           )}
                         </div>
                       )}
-                      {hubspotData.company?.book_fair_dates && (
+                      {hubspotData.upcomingDeal && hubspotData.company?.book_fair_dates && (
                         <p className="mt-2 font-bold" style={{ fontFamily: 'brother-1816, sans-serif', fontSize: '1.14rem' }}>
                           Upcoming fair! {hubspotData.company.book_fair_dates}
                         </p>
@@ -892,7 +892,7 @@ const SignUpForm = () => {
                           )}
                         </p>
                       )}
-                      {hubspotData.company?.book_fair_dates && (() => {
+                      {hubspotData.upcomingDeal && hubspotData.company?.book_fair_dates && (() => {
                         // Parse start date from text like "March 1-8, 2026"
                         const dateText = hubspotData.company.book_fair_dates!;
                         const monthDayMatch = dateText.match(/^(\w+)\s+(\d+)/);

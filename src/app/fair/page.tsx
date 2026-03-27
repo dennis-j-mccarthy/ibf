@@ -152,7 +152,7 @@ export default function FairLandingPage() {
       <section className="py-12 md:py-16">
         <div className="max-w-4xl mx-auto px-4">
           {/* Upcoming Fair Card */}
-          {data.company?.book_fair_dates && (
+          {data.upcomingDeal && data.company?.book_fair_dates && (
             <div className="bg-white rounded-2xl shadow-lg p-8 md:p-12 text-center mb-8">
               <p className="text-[#0088ff] uppercase tracking-widest text-sm font-bold mb-2" style={{ fontFamily: 'brother-1816, sans-serif' }}>
                 Your Upcoming Fair
