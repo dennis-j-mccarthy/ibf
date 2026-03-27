@@ -69,18 +69,11 @@ export async function POST(request: NextRequest) {
 
     console.log('Searching for company by domain:', domain);
 
-    // Try exact domain matches first (including alternate TLDs), then fuzzy
-    const domainBase = domainWithoutWww.split('.')[0];
-    const domainTLD = domainWithoutWww.split('.').slice(1).join('.');
-    const alternateTLDs = ['com', 'org', 'edu', 'net', 'us'].filter(t => t !== domainTLD);
-
-    // Build unique set of exact match candidates
+    // Strict exact match only — no alternate TLDs
     const exactCandidates = new Set([
       domain,                    // as entered
       domainWithoutWww,          // without www
       domainWithWww,             // with www
-      ...alternateTLDs.map(tld => `${domainBase}.${tld}`),
-      ...alternateTLDs.map(tld => `www.${domainBase}.${tld}`),
     ]);
     const exactStrategies = [...exactCandidates].map(v => ({ value: v, description: `exact: ${v}` }));
 
