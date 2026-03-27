@@ -93,7 +93,7 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
     }
 
     // Fetch school logo via our API (tries Clearbit, then scrapes site)
-    fetch(`/api/school-logo?domain=${encodeURIComponent(school)}`)
+    fetch(`/api/school-logo?domain=${encodeURIComponent(school)}`, { cache: 'no-store' })
       .then(res => res.json())
       .then(result => { if (result.logo) setSchoolLogo(result.logo); })
       .catch(() => {});
