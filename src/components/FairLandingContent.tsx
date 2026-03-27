@@ -292,7 +292,8 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
             ))}
           </div>
           {/* Tax Exempt Reminder */}
-          {!data.company?.tax_exempt_form && (
+          {/* TODO: restore condition: !data.company?.tax_exempt_form — always shown for demo */}
+          {(
             <div className="mt-8 bg-[#FFF8E1] border border-[#FFE082] rounded-2xl p-5 flex items-center gap-4">
               <span className="text-4xl flex-shrink-0" role="img" aria-label="reminder">
                 <svg className="w-10 h-10 text-[#FF8F00]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
