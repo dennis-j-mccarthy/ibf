@@ -221,13 +221,8 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
             className="text-4xl md:text-6xl font-bold mb-4"
             style={{ fontFamily: 'brother-1816, sans-serif' }}
           >
-            Welcome{data.contactName ? `, ${data.contactName}` : ''}!
+            Welcome{data.company?.name ? `, ${data.company.name}` : ''}!
           </h1>
-          {data.company?.name && (
-            <p className="text-2xl md:text-3xl font-semibold opacity-95" style={{ fontFamily: 'brother-1816, sans-serif' }}>
-              {data.company.name}
-            </p>
-          )}
           {data.company?.city && data.company?.state && (
             <p className="text-lg opacity-80 mt-1" style={{ fontFamily: 'brother-1816, sans-serif' }}>
               {data.company.city}, {data.company.state}
