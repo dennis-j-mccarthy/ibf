@@ -206,48 +206,56 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
   return (
     <div className="min-h-screen bg-[#F3FDF5]">
       {/* Hero — includes welcome + fair dates */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#ff6445] to-[#e04520] text-white py-16 md:py-24">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          {schoolLogo && (
-            <div className="inline-block rounded-2xl p-4 mb-8 shadow-lg bg-[#42ADE2]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={schoolLogo}
-                alt={data.company?.name || 'School logo'}
-                className="h-16 md:h-20 w-auto object-contain"
-              />
-            </div>
-          )}
-          <h1
-            className="text-4xl md:text-6xl font-bold mb-4"
-            style={{ fontFamily: 'brother-1816, sans-serif' }}
-          >
-            Welcome{data.company?.name ? `, ${data.company.name}` : ''}!
-          </h1>
-          {data.company?.city && data.company?.state && (
-            <p className="text-lg opacity-80 mt-1" style={{ fontFamily: 'brother-1816, sans-serif' }}>
-              {data.company.city}, {data.company.state}
-            </p>
-          )}
-          {data.upcomingDeal && data.company?.book_fair_dates && (
-            <div className="mt-8 bg-white rounded-2xl inline-block px-10 py-6">
-              <p className="text-[#ff6445] uppercase tracking-widest text-sm font-bold mb-1" style={{ fontFamily: 'brother-1816, sans-serif' }}>
-                Your Upcoming Fair
-              </p>
-              <p className="text-3xl md:text-4xl font-bold text-[#ff6445]" style={{ fontFamily: 'brother-1816, sans-serif' }}>
-                {data.company.book_fair_dates}
-              </p>
-              <a
-                href="#planning-calendar"
-                onClick={(e) => { e.preventDefault(); document.getElementById('planning-calendar')?.scrollIntoView({ behavior: 'smooth' }); }}
-                className="inline-flex items-center gap-2 mt-4 bg-[#42ADE2] text-white font-bold uppercase tracking-wider text-base px-6 py-3 rounded-xl hover:bg-[#3698c9] transition-colors"
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#ff6445] to-[#e04520] text-white py-12 md:py-20">
+        <div className="max-w-4xl mx-auto px-4">
+          {/* Logo + Welcome — side by side on desktop */}
+          <div className={`flex flex-col ${schoolLogo ? 'md:flex-row' : ''} items-center gap-6 md:gap-8`}>
+            {schoolLogo && (
+              <div className="flex-shrink-0 rounded-2xl p-4 shadow-lg bg-[#42ADE2]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={schoolLogo}
+                  alt={data.company?.name || 'School logo'}
+                  className="h-20 md:h-24 w-auto object-contain"
+                />
+              </div>
+            )}
+            <div className={schoolLogo ? 'text-center md:text-left' : 'text-center w-full'}>
+              <h1
+                className="text-3xl md:text-5xl font-bold mb-1"
                 style={{ fontFamily: 'brother-1816, sans-serif' }}
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-                </svg>
-                View Your Personalized Fair Calendar
-              </a>
+                Welcome{data.company?.name ? `, ${data.company.name}` : ''}!
+              </h1>
+              {data.company?.city && data.company?.state && (
+                <p className="text-lg opacity-80" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+                  {data.company.city}, {data.company.state}
+                </p>
+              )}
+            </div>
+          </div>
+          {/* Upcoming fair dates */}
+          {data.upcomingDeal && data.company?.book_fair_dates && (
+            <div className="mt-8 text-center">
+              <div className="bg-white rounded-2xl inline-block px-10 py-6">
+                <p className="text-[#ff6445] uppercase tracking-widest text-sm font-bold mb-1" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+                  Your Upcoming Fair
+                </p>
+                <p className="text-3xl md:text-4xl font-bold text-[#ff6445]" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+                  {data.company.book_fair_dates}
+                </p>
+                <a
+                  href="#planning-calendar"
+                  onClick={(e) => { e.preventDefault(); document.getElementById('planning-calendar')?.scrollIntoView({ behavior: 'smooth' }); }}
+                  className="inline-flex items-center gap-2 mt-4 bg-[#42ADE2] text-white font-bold uppercase tracking-wider text-base px-6 py-3 rounded-xl hover:bg-[#3698c9] transition-colors"
+                  style={{ fontFamily: 'brother-1816, sans-serif' }}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                  </svg>
+                  View Your Personalized Fair Calendar
+                </a>
+              </div>
             </div>
           )}
         </div>
@@ -294,24 +302,20 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
           {/* Tax Exempt Reminder */}
           {/* TODO: restore condition: !data.company?.tax_exempt_form — always shown for demo */}
           {(
-            <div className="mt-8 bg-[#FFF8E1] border border-[#FFE082] rounded-2xl p-5 flex items-center gap-4">
-              <span className="text-4xl flex-shrink-0" role="img" aria-label="reminder">
-                <svg className="w-10 h-10 text-[#FF8F00]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-                </svg>
-              </span>
-              <div className="flex-1">
-                <p className="text-[#02176f] font-bold text-sm" style={{ fontFamily: 'brother-1816, sans-serif' }}>
-                  Don&apos;t forget to upload your tax exempt docs!
-                </p>
-                <Link
-                  href="/upload-tax-document"
-                  className="text-[#0088ff] hover:text-[#0070dd] text-sm font-semibold underline underline-offset-2 transition-colors"
-                  style={{ fontFamily: 'brother-1816, sans-serif' }}
-                >
-                  Upload Tax Exempt Certificate
-                </Link>
-              </div>
+            <div className="mt-8 bg-[#FFF8E1] border border-[#FFE082] rounded-2xl p-5 flex flex-col items-center text-center gap-2">
+              <svg className="w-8 h-8 text-[#FF8F00]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+              </svg>
+              <p className="text-[#02176f] font-bold text-sm" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+                Don&apos;t forget to upload your tax exempt docs!
+              </p>
+              <Link
+                href="/upload-tax-document"
+                className="text-[#0088ff] hover:text-[#0070dd] text-sm font-semibold underline underline-offset-2 transition-colors"
+                style={{ fontFamily: 'brother-1816, sans-serif' }}
+              >
+                Upload Tax Exempt Certificate
+              </Link>
             </div>
           )}
         </div>
