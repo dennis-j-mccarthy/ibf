@@ -84,12 +84,26 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
   const school = searchParams.get('school');
   const [data, setData] = useState<FairData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [schoolLogo, setSchoolLogo] = useState<string | null>(null);
 
   useEffect(() => {
     if (!school) {
       setLoading(false);
       return;
     }
+
+    // Try to fetch school logo from Clearbit
+    let domain = school.trim().toLowerCase();
+    try {
+      if (domain.includes('://')) domain = new URL(domain).hostname;
+      else if (domain.includes('/')) domain = domain.split('/')[0];
+    } catch { /* use as-is */ }
+    domain = domain.replace(/^www\./, '');
+    const logoUrl = `https://logo.clearbit.com/${domain}`;
+    const img = new window.Image();
+    img.onload = () => setSchoolLogo(logoUrl);
+    img.onerror = () => setSchoolLogo(null);
+    img.src = logoUrl;
 
     async function lookup() {
       try {
@@ -199,6 +213,16 @@ function FairLandingInner({ resources }: { resources: Resource[] }) {
       {/* Hero — includes welcome + fair dates */}
       <section className="relative overflow-hidden bg-gradient-to-br from-[#ff6445] to-[#e04520] text-white py-16 md:py-24">
         <div className="max-w-4xl mx-auto px-4 text-center">
+          {schoolLogo && (
+            <div className="inline-block bg-white rounded-2xl p-4 mb-8 shadow-lg">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={schoolLogo}
+                alt={data.company?.name || 'School logo'}
+                className="h-16 md:h-20 w-auto object-contain"
+              />
+            </div>
+          )}
           <h1
             className="text-4xl md:text-6xl font-bold mb-4"
             style={{ fontFamily: 'brother-1816, sans-serif' }}
