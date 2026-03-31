@@ -15,12 +15,12 @@ const teamMembers = [
   { name: 'Cassandra Husak', role: 'Purchasing & Inventory', image: '/images/cassandra.png' },
   { name: 'Susan Nutt', role: 'Book Fair Pro', image: '/images/SusanNutt.jpg' },
   { name: 'Rose Trabbic', role: 'Book and Product Manager', image: '/images/RoseTrabbic.jpg' },
-  { name: 'Anna Bragdon', role: 'Book List Curator', image: '/images/AnnaBragdon.jpg' },
   { name: 'Veronica Salgado', role: 'Marketing Specialist', image: '/images/veronica.png' },
   { name: 'Kim Neumaier', role: 'Book Fair Pro', image: '/images/kim.png' },
   { name: 'Alma Cue', role: 'Book Fair Pro', image: '/images/AlmaCue.jpg' },
   { name: 'Jeanette Pohl', role: 'Book Fair Pro', image: '/images/jeanette1.png' },
   { name: 'Julie DeGregoria', role: 'Book Fair Pro', image: '/images/julie-blob-3.jpg' },
+  { name: 'Marni Gilet', role: 'Book Fair Pro', image: '/images/blob-marni.png' },
   { name: 'Nick Capone', role: 'Video Production', image: '/images/Nick.png' },
   { name: "Balbina O'Brien", role: 'Graphic Design Lead', image: '/images/Balbina.png' },
 ];
