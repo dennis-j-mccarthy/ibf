@@ -20,7 +20,7 @@ const teamMembers = [
   { name: 'Alma Cue', role: 'Book Fair Pro', image: '/images/AlmaCue.jpg' },
   { name: 'Jeanette Pohl', role: 'Book Fair Pro', image: '/images/jeanette1.png' },
   { name: 'Julie DeGregoria', role: 'Book Fair Pro', image: '/images/julie-blob-3.jpg' },
-  { name: 'Marni Gilet', role: 'Book Fair Pro', image: '/images/blob-marni.png' },
+  { name: 'Marni Spewock', role: 'Book Fair Pro', image: '/images/blob-marni.png' },
   { name: 'Nick Capone', role: 'Video Production', image: '/images/Nick.png' },
   { name: "Balbina O'Brien", role: 'Graphic Design Lead', image: '/images/Balbina.png' },
 ];
