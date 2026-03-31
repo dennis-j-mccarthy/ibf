@@ -13,7 +13,7 @@ const teamMembers = [
   { name: 'Kristin Munin', role: 'Book Fair Manager', image: '/images/Kristin-Munin.png' },
   { name: 'Amy Shaw', role: 'Book Fair Manager', image: '/images/Amy-Shaw-website-2.png' },
   { name: 'Cassandra Husak', role: 'Purchasing & Inventory', image: '/images/cassandra.png' },
-  { name: 'Susan Nutt', role: 'Book Fair Pro', image: '/images/SusanNutt.jpg' },
+  { name: 'Susan Nutt', role: 'Book Fair Admin', image: '/images/SusanNutt.jpg' },
   { name: 'Rose Trabbic', role: 'Book and Product Manager', image: '/images/RoseTrabbic.jpg' },
   { name: 'Veronica Salgado', role: 'Marketing Specialist', image: '/images/veronica.png' },
   { name: 'Kim Neumaier', role: 'Book Fair Pro', image: '/images/kim.png' },
