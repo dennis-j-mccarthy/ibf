@@ -1250,6 +1250,17 @@ const SignUpForm = () => {
                       />
                       <span className="text-sm" style={{ fontFamily: 'brother-1816, sans-serif' }}>Fall 2026</span>
                     </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="preferredSeason"
+                        value="Spring 2027"
+                        checked={formData.preferredSeason === 'Spring 2027'}
+                        onChange={handleChange}
+                        className="w-5 h-5 accent-[#0088ff]"
+                      />
+                      <span className="text-sm" style={{ fontFamily: 'brother-1816, sans-serif' }}>Spring 2027</span>
+                    </label>
                   </div>
                 </div>
               </div>
