@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
 import { useVersion } from '@/contexts/VersionContext';
 
 interface Testimonial {
@@ -75,23 +73,6 @@ const Testimonials = () => {
           )}
         </div>
 
-        {/* Watch Video Link */}
-        <div className="mt-12 flex items-center gap-4">
-          <Image
-            src="/images/Worksheet-Frame-39977-1.png"
-            alt="Video testimonials"
-            width={161}
-            height={90}
-            className="w-[120px] md:w-[161px] h-auto"
-          />
-          <Link 
-            href="#" 
-            className="text-[#0088ff] font-semibold hover:underline"
-            style={{ fontFamily: 'brother-1816, sans-serif' }}
-          >
-            Watch video testimonials for Ignatius Book Fair customers
-          </Link>
-        </div>
       </div>
     </section>
   );
