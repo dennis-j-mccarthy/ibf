@@ -17,13 +17,6 @@ export default function BookBattlesPage() {
           Ignatius Book Battles
         </h1>
 
-        <p
-          className="text-center text-[#02176f]/60 text-lg mb-6"
-          style={{ fontFamily: 'brother-1816, sans-serif' }}
-        >
-          Watch the Video (click for sound)
-        </p>
-
         <div className="w-full">
           <Script src="https://fast.wistia.com/player.js" strategy="lazyOnload" />
           <Script src="https://fast.wistia.com/embed/x0cm7tqchc.js" strategy="lazyOnload" />
@@ -38,6 +31,13 @@ export default function BookBattlesPage() {
           {/* @ts-expect-error - Wistia custom element */}
           <wistia-player media-id="x0cm7tqchc" aspect="1.7777777777777777"></wistia-player>
         </div>
+
+        <p
+          className="text-center text-[#02176f]/60 text-lg mt-6"
+          style={{ fontFamily: 'brother-1816, sans-serif' }}
+        >
+          Watch the Video (click for sound)
+        </p>
       </div>
     </div>
   );
