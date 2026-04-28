@@ -17,6 +17,13 @@ export default function BookBattlesPage() {
           Ignatius Book Battles
         </h1>
 
+        <p
+          className="text-center text-[#02176f] text-base md:text-lg leading-relaxed mb-10 max-w-2xl mx-auto"
+          style={{ fontFamily: 'brother-1816, sans-serif' }}
+        >
+          The Ignatius Book Battle encourages students to fall in love with reading through stories that inspire, challenge, and delight. This year&apos;s curated book list blends excellent Catholic titles with outstanding secular literature, giving students a rich and well-rounded reading experience. Schools can purchase all competition titles here in one convenient place.
+        </p>
+
         <div className="w-full">
           <Script src="https://fast.wistia.com/player.js" strategy="lazyOnload" />
           <Script src="https://fast.wistia.com/embed/x0cm7tqchc.js" strategy="lazyOnload" />
