@@ -24,7 +24,7 @@ export default function BookBattlesPage() {
           The Ignatius Book Battle encourages students to fall in love with reading through stories that inspire, challenge, and delight. This year&apos;s curated book list blends excellent Catholic titles with outstanding secular literature, giving students a rich and well-rounded reading experience. Schools can purchase all competition titles here in one convenient place.
         </p>
 
-        <div className="w-full">
+        <div className="w-full mt-[20px]">
           <Script src="https://fast.wistia.com/player.js" strategy="lazyOnload" />
           <Script src="https://fast.wistia.com/embed/x0cm7tqchc.js" strategy="lazyOnload" />
           <style>{`
