@@ -52,6 +52,12 @@ const nextConfig: NextConfig = {
         destination: '/bookfair-resources',
         permanent: true,
       },
+      // Old /about-ignatius-book-fairs route
+      {
+        source: '/about-ignatius-book-fairs',
+        destination: '/about',
+        permanent: true,
+      },
     ];
   },
 };
