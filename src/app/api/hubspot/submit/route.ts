@@ -91,6 +91,27 @@ export async function POST(request: NextRequest) {
     // NOTE: This form must be configured in HubSpot to create Company records
     // The objectTypeId for Company is 0-2, so Company properties need the 0-2/ prefix
     if (step === 2 || step === 'company') {
+      // Server-side guard: refuse if a company with this domain already exists.
+      // Backstop for the client gate in case it races or is bypassed.
+      if (formData.website) {
+        const origin = request.nextUrl.origin;
+        const lookupResponse = await fetch(`${origin}/api/hubspot/lookup`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ website: formData.website }),
+        });
+        if (lookupResponse.ok) {
+          const lookupData = await lookupResponse.json();
+          if (lookupData.found) {
+            console.log('Submit blocked: domain already exists for company', lookupData.company?.name);
+            return NextResponse.json(
+              { error: 'Domain already exists', existing: lookupData },
+              { status: 409 }
+            );
+          }
+        }
+      }
+
       const companyFields: FormField[] = [
         // Email for contact association (Contact property - no prefix)
         { name: 'email', value: formData.email || '' },

@@ -214,6 +214,8 @@ const SignUpForm = () => {
 
   const [hubspotData, setHubspotData] = useState<HubSpotData | null>(null);
   const [isLookingUp, setIsLookingUp] = useState(false);
+  const [existingDomain, setExistingDomain] = useState<HubSpotData | null>(null);
+  const [isCheckingDomain, setIsCheckingDomain] = useState(false);
 
   // Auto-fill form with test data using keyboard shortcuts
   // Works in dev mode OR when ?testmode=true is in the URL
@@ -381,6 +383,39 @@ const SignUpForm = () => {
     }
   }, []);
 
+  // Check if website domain already exists in HubSpot (Step 2).
+  // Returns the matching HubSpotData if found, or null if not — so callers
+  // can branch synchronously without waiting for React state to update.
+  const checkExistingDomain = useCallback(async (website: string): Promise<HubSpotData | null> => {
+    if (!website) {
+      setExistingDomain(null);
+      return null;
+    }
+    setIsCheckingDomain(true);
+    try {
+      const response = await fetch('/api/hubspot/lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ website }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.found) {
+          setExistingDomain(data);
+          return data;
+        }
+        setExistingDomain(null);
+        return null;
+      }
+      return null;
+    } catch (error) {
+      console.error('Domain check error:', error);
+      return null;
+    } finally {
+      setIsCheckingDomain(false);
+    }
+  }, []);
+
   // Auto-invoke returning customer flow when ?school= param is present
   // If they have an upcoming fair, redirect to dedicated fair landing page
   useEffect(() => {
@@ -494,6 +529,15 @@ const SignUpForm = () => {
 
     setIsSubmitting(true);
     try {
+      // Final domain check: catches races where onBlur hadn't completed before submit
+      if (formData.website) {
+        const found = await checkExistingDomain(formData.website);
+        if (found) {
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
       const response = await fetch('/api/hubspot/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -505,6 +549,14 @@ const SignUpForm = () => {
           }
         }),
       });
+
+      // Server-side duplicate-domain guard returned 409
+      if (response.status === 409) {
+        const body = await response.json();
+        if (body.existing) setExistingDomain(body.existing);
+        setIsSubmitting(false);
+        return;
+      }
 
       if (response.ok) {
         // Determine appointment URL based on org type, school type, and state
@@ -1265,6 +1317,63 @@ const SignUpForm = () => {
                 </div>
               </div>
 
+              {/* Website */}
+              <input
+                type="text"
+                name="website"
+                placeholder="Website *"
+                value={formData.website}
+                onChange={(e) => {
+                  handleChange(e);
+                  setExistingDomain(null);
+                }}
+                onBlur={() => {
+                  if (formData.website) checkExistingDomain(formData.website);
+                }}
+                required
+                className={`w-full h-11 px-4 rounded-lg border-0 text-white placeholder-white tracking-wide ${existingDomain ? 'mb-0 bg-[#ff6445]' : 'mb-2.5 bg-[#0088ff]'}`}
+                style={{ fontFamily: 'brother-1816, sans-serif' }}
+              />
+              {isCheckingDomain && (
+                <p className="text-[#0088ff] text-sm mt-1 mb-2.5" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+                  Checking...
+                </p>
+              )}
+              {existingDomain && (
+                <div className="bg-[#f0f8ff] border-2 border-[#0088ff] rounded-lg p-4 mt-2 mb-2.5">
+                  <p className="text-[#02176f] font-bold text-sm mb-2" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+                    This organization is already in our system!
+                  </p>
+                  {existingDomain.company?.name && (
+                    <p className="text-[#02176f] text-sm" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+                      {existingDomain.company.name}
+                      {existingDomain.company.city && existingDomain.company.state && (
+                        <span> &mdash; {existingDomain.company.city}, {existingDomain.company.state}</span>
+                      )}
+                    </p>
+                  )}
+                  {existingDomain.owner && (
+                    <p className="text-[#02176f] text-sm mt-2" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+                      Your rep: <strong>{existingDomain.owner.firstName} {existingDomain.owner.lastName}</strong>
+                      {existingDomain.owner.email && (
+                        <> &mdash; <a href={`mailto:${existingDomain.owner.email}`} className="text-[#0088ff] underline">{existingDomain.owner.email}</a></>
+                      )}
+                    </p>
+                  )}
+                  {existingDomain.bookingUrl && (
+                    <a
+                      href={existingDomain.bookingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block mt-3 px-6 py-2 bg-[#50db92] text-white font-bold rounded-lg text-sm hover:opacity-90"
+                      style={{ fontFamily: 'brother-1816, sans-serif' }}
+                    >
+                      Schedule a Meeting
+                    </a>
+                  )}
+                </div>
+              )}
+
               {/* Organization Name */}
               <input
                 type="text"
@@ -1325,18 +1434,6 @@ const SignUpForm = () => {
                   style={{ fontFamily: 'brother-1816, sans-serif' }}
                 />
               </div>
-
-              {/* Website */}
-              <input
-                type="text"
-                name="website"
-                placeholder="Website *"
-                value={formData.website}
-                onChange={handleChange}
-                required
-                className="w-full h-11 px-4 rounded-lg border-0 bg-[#0088ff] text-white placeholder-white tracking-wide mb-2.5"
-                style={{ fontFamily: 'brother-1816, sans-serif' }}
-              />
 
               {/* Organization Type */}
               <div className="mb-2.5">
@@ -1481,11 +1578,11 @@ const SignUpForm = () => {
                 </button>
                 <button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !!existingDomain}
                   className="flex-1 bg-[#50db92] text-white font-bold uppercase px-6 py-4 rounded-xl hover:bg-[#45c583] transition-colors tracking-wider disabled:opacity-50"
                   style={{ fontFamily: 'brother-1816, sans-serif' }}
                 >
-                  {isSubmitting ? 'SUBMITTING...' : 'SUBMIT >'}
+                  {isSubmitting ? 'SUBMITTING...' : existingDomain ? 'CONTACT YOUR REP' : 'SUBMIT >'}
                 </button>
               </div>
                 </form>
