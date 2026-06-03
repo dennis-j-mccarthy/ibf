@@ -40,14 +40,14 @@ export default function BookBattlesPage() {
         </div>
 
         <p
-          className="text-center text-[#02176f]/60 text-lg mt-6"
+          className="text-center text-[#02176f]/60 text-lg mt-[10px]"
           style={{ fontFamily: 'brother-1816, sans-serif' }}
         >
           Watch the Video (click for sound)
         </p>
 
         <h2
-          className="text-[#02176f] text-3xl md:text-4xl font-black uppercase text-center mt-[60px] mb-[30px]"
+          className="text-[#02176f] text-3xl md:text-4xl font-black uppercase text-center mt-[100px] mb-[40px]"
           style={{ fontFamily: 'brother-1816, sans-serif' }}
         >
           Book Lists
