@@ -45,6 +45,53 @@ export default function BookBattlesPage() {
         >
           Watch the Video (click for sound)
         </p>
+
+        <h2
+          className="text-[#02176f] text-3xl md:text-4xl font-black uppercase text-center mt-20 mb-10"
+          style={{ fontFamily: 'brother-1816, sans-serif' }}
+        >
+          Book Lists
+        </h2>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-2xl mx-auto">
+          <a
+            href="/documents/4-5-book-battle-6-2.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group block"
+          >
+            <img
+              src="/images/thumb-book-battle-4-5.png"
+              alt="Book Battle 2026-2027 Book List, Grades 4-5"
+              className="w-full rounded-lg border border-[#02176f]/10 shadow-md transition-shadow group-hover:shadow-xl"
+            />
+            <p
+              className="text-center text-[#02176f] text-lg font-bold uppercase mt-3 group-hover:underline"
+              style={{ fontFamily: 'brother-1816, sans-serif' }}
+            >
+              Grades 4-5
+            </p>
+          </a>
+
+          <a
+            href="/documents/6-8-book-battle-6-2.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group block"
+          >
+            <img
+              src="/images/thumb-book-battle-6-8.png"
+              alt="Book Battle 2026-2027 Book List, Grades 6-8"
+              className="w-full rounded-lg border border-[#02176f]/10 shadow-md transition-shadow group-hover:shadow-xl"
+            />
+            <p
+              className="text-center text-[#02176f] text-lg font-bold uppercase mt-3 group-hover:underline"
+              style={{ fontFamily: 'brother-1816, sans-serif' }}
+            >
+              Grades 6-8
+            </p>
+          </a>
+        </div>
       </div>
     </div>
   );
