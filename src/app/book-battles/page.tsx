@@ -47,8 +47,8 @@ export default function BookBattlesPage() {
         </p>
 
         <h2
-          className="text-[#02176f] text-3xl md:text-4xl font-black uppercase text-center mt-[80px] mb-[40px]"
-          style={{ fontFamily: 'brother-1816, sans-serif' }}
+          className="text-[#02176f] text-3xl md:text-4xl font-black uppercase text-center"
+          style={{ fontFamily: 'brother-1816, sans-serif', marginTop: '80px', marginBottom: '40px' }}
         >
           Book Lists
         </h2>
