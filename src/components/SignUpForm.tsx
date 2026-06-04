@@ -186,7 +186,7 @@ const SignUpForm = () => {
     representsOrg: '', // Yes, No
     roleInOrg: '', // dropdown
     hasHostedBefore: '', // Yes, No, Unsure
-    preferredSeason: '', // Spring 2026, Summer 2026, Fall 2026
+    preferredSeason: '', // Fall 2026, Spring 2027, Summer 2027, Fall 2027
 
     orgName: '',
     address1: '',
@@ -275,7 +275,7 @@ const SignUpForm = () => {
           ...prev,
           representsOrg: 'Yes',
           roleInOrg: 'Teacher',
-          preferredSeason: 'Spring 2026',
+          preferredSeason: 'Spring 2027',
           orgName: 'Lincoln Elementary',
           address1: '456 Oak Avenue',
           city: 'Chicago',
@@ -303,7 +303,7 @@ const SignUpForm = () => {
           ...prev,
           representsOrg: 'Yes',
           roleInOrg: 'Pastor',
-          preferredSeason: 'Summer 2026',
+          preferredSeason: 'Summer 2027',
           orgName: 'St. Patrick Parish',
           address1: '789 Church Street',
           city: 'Boston',
@@ -1273,28 +1273,6 @@ const SignUpForm = () => {
                       <input
                         type="radio"
                         name="preferredSeason"
-                        value="Spring 2026"
-                        checked={formData.preferredSeason === 'Spring 2026'}
-                        onChange={handleChange}
-                        className="w-5 h-5 accent-[#0088ff]"
-                      />
-                      <span className="text-sm" style={{ fontFamily: 'brother-1816, sans-serif' }}>Spring 2026</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="preferredSeason"
-                        value="Summer 2026"
-                        checked={formData.preferredSeason === 'Summer 2026'}
-                        onChange={handleChange}
-                        className="w-5 h-5 accent-[#0088ff]"
-                      />
-                      <span className="text-sm" style={{ fontFamily: 'brother-1816, sans-serif' }}>Summer 2026</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="preferredSeason"
                         value="Fall 2026"
                         checked={formData.preferredSeason === 'Fall 2026'}
                         onChange={handleChange}
@@ -1312,6 +1290,28 @@ const SignUpForm = () => {
                         className="w-5 h-5 accent-[#0088ff]"
                       />
                       <span className="text-sm" style={{ fontFamily: 'brother-1816, sans-serif' }}>Spring 2027</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="preferredSeason"
+                        value="Summer 2027"
+                        checked={formData.preferredSeason === 'Summer 2027'}
+                        onChange={handleChange}
+                        className="w-5 h-5 accent-[#0088ff]"
+                      />
+                      <span className="text-sm" style={{ fontFamily: 'brother-1816, sans-serif' }}>Summer 2027</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="preferredSeason"
+                        value="Fall 2027"
+                        checked={formData.preferredSeason === 'Fall 2027'}
+                        onChange={handleChange}
+                        className="w-5 h-5 accent-[#0088ff]"
+                      />
+                      <span className="text-sm" style={{ fontFamily: 'brother-1816, sans-serif' }}>Fall 2027</span>
                     </label>
                   </div>
                 </div>
