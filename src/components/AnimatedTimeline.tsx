@@ -36,7 +36,7 @@ const timelineData = [
     year: '2025',
     color: '#f29500',
     image: '/images/IntroductionofBookClub.png',
-    text: 'Our vision includes bringing the Book Fair and Club to a wider audience, encompassing parishes, public and charter schools, and other diverse groups, both young and old.',
+    text: 'Our vision includes bringing more Book Fairs to a wider audience, encompassing parishes, public and charter schools, and other diverse groups, both young and old.',
     side: 'left',
   },
 ];
