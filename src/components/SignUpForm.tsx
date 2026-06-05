@@ -798,7 +798,7 @@ const SignUpForm = () => {
               style={{ fontFamily: 'brother-1816, sans-serif' }}
             >
               {currentStep === 1 ? (
-                'Interested in hosting a book fair? Fill out this form and one of our Book Fair Pros will be in touch with all the details you need!'
+                'Interested in hosting a book fair? Fill out this form to book an appointment with one of our Book Fair Pros for all the details you need!'
               ) : (
                 'Tell us more about your organization so we can better serve you.'
               )}
