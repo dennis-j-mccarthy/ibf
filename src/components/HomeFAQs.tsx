@@ -22,7 +22,7 @@ const faqs: FAQ[] = [
   },
   {
     question: "What's the process if I want to host a book fair?",
-    answer: 'To host a book fair, please complete an inquiry form. You will then be contacted by a Book Fair Pro who will provide more information and answer any questions you have.',
+    answer: 'To host a book fair, please complete an inquiry form. You will be directed to a Book Fair Pro appointment form so we can provide more information and answer any questions you have.',
   },
   {
     question: 'Where can a fair be hosted?',
