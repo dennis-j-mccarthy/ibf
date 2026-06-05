@@ -36,7 +36,7 @@ const timelineData = [
     year: '2025',
     color: '#f29500',
     image: '/images/IntroductionofBookClub.png',
-    text: 'The introduction of the Book Club is set to expand our impact, reaching more readers and communities.',
+    text: 'Our vision includes bringing the Book Fair and Club to a wider audience, encompassing parishes, public and charter schools, and other diverse groups, both young and old.',
     side: 'left',
   },
 ];
@@ -163,9 +163,7 @@ function BeyondSection() {
             <span className="font-handsome text-4xl md:text-5xl text-[#50db92]">and beyond</span>
           </h3>
           <p className="text-gray-700 max-w-md inline-block">
-            Our vision includes bringing the Book Fair and Club to a wider audience, 
-            encompassing parishes, public and charter schools, and other diverse groups, 
-            both young and old.
+            The introduction of the Book Club is set to expand our impact, reaching more readers and communities.
           </p>
         </div>
         <div className="flex-1 hidden md:block" />
