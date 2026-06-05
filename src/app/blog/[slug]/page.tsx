@@ -94,12 +94,12 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           <article className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-8 md:p-12">
             {/* Featured Image */}
             {blog.thumbnail && (
-              <div className="relative aspect-video rounded-lg overflow-hidden mb-8 -mt-20 shadow-lg">
+              <div className="relative aspect-video rounded-lg overflow-hidden mb-8 -mt-20 shadow-lg bg-white">
                 <Image
                   src={blog.thumbnail}
                   alt={blog.title}
                   fill
-                  className="object-cover"
+                  className="object-contain"
                 />
               </div>
             )}
