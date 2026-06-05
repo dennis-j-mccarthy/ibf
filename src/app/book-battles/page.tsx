@@ -74,7 +74,7 @@ export default function BookBattlesPage() {
           </a>
 
           <a
-            href="/documents/6-8-book-battle-6-2.pdf"
+            href="/documents/6-8-book-battle-6-4.pdf"
             target="_blank"
             rel="noopener noreferrer"
             className="group block"
