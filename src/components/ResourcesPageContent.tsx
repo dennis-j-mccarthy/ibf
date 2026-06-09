@@ -415,6 +415,8 @@ export default function ResourcesPageContent({ resources }: ResourcesPageContent
 
 function ResourceCard({ resource, onVideoClick, onDetailsClick }: { resource: Resource; onVideoClick: () => void; onDetailsClick: () => void }) {
   const isVideo = resource.resourceType === 'Video';
+  const aspectMatch = resource.embedCode?.match(/aspect="([0-9.]+)"/);
+  const isVerticalVideo = isVideo && aspectMatch ? parseFloat(aspectMatch[1]) < 1 : false;
   const hasDetails = resource.description || resource.parentGuide || resource.slug.endsWith('operational-guide');
 
   const handleCardClick = () => {
@@ -449,7 +451,7 @@ function ResourceCard({ resource, onVideoClick, onDetailsClick }: { resource: Re
       )}
 
       {/* Thumbnail */}
-      <div className={`relative mt-4 rounded-lg overflow-hidden ${isVideo ? 'w-[calc(100%-30px)] aspect-video' : 'w-full max-w-[180px] aspect-[3/4] border border-[#b9dbc5] p-[5%]'}`}>
+      <div className={`relative mt-4 rounded-lg overflow-hidden ${isVerticalVideo ? 'w-[60%] max-w-[180px] aspect-[9/16] mx-auto' : isVideo ? 'w-[calc(100%-30px)] aspect-video' : 'w-full max-w-[180px] aspect-[3/4] border border-[#b9dbc5] p-[5%]'}`}>
         {resource.thumbnail ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
