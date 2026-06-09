@@ -27,7 +27,12 @@ function LoginForm() {
         setSubmitting(false);
         return;
       }
-      const next = searchParams.get('next') || '/admin/bot-knowledge';
+      // Only honor a "next" that points at a real admin sub-page; otherwise default.
+      const nextParam = searchParams.get('next');
+      const next =
+        nextParam && nextParam.startsWith('/admin/') && nextParam !== '/admin/login'
+          ? nextParam
+          : '/admin/bot-knowledge';
       router.push(next);
       router.refresh();
     } catch {
