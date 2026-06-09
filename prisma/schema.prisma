@@ -88,3 +88,27 @@ model FormFunnelEvent {
   @@index([event])
   @@index([createdAt])
 }
+
+// Chatbot knowledge base. Separate from the public-facing FAQ model on purpose --
+// these power the HubSpot bot's noindexed source pages, not the on-site FAQ accordion.
+model BotAnswer {
+  id        Int      @id @default(autoincrement())
+  question  String
+  answer    String
+  slug      String   @unique
+  links     Json?    // [{ label: string, url: string }]
+  audience  String?  // "Catholic", "Public", or "Both"
+  category  String?  // free-form grouping (e.g. "Pricing", "Logistics")
+  order     Float    @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Admin login accounts for the /admin area. Passwords are scrypt-hashed.
+model AdminUser {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
