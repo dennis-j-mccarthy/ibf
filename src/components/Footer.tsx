@@ -59,6 +59,13 @@ const Footer = () => {
               )
             )}
 
+            <Link
+              href="/book-fair-admin/login"
+              className="text-white/60 hover:text-white text-xs font-medium transition-opacity mt-2"
+            >
+              Coordinator Login
+            </Link>
+
             {/* Mode Switch - shows after popup is dismissed */}
             {showModeSwitch && (
               <button
