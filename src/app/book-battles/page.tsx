@@ -92,6 +92,56 @@ export default function BookBattlesPage() {
             </p>
           </a>
         </div>
+
+        <h2
+          className="text-[#02176f] text-3xl md:text-4xl font-black uppercase text-center"
+          style={{ fontFamily: 'brother-1816, sans-serif', marginTop: '80px', marginBottom: '40px' }}
+        >
+          Book Battle Worksheets
+        </h2>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+          {[
+            {
+              href: '/documents/ibb-book-summary-sheet.pdf',
+              thumb: '/images/thumb-ibb-book-summary-sheet.png',
+              title: 'Book Summary Sheet',
+            },
+            {
+              href: '/documents/ibb-round-scoring-sheet.pdf',
+              thumb: '/images/thumb-ibb-round-scoring-sheet.png',
+              title: 'Round Scoring Sheet',
+            },
+            {
+              href: '/documents/ibb-sportsmanship.pdf',
+              thumb: '/images/thumb-ibb-sportsmanship.png',
+              title: 'Sportsmanship Warning Form',
+            },
+          ].map((sheet) => (
+            <a
+              key={sheet.href}
+              href={sheet.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group block"
+            >
+              {/* Fixed-aspect card so the landscape sheet sits evenly beside the portrait ones */}
+              <div className="aspect-[4/5] flex items-center justify-center bg-[#f5f7fb] rounded-lg border border-[#02176f]/10 shadow-md transition-shadow group-hover:shadow-xl p-4">
+                <img
+                  src={sheet.thumb}
+                  alt={sheet.title}
+                  className="max-h-full max-w-full rounded shadow-sm"
+                />
+              </div>
+              <p
+                className="text-center text-[#02176f] text-lg font-bold uppercase mt-3 group-hover:underline"
+                style={{ fontFamily: 'brother-1816, sans-serif' }}
+              >
+                {sheet.title}
+              </p>
+            </a>
+          ))}
+        </div>
       </div>
     </div>
   );
