@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git merge:*)",
+      "Read(//Users/dennis.mccarthy/Desktop/**)",
+      "Bash(sips -g pixelWidth -g pixelHeight /Users/dennis.mccarthy/ibf/public/images/create-account-thumb.png)"
+    ]
+  }
+}
