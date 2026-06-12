@@ -111,28 +111,52 @@ function Eyebrow({ children, color }: { children: ReactNode; color: string }) {
 // ---- Countdown -----------------------------------------------------------
 
 function CountdownWidget({ data, options }: { data: WidgetData; options: WidgetOptions }) {
-  const [days, setDays] = useState<number | null>(null);
+  const [t, setT] = useState<{ d: number; h: number; m: number; s: number } | null>(null);
   useEffect(() => {
     if (!data.fairStartDate) return;
-    const tick = () => setDays(daysUntil(data.fairStartDate!));
+    const target = new Date(data.fairStartDate.replace(' ', 'T')).getTime();
+    const tick = () => {
+      const diff = Math.max(0, target - Date.now());
+      setT({
+        d: Math.floor(diff / 86_400_000),
+        h: Math.floor((diff % 86_400_000) / 3_600_000),
+        m: Math.floor((diff % 3_600_000) / 60_000),
+        s: Math.floor((diff % 60_000) / 1000),
+      });
+    };
     tick();
-    const id = setInterval(tick, 60_000);
+    const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, [data.fairStartDate]);
 
   const dark = options.theme === 'dark';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const cells = [
+    { label: 'Days', value: t ? String(t.d) : '--' },
+    { label: 'Hrs', value: t ? pad(t.h) : '--' },
+    { label: 'Min', value: t ? pad(t.m) : '--' },
+    { label: 'Sec', value: t ? pad(t.s) : '--' },
+  ];
   return (
     <Frame theme={options.theme} loupio={options.loupio} accent="#ff6445">
       <Eyebrow color="#ff6445">{data.schoolName} Book Fair</Eyebrow>
-      <div className="flex items-end gap-2">
-        <span className="text-6xl font-extrabold leading-none" style={{ ...font, color: dark ? '#ffd41d' : '#02176f' }}>
-          {days ?? '—'}
-        </span>
-        <span className="text-lg font-bold mb-1" style={font}>
-          {days === 1 ? 'day' : 'days'} to go!
-        </span>
+      <div className="flex gap-1.5">
+        {cells.map((c) => (
+          <div
+            key={c.label}
+            className="flex flex-col items-center rounded-lg px-2 py-1.5 flex-1"
+            style={{ background: dark ? 'rgba(255,255,255,0.1)' : '#f3f5fa' }}
+          >
+            <span className="text-2xl font-extrabold tabular-nums leading-none" style={{ ...font, color: dark ? '#ffd41d' : '#02176f' }}>
+              {c.value}
+            </span>
+            <span className="text-[9px] font-semibold uppercase tracking-wide mt-1" style={{ color: dark ? 'rgba(255,255,255,0.6)' : '#a0a4b0' }}>
+              {c.label}
+            </span>
+          </div>
+        ))}
       </div>
-      <p className="text-sm mt-1.5 font-medium" style={{ color: dark ? 'rgba(255,255,255,0.7)' : '#7e828f' }}>
+      <p className="text-sm mt-2 font-medium pr-16" style={{ color: dark ? 'rgba(255,255,255,0.7)' : '#7e828f' }}>
         {rangeLabel(data.fairStartDate, data.fairEndDate) || 'Coming soon'}
       </p>
     </Frame>

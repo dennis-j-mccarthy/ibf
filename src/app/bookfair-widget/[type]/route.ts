@@ -73,20 +73,27 @@ async function buildWidget(
 
   if (type === 'countdown') {
     const [school, fair] = await Promise.all([getSchool(schoolId), getUpcomingFair(schoolId)]);
-    const days = fair?.startDate ? daysUntil(fair.startDate) : null;
-    return f(
-      `${eyebrow(`${school?.name ?? 'Our'} Book Fair`, '#ff6445')}
-       <div style="display:flex;align-items:flex-end;gap:8px">
-         <span style="font-size:64px;font-weight:800;line-height:1;color:${dark ? '#ffd41d' : '#02176f'}">${
-        days ?? '—'
-      }</span>
-         <span style="font-size:18px;font-weight:700;margin-bottom:4px">${days === 1 ? 'day' : 'days'} to go!</span>
+    const targetMs = fair?.startDate ? new Date(fair.startDate.replace(' ', 'T')).getTime() : 0;
+    const diff = Math.max(0, targetMs - Date.now());
+    const d = Math.floor(diff / 86_400_000);
+    const h = Math.floor((diff % 86_400_000) / 3_600_000);
+    const m = Math.floor((diff % 3_600_000) / 60_000);
+    const s = Math.floor((diff % 60_000) / 1000);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const cellBg = dark ? 'rgba(255,255,255,.1)' : '#f3f5fa';
+    const numColor = dark ? '#ffd41d' : '#02176f';
+    const lblColor = dark ? 'rgba(255,255,255,.6)' : '#a0a4b0';
+    const cell = (val: string | number, label: string, attr: string) =>
+      `<div style="flex:1;display:flex;flex-direction:column;align-items:center;border-radius:8px;padding:6px 4px;background:${cellBg}"><span data-${attr} style="font-size:24px;font-weight:800;line-height:1;color:${numColor}">${val}</span><span style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-top:4px;color:${lblColor}">${label}</span></div>`;
+    const inner = `${eyebrow(`${school?.name ?? 'Our'} Book Fair`, '#ff6445')}
+       <div id="bf-cd" data-target="${targetMs}" style="display:flex;gap:6px">
+         ${cell(d, 'Days', 'd')}${cell(pad(h), 'Hrs', 'h')}${cell(pad(m), 'Min', 'm')}${cell(pad(s), 'Sec', 's')}
        </div>
-       <p style="font-size:14px;margin:6px 0 0;font-weight:600;color:${dark ? 'rgba(255,255,255,.7)' : '#7e828f'}">${esc(
-        rangeLabel(fair?.startDate, fair?.endDate)
-      )}</p>`,
-      '#ff6445'
-    );
+       <p style="font-size:14px;margin:8px 0 0;font-weight:600;padding-right:64px;color:${
+         dark ? 'rgba(255,255,255,.7)' : '#7e828f'
+       }">${esc(rangeLabel(fair?.startDate, fair?.endDate))}</p>`;
+    const script = `<script>(function(){var el=document.getElementById('bf-cd');if(!el)return;var t=+el.getAttribute('data-target');function p(n){return(n<10?'0':'')+n}function tk(){var d=Math.max(0,t-Date.now());el.querySelector('[data-d]').textContent=Math.floor(d/864e5);el.querySelector('[data-h]').textContent=p(Math.floor(d%864e5/36e5));el.querySelector('[data-m]').textContent=p(Math.floor(d%36e5/6e4));el.querySelector('[data-s]').textContent=p(Math.floor(d%6e4/1e3))}tk();setInterval(tk,1000)})();</script>`;
+    return f(inner, '#ff6445') + script;
   }
 
   if (type === 'goal') {

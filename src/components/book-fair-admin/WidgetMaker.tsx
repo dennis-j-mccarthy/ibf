@@ -7,7 +7,7 @@ import { BookFairWidget, WIDGET_TYPES, type WidgetAudience, type WidgetData, typ
 
 // Default iframe height per widget so the embed code fits without scrollbars.
 const HEIGHTS: Record<WidgetType, number> = {
-  countdown: 200,
+  countdown: 215,
   goal: 230,
   teacher: 250,
   family: 250,
