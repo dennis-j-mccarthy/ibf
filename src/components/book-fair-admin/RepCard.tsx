@@ -43,11 +43,11 @@ export default function RepCard({ rep, flat = false }: { rep: Rep; flat?: boolea
       </p>
       <a
         href={rep.bookingUrl}
-        target="_blank"
+        target={rep.bookingUrl.startsWith('mailto:') ? undefined : '_blank'}
         rel="noopener noreferrer"
         className="mt-auto block text-center bg-[#0088ff] hover:bg-[#0070d8] text-white font-semibold rounded-full py-2.5 px-5 transition-colors"
       >
-        Book a call with {rep.firstName}
+        {rep.bookingUrl.startsWith('mailto:') ? `Email ${rep.firstName}` : `Book a call with ${rep.firstName}`}
       </a>
     </section>
   );

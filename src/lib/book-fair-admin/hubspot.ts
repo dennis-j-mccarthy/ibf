@@ -105,6 +105,19 @@ export const getCompany = cache(async (companyId: string): Promise<HubSpotCompan
   );
 });
 
+export interface HubSpotOwner {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+}
+
+// Resolve a deal's owner (the Ignatius rep) by id. Needs the
+// crm.objects.owners.read scope on the private app.
+export const getOwner = cache(async (ownerId: string): Promise<HubSpotOwner | null> => {
+  return hubspotGet<HubSpotOwner>(`/crm/v3/owners/${encodeURIComponent(ownerId)}`);
+});
+
 // Fetch several deals concurrently (single-object GETs — see header comment).
 // Missing/failed deals come back as null entries keyed by id.
 export async function getDeals(dealIds: string[]): Promise<Map<string, HubSpotDeal | null>> {

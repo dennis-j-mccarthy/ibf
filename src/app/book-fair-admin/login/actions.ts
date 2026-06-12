@@ -36,14 +36,14 @@ export async function requestMagicLink(
     // Authorization gate: the email must be a school's Ave $ admin.
     let schoolId = await getSchoolIdByAveDollarsEmail(email);
 
-    // Dev-only convenience: let a test email stand in for a real Ave $ admin so
+    // Dev-only convenience: let test emails stand in for a real Ave $ admin so
     // the dashboard can be demoed without touching production data.
-    if (
-      schoolId == null &&
-      process.env.NODE_ENV !== 'production' &&
-      email === 'dennisjmccarthy+test@gmail.com'
-    ) {
-      schoolId = 1363; // The Saint Constantine School
+    const DEV_TEST_EMAILS: Record<string, number> = {
+      'dennisjmccarthy+test@gmail.com': 1363, // The Saint Constantine School
+      'dennis.mccarthy@ignatiusbookclub.com': 3976, // Saint Andrew (full roster)
+    };
+    if (schoolId == null && process.env.NODE_ENV !== 'production' && DEV_TEST_EMAILS[email]) {
+      schoolId = DEV_TEST_EMAILS[email];
     }
     if (schoolId == null) return { message: GENERIC_MESSAGE };
 

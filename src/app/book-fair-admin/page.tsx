@@ -15,8 +15,8 @@ import ResourceHub from '@/components/book-fair-admin/ResourceHub';
 import WidgetMaker from '@/components/book-fair-admin/WidgetMaker';
 import type { WidgetData } from '@/components/book-fair-admin/widgets';
 import { fairStatusStep } from '@/lib/book-fair-admin/fair-status';
-import { getRep } from '@/lib/book-fair-admin/reps';
-import { getCompany, getDeal, getDeals, parseDollarString } from '@/lib/book-fair-admin/hubspot';
+import { buildRep } from '@/lib/book-fair-admin/reps';
+import { getCompany, getDeal, getDeals, getOwner, parseDollarString } from '@/lib/book-fair-admin/hubspot';
 import {
   getAveDollarsEarned,
   getAveDollarsSpent,
@@ -184,7 +184,8 @@ export default async function BookFairAdminDashboard({
   const isVirtual = upcomingDeal ? isTruthyFlag(upcomingDeal.properties.virtual_book_fair) : null;
   const schoolName = school?.name ?? 'Your school';
   const logoDomain = company?.properties.domain ?? null;
-  const rep = getRep(upcomingDeal?.properties.hubspot_owner_id);
+  const ownerId = upcomingDeal?.properties.hubspot_owner_id;
+  const rep = buildRep(ownerId, ownerId ? await getOwner(ownerId) : null);
   const realStep = fairStatusStep(upcomingDeal?.properties.dealstage);
   // Dev-only preview: ?step=N forces the fair-status step to preview each state.
   const sp = await searchParams;
