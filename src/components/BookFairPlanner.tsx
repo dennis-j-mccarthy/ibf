@@ -1264,7 +1264,7 @@ function getFirstDayOfMonth(date: Date): number {
   return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
 }
 
-export default function BookFairPlanner({ resources, initialFairType, initialFairDate }: { resources: Resource[]; initialFairType?: string; initialFairDate?: string }) {
+export default function BookFairPlanner({ resources, initialFairType, initialFairDate, lockSettings = false }: { resources: Resource[]; initialFairType?: string; initialFairDate?: string; lockSettings?: boolean }) {
   const searchParams = useSearchParams();
   const [fairDate, setFairDate] = useState<Date | null>(null);
   const [fairType, setFairType] = useState<FairType | null>(null);
@@ -1356,7 +1356,7 @@ export default function BookFairPlanner({ resources, initialFairType, initialFai
       <section id="planning-calendar" className="bg-gradient-to-b from-[#02176f] to-[#0066ff] py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-xl mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4" style={{ fontFamily: 'barlo, sans-serif' }}>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4" style={{ fontFamily: 'brother-1816, sans-serif' }}>
               Book Fair Planning Calendar
             </h2>
             <p className="text-white/80 mb-8">
@@ -1413,18 +1413,20 @@ export default function BookFairPlanner({ resources, initialFairType, initialFai
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-2" style={{ fontFamily: 'barlo, sans-serif' }}>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-2" style={{ fontFamily: 'brother-1816, sans-serif' }}>
               Your {FAIR_TYPE_LABELS[fairType!]} Planning Calendar
             </h2>
             <p className="text-white/80 mb-4">
               Book Fair Date: <span className="font-semibold text-[#00c853]">{formatFullDate(fairDate)}</span>
             </p>
-            <button
-              onClick={() => { setFairDate(null); setDateInput(''); }}
-              className="text-white/60 hover:text-white text-sm underline"
-            >
-              Change date or fair type
-            </button>
+            {!lockSettings && (
+              <button
+                onClick={() => { setFairDate(null); setDateInput(''); }}
+                className="text-white/60 hover:text-white text-sm underline"
+              >
+                Change date or fair type
+              </button>
+            )}
           </div>
 
           {/* Legend */}
@@ -1552,17 +1554,30 @@ function MonthCalendar({
               onMouseEnter={() => events.length > 0 && onHoverEvent(events[0].id)}
               onMouseLeave={() => onHoverEvent(null)}
               disabled={events.length === 0}
-              className={`h-8 w-8 mx-auto rounded-full text-sm flex items-center justify-center transition-all ${
+              className={`h-8 w-8 mx-auto text-sm flex items-center justify-center relative transition-all ${
                 isFairDay
-                  ? 'bg-[#ffc107] text-gray-900 font-bold ring-2 ring-[#ffc107] ring-offset-2'
+                  ? 'text-gray-900 font-bold hover:scale-110 cursor-pointer'
                   : events.length > 0
                   ? events[0].type === 'operations'
-                    ? 'bg-[#ff6445] text-white hover:scale-110 cursor-pointer'
-                    : 'bg-[#00c853] text-white hover:scale-110 cursor-pointer'
-                  : 'text-gray-600 hover:bg-gray-100'
-              } ${isHovered ? 'ring-2 ring-white scale-110' : ''}`}
+                    ? 'rounded-full bg-[#ff6445] text-white hover:scale-110 cursor-pointer'
+                    : 'rounded-full bg-[#00c853] text-white hover:scale-110 cursor-pointer'
+                  : 'rounded-full text-gray-600 hover:bg-gray-100'
+              } ${isHovered && !isFairDay ? 'ring-2 ring-white scale-110' : ''}`}
             >
-              {day}
+              {isFairDay && (
+                <svg
+                  className="absolute inset-0 h-full w-full origin-center drop-shadow-sm animate-[star-pulse_1.6s_ease-in-out_infinite]"
+                  viewBox="0 0 24 24"
+                  fill="#ffc107"
+                  stroke="#ff6445"
+                  strokeWidth="1.5"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M12 2.5l2.74 5.93 6.51.86-4.8 4.46 1.23 6.43L12 17.97l-5.68 2.21 1.23-6.43-4.8-4.46 6.51-.86L12 2.5z" />
+                </svg>
+              )}
+              <span className="relative z-10">{day}</span>
             </button>
           );
         })}

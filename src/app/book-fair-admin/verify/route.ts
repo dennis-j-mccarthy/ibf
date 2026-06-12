@@ -8,7 +8,7 @@ import {
   signSessionToken,
   verifyMagicLinkToken,
 } from '@/lib/book-fair-admin/auth';
-import { getCoordinatorByBcUserId } from '@/lib/book-fair-admin/queries';
+import { getSchool } from '@/lib/book-fair-admin/queries';
 
 export const runtime = 'nodejs';
 
@@ -26,19 +26,18 @@ export async function GET(request: NextRequest) {
   const claims = await verifyMagicLinkToken(token, secret);
   if (!claims) return fail();
 
-  // Re-check authorization at click time: the profile must still exist and
-  // still belong to the same user the link was issued for.
-  let coordinator;
+  // Re-validate at click time: the school must still exist.
+  let school;
   try {
-    coordinator = await getCoordinatorByBcUserId(claims.bc_user_id);
+    school = await getSchool(claims.school_id);
   } catch (error) {
-    console.error('Verify authorization check failed:', error);
+    console.error('Verify school check failed:', error);
     return fail();
   }
-  if (!coordinator || coordinator.userId !== claims.user_id) return fail();
+  if (!school) return fail();
 
   const session = await signSessionToken(
-    { userId: coordinator.userId, schoolId: coordinator.schoolId },
+    { userId: claims.user_id, schoolId: claims.school_id },
     secret
   );
   const response = NextResponse.redirect(new URL('/book-fair-admin', request.url));

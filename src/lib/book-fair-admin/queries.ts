@@ -19,6 +19,8 @@ import {
   studentsToClassrooms,
   teacherProfiles,
   users,
+  wishlists,
+  wishlistItems,
 } from './schema';
 
 // ---------- Authorization ----------
@@ -40,6 +42,18 @@ export async function getCoordinatorByBcUserId(bcUserId: number) {
   return rows[0] ?? null;
 }
 
+// True once an admin account exists for the school (a fair_admin_profiles row,
+// which links to users.bc_user_id on BigCommerce).
+export async function getHasFairAdmin(schoolId: number): Promise<boolean> {
+  const db = getDb();
+  const rows = await db
+    .select({ id: fairAdminProfiles.id })
+    .from(fairAdminProfiles)
+    .where(eq(fairAdminProfiles.schoolId, schoolId))
+    .limit(1);
+  return rows.length > 0;
+}
+
 // ---------- School & fairs ----------
 
 export async function getSchool(schoolId: number) {
@@ -56,6 +70,21 @@ export async function getSchool(schoolId: number) {
     .where(eq(schools.id, schoolId))
     .limit(1);
   return rows[0] ?? null;
+}
+
+// ---------- Login (Ave $ admin email) ----------
+
+// Resolve a school from its Ave Dollars admin email. This is the interim login
+// identity (the bc_ave_dollars_email column, populated on every school); we'll
+// move to the HubSpot book-fair-coordinator field later.
+export async function getSchoolIdByAveDollarsEmail(email: string): Promise<number | null> {
+  const db = getDb();
+  const rows = await db
+    .select({ id: schools.id })
+    .from(schools)
+    .where(sql`lower(${schools.bcAveDollarsEmail}) = ${email.toLowerCase()}`)
+    .limit(1);
+  return rows[0]?.id ?? null;
 }
 
 export type FairRow = {
@@ -105,6 +134,7 @@ export type ClassroomTeacherRow = {
   teacherStatus: string | null;
   teacherProfileId: number | null;
   teacherTosAcceptedAt: string | null;
+  createdAt: string | null;
 };
 
 export async function getClassroomsWithTeachers(schoolId: number): Promise<ClassroomTeacherRow[]> {
@@ -119,12 +149,63 @@ export async function getClassroomsWithTeachers(schoolId: number): Promise<Class
       teacherStatus: classrooms.teacherStatus,
       teacherProfileId: classrooms.teacherProfileId,
       teacherTosAcceptedAt: users.tosAcceptedAt,
+      createdAt: classrooms.createdAt,
     })
     .from(classrooms)
     .leftJoin(teacherProfiles, eq(teacherProfiles.id, classrooms.teacherProfileId))
     .leftJoin(users, eq(users.id, teacherProfiles.userId))
     .where(eq(classrooms.schoolId, schoolId))
     .orderBy(asc(classrooms.classroomName));
+}
+
+export interface WishlistSummary {
+  totalItems: number; // distinct wishlist line items school-wide
+  totalBooks: number; // sum of desired quantities
+  totalPurchased: number; // books actually bought from wishlists so far
+  classroomsStarted: number; // classrooms with at least one wishlist item
+}
+
+// School-wide wishlist rollup for the "Wishlist insights" strip.
+export async function getWishlistSummary(schoolId: number): Promise<WishlistSummary> {
+  const db = getDb();
+  const rows = await db
+    .select({
+      totalItems: sql<number>`count(${wishlistItems.id})::int`,
+      totalBooks: sql<number>`coalesce(sum(${wishlistItems.desiredQuantity}), 0)::int`,
+      totalPurchased: sql<number>`coalesce(sum(${wishlistItems.totalPurchased}), 0)::int`,
+      classroomsStarted: sql<number>`count(distinct ${wishlists.classroomId})::int`,
+    })
+    .from(wishlistItems)
+    .innerJoin(wishlists, eq(wishlists.id, wishlistItems.wishlistId))
+    .innerJoin(classrooms, eq(classrooms.id, wishlists.classroomId))
+    .where(eq(classrooms.schoolId, schoolId));
+  const r = rows[0];
+  return {
+    totalItems: r?.totalItems ?? 0,
+    totalBooks: r?.totalBooks ?? 0,
+    totalPurchased: r?.totalPurchased ?? 0,
+    classroomsStarted: r?.classroomsStarted ?? 0,
+  };
+}
+
+// Wishlist item counts per classroom (summed across the classroom's wishlists).
+// A classroom with a wishlist but no books comes back with itemCount 0; a
+// classroom with no wishlist isn't returned at all.
+export async function getWishlistItemCountsByClassroom(
+  schoolId: number
+): Promise<{ classroomId: number; itemCount: number }[]> {
+  const db = getDb();
+  const rows = await db
+    .select({
+      classroomId: wishlists.classroomId,
+      itemCount: sql<number>`count(${wishlistItems.id})::int`,
+    })
+    .from(wishlists)
+    .innerJoin(classrooms, eq(classrooms.id, wishlists.classroomId))
+    .leftJoin(wishlistItems, eq(wishlistItems.wishlistId, wishlists.id))
+    .where(eq(classrooms.schoolId, schoolId))
+    .groupBy(wishlists.classroomId);
+  return rows.map((r) => ({ classroomId: r.classroomId ?? 0, itemCount: r.itemCount }));
 }
 
 export type ParentCounts = { classroomId: number; parents: number; activeParents: number };

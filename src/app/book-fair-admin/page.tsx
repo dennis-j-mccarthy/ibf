@@ -1,26 +1,34 @@
 import type { Metadata } from 'next';
 import FairHeaderCard from '@/components/book-fair-admin/FairHeaderCard';
+import HeaderIcon from '@/components/book-fair-admin/HeaderIcon';
+import PlanViews from '@/components/book-fair-admin/PlanViews';
+import ShareSignupCard from '@/components/book-fair-admin/ShareSignupCard';
 import InviteTree, {
   type InviteTreeClassroom,
 } from '@/components/book-fair-admin/InviteTree';
-import MarketingTimeline from '@/components/book-fair-admin/MarketingTimeline';
 import PastFairsSection, {
   type PastFairItem,
 } from '@/components/book-fair-admin/PastFairsSection';
-import PrepChecklist, { type TaxCertStatus } from '@/components/book-fair-admin/PrepChecklist';
+import { type TaxCertStatus } from '@/components/book-fair-admin/PrepChecklist';
+import RepCard from '@/components/book-fair-admin/RepCard';
 import ResourceHub from '@/components/book-fair-admin/ResourceHub';
+import { fairStatusStep } from '@/lib/book-fair-admin/fair-status';
+import { getRep } from '@/lib/book-fair-admin/reps';
 import { getCompany, getDeal, getDeals, parseDollarString } from '@/lib/book-fair-admin/hubspot';
 import {
   getAveDollarsEarned,
   getAveDollarsSpent,
   getClassroomsWithTeachers,
+  getHasFairAdmin,
   getParentCountsByClassroom,
   getPastFairs,
   getSchool,
   getSchoolParentSummary,
   getUpcomingFair,
+  getWishlistItemCountsByClassroom,
 } from '@/lib/book-fair-admin/queries';
 import { requireSession } from '@/lib/book-fair-admin/session';
+import { getResources } from '@/lib/data';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,19 +43,35 @@ function isTruthyFlag(value: string | null | undefined): boolean {
   return ['true', 'yes', '1'].includes((value ?? '').toLowerCase());
 }
 
-export default async function BookFairAdminDashboard() {
+export default async function BookFairAdminDashboard({
+  searchParams,
+}: {
+  searchParams: Promise<{ step?: string }>;
+}) {
   const session = await requireSession();
   const schoolId = session.school_id;
+  const resources = await getResources();
 
-  const [school, upcomingFair, pastFairs, classroomRows, parentCounts, parentSummary] =
-    await Promise.all([
-      getSchool(schoolId),
-      getUpcomingFair(schoolId),
-      getPastFairs(schoolId),
-      getClassroomsWithTeachers(schoolId),
-      getParentCountsByClassroom(schoolId),
-      getSchoolParentSummary(schoolId),
-    ]);
+  const [
+    school,
+    upcomingFair,
+    pastFairs,
+    classroomRows,
+    parentCounts,
+    parentSummary,
+    wishlistCounts,
+    hasFairAdmin,
+  ] = await Promise.all([
+    getSchool(schoolId),
+    getUpcomingFair(schoolId),
+    getPastFairs(schoolId),
+    getClassroomsWithTeachers(schoolId),
+    getParentCountsByClassroom(schoolId),
+    getSchoolParentSummary(schoolId),
+    getWishlistItemCountsByClassroom(schoolId),
+    getHasFairAdmin(schoolId),
+  ]);
+  const wishlistByClassroom = new Map(wishlistCounts.map((w) => [w.classroomId, w.itemCount]));
 
   // HubSpot reads degrade to null — the page renders Postgres-only data with
   // "unavailable" notes when HubSpot is unreachable.
@@ -69,8 +93,6 @@ export default async function BookFairAdminDashboard() {
         : 'missing';
   }
   const classroomCount = classroomRows.length;
-  const invitedCount = classroomRows.filter((c) => c.invitedTeacherEmail != null).length;
-  const activeTeacherCount = classroomRows.filter((c) => c.teacherProfileId != null).length;
 
   // --- Invite tree ---
   const countsByClassroom = new Map(parentCounts.map((p) => [p.classroomId, p]));
@@ -90,6 +112,8 @@ export default async function BookFairAdminDashboard() {
       fullyActive: c.teacherTosAcceptedAt != null,
       parentCount: counts?.parents ?? 0,
       activeParentCount: counts?.activeParents ?? 0,
+      wishlistItemCount: wishlistByClassroom.get(c.id) ?? 0,
+      createdAt: c.createdAt,
     };
   });
   const treeSummary = {
@@ -98,6 +122,22 @@ export default async function BookFairAdminDashboard() {
     pending: treeClassrooms.filter((c) => c.status === 'pending').length,
     parentsJoined: parentSummary.parents,
   };
+
+  // Data-driven checklist items (the rest are manually checkable in the component).
+  const checklistAutoDone: Record<string, boolean> = {
+    admin: hasFairAdmin,
+    tax: taxCertStatus === 'complete',
+    invite: classroomCount > 0 && treeSummary.pending === 0,
+    signup: classroomCount > 0 && treeSummary.active === classroomCount,
+  };
+  // Admin signup link (role=admin assumed — confirm the exact role value).
+  const adminSignupUrl = `https://store.ignatiusbookfairs.com?signup=true&schoolId=${schoolId}&role=admin`;
+  // slug -> full Resource for the checklist's resource modals.
+  const resourceBySlug: Record<string, (typeof resources)[number]> = {};
+  for (const r of resources) {
+    if (!r.isActive) continue;
+    resourceBySlug[r.slug] = r;
+  }
 
   // --- Past fairs ---
   const pastItems: PastFairItem[] = await Promise.all(
@@ -123,8 +163,77 @@ export default async function BookFairAdminDashboard() {
     })
   );
 
+  // Goal tracker: current fair sales (post during/after the fair) vs. the most
+  // recent past fair's total as a suggested target.
+  const currentSales = parseDollarString(upcomingDeal?.properties.total_sales ?? null);
+  let lastFairSales: number | null = null;
+  for (const fair of pastFairs) {
+    const deal = fair.hsDealId ? pastDealsById.get(fair.hsDealId) : null;
+    const v = parseDollarString(deal?.properties.total_sales ?? null);
+    if (v !== null) {
+      lastFairSales = v;
+      break;
+    }
+  }
+
   const isVirtual = upcomingDeal ? isTruthyFlag(upcomingDeal.properties.virtual_book_fair) : null;
   const schoolName = school?.name ?? 'Your school';
+  const logoDomain = company?.properties.domain ?? null;
+  const rep = getRep(upcomingDeal?.properties.hubspot_owner_id);
+  const realStep = fairStatusStep(upcomingDeal?.properties.dealstage);
+  // Dev-only preview: ?step=N forces the fair-status step to preview each state.
+  const sp = await searchParams;
+  const overrideStep =
+    process.env.NODE_ENV !== 'production' && sp?.step ? Number(sp.step) : null;
+  const currentStep =
+    overrideStep && overrideStep >= 1 && overrideStep <= 5 ? overrideStep : realStep;
+
+  // Contacts from the upcoming fair's HubSpot deal.
+  const dp = upcomingDeal?.properties;
+  const coordinator =
+    dp && (dp.chair_organizer_first_name || dp.chair_organizer_email)
+      ? {
+          name: [dp.chair_organizer_first_name, dp.chair_organizer_last_name].filter(Boolean).join(' '),
+          email: dp.chair_organizer_email ?? null,
+        }
+      : null;
+  const aveAdmin =
+    dp && (dp.ave_dollars_first_name || dp.ave_dollar_email)
+      ? {
+          name: [dp.ave_dollars_first_name, dp.ave_dollars_last_name].filter(Boolean).join(' '),
+          email: dp.ave_dollar_email ?? null,
+        }
+      : null;
+
+  // Link to the public planning calendar, pre-filled with this fair's type + date.
+  const DEAL_TYPE_TO_PLANNER: Record<string, string> = {
+    'school book fair': 'catholic-in-person',
+    'parish book fair': 'parish-in-person',
+    'public book fair': 'public-in-person',
+    'virtual book fair': 'catholic-virtual',
+  };
+  const plannerType =
+    DEAL_TYPE_TO_PLANNER[(dp?.dealtype ?? '').toLowerCase()] ?? 'catholic-in-person';
+  const plannerDate = upcomingFair?.startDate?.slice(0, 10);
+  const FAIR_TYPE_TO_AUDIENCE: Record<string, string> = {
+    'catholic-in-person': 'Catholic In Person',
+    'catholic-virtual': 'Catholic In Person', // virtual resources share the Catholic audience tag
+    'public-in-person': 'Public In Person',
+    'parish-in-person': 'Parish In Person',
+  };
+  const resourceAudience = FAIR_TYPE_TO_AUDIENCE[plannerType];
+
+  const PILL_LABELS: Record<string, string> = {
+    'catholic-in-person': 'Catholic In-Person',
+    'catholic-virtual': 'Catholic Virtual',
+    'public-in-person': 'Public In-Person',
+    'parish-in-person': 'Parish In-Person',
+  };
+  const fairTypeLabel = PILL_LABELS[plannerType] ?? null;
+
+  // Sign-up links the coordinator shares (school-wide, by role).
+  const familyUrl = `https://store.ignatiusbookfairs.com?signup=true&schoolId=${schoolId}&role=parent`;
+  const teacherUrl = `https://store.ignatiusbookfairs.com?signup=true&schoolId=${schoolId}&role=teacher`;
 
   return (
     <div className="bg-[#f5f5f5] min-h-screen">
@@ -150,21 +259,54 @@ export default async function BookFairAdminDashboard() {
           <>
             <FairHeaderCard
               schoolName={schoolName}
+              city={school?.city}
+              state={school?.state}
               startDate={upcomingFair.startDate}
               endDate={upcomingFair.endDate}
               isVirtual={isVirtual}
+              fairTypeLabel={fairTypeLabel}
+              coordinator={coordinator}
+              aveAdmin={aveAdmin}
+              logoDomain={logoDomain}
+              currentStep={currentStep}
+              schoolId={schoolId}
+              currentSales={currentSales}
+              lastFairSales={lastFairSales}
             />
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-              <PrepChecklist
-                taxCertStatus={taxCertStatus}
-                classroomCount={classroomCount}
-                invitedCount={invitedCount}
-                activeTeacherCount={activeTeacherCount}
-              />
-              <MarketingTimeline fairStartDate={upcomingFair.startDate} />
-            </div>
-            <InviteTree classrooms={treeClassrooms} summary={treeSummary} />
-            <ResourceHub />
+            <PastFairsSection items={pastItems} />
+            <PlanViews
+              checklist={{
+                schoolId,
+                fairType: plannerType,
+                autoDone: checklistAutoDone,
+                taxCertMissing: taxCertStatus === 'missing',
+                resourcesBySlug: resourceBySlug,
+                adminSignupUrl,
+                fairStartDate: plannerDate,
+              }}
+              planner={{
+                resources,
+                initialFairType: plannerType,
+                initialFairDate: plannerDate,
+                lockSettings: true,
+              }}
+            />
+            <section className="bg-white rounded-xl shadow-sm p-6">
+              <h3
+                className="flex items-center gap-2.5 text-[#02176f] text-xl font-semibold mb-[30px]!"
+                style={{ fontFamily: 'brother-1816, sans-serif' }}
+              >
+                <HeaderIcon name="comms" />
+                Communications
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch">
+                {rep && <RepCard rep={rep} flat />}
+                <ShareSignupCard url={familyUrl} variant="family" flat />
+                <ShareSignupCard url={teacherUrl} variant="teacher" flat />
+              </div>
+            </section>
+            <ResourceHub resources={resources} audience={resourceAudience} isVirtual={plannerType === 'catholic-virtual'} />
+            <InviteTree classrooms={treeClassrooms} schoolId={schoolId} nowMs={Date.now()} />
           </>
         ) : (
           <>
@@ -183,11 +325,10 @@ export default async function BookFairAdminDashboard() {
                 .
               </p>
             </div>
-            <ResourceHub />
+            <PastFairsSection items={pastItems} />
+            <ResourceHub resources={resources} audience={resourceAudience} isVirtual={plannerType === 'catholic-virtual'} />
           </>
         )}
-
-        <PastFairsSection items={pastItems} />
       </div>
     </div>
   );

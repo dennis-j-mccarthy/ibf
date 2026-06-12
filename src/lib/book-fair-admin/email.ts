@@ -5,6 +5,12 @@ export async function sendMagicLinkEmail(to: string, link: string): Promise<bool
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM;
   if (!apiKey || !from) {
+    // Local/dev fallback: no email provider configured — print the sign-in
+    // link to the server console so login works without Resend.
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`\n[book-fair-admin] magic link for ${to}:\n${link}\n`);
+      return true;
+    }
     console.error('RESEND_API_KEY / EMAIL_FROM are not set');
     return false;
   }

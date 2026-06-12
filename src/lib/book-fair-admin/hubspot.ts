@@ -32,6 +32,17 @@ const DEAL_PROPERTIES = [
   'book_fair_end_date',
   'fair_size',
   'cash_back',
+  'dealtype',
+  'hubspot_owner_id',
+  'dealstage',
+  // Contacts (read-only): Ave $ admin and book fair coordinator ("chair/organizer").
+  'ave_dollars_first_name',
+  'ave_dollars_last_name',
+  'ave_dollar_email',
+  'chair_organizer_first_name',
+  'chair_organizer_last_name',
+  'chair_organizer_email',
+  'principal_name',
 ] as const;
 
 const COMPANY_PROPERTIES = [
@@ -39,6 +50,7 @@ const COMPANY_PROPERTIES = [
   'tax_exempt_received__manually_',
   'sales_tax_expiration',
   'company_identifier',
+  'domain',
 ] as const;
 
 export interface HubSpotDeal {

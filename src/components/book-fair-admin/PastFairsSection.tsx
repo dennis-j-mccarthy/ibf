@@ -1,4 +1,5 @@
 import { formatRangeET } from '@/lib/book-fair-admin/dates';
+import HeaderIcon from './HeaderIcon';
 
 export interface PastFairItem {
   id: number;
@@ -14,27 +15,25 @@ export interface PastFairItem {
   spendIsCertain: boolean;
 }
 
-const money = (n: number) =>
-  n.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-
 export default function PastFairsSection({ items }: { items: PastFairItem[] }) {
   if (items.length === 0) return null;
 
   return (
-    <section className="bg-white rounded-xl shadow-sm p-6">
+    <section className="bg-[#c0dac7] rounded-xl shadow-sm p-6">
       <h3
-        className="text-[#02176f] text-xl font-semibold mb-4"
+        className="flex items-center gap-2.5 text-[#02176f] text-xl font-semibold mb-[30px]!"
         style={{ fontFamily: 'brother-1816, sans-serif' }}
       >
+        <HeaderIcon name="pastfairs" />
         Past fairs
       </h3>
       <ul className="space-y-4">
         {items.map((fair) => (
-          <li key={fair.id} className="border border-[#f0f0f0] rounded-lg p-4">
+          <li key={fair.id} className="bg-white border border-[#dddddd] rounded-lg p-4 shadow-sm">
             <p className="font-semibold text-[#1a1b1f] mb-2">
               {formatRangeET(fair.startDate, fair.endDate)}
             </p>
-            <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+            <dl className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <dt className="text-[#7e828f]">Total sales</dt>
                 <dd className="font-semibold text-[#1a1b1f]">
@@ -44,16 +43,6 @@ export default function PastFairsSection({ items }: { items: PastFairItem[] }) {
               <div>
                 <dt className="text-[#7e828f]">Items sold</dt>
                 <dd className="font-semibold text-[#1a1b1f]">{fair.totalItemsSold ?? '—'}</dd>
-              </div>
-              <div>
-                <dt className="text-[#7e828f]">Ave Dollars earned</dt>
-                <dd className="font-semibold text-[#1a1b1f]">{money(fair.aveDollarsEarned)}</dd>
-              </div>
-              <div>
-                <dt className="text-[#7e828f]">
-                  {fair.spendIsCertain ? 'Ave Dollars spent' : 'Ave Dollars activity'}
-                </dt>
-                <dd className="font-semibold text-[#1a1b1f]">{money(fair.aveDollarsSpent)}</dd>
               </div>
             </dl>
             {fair.hubspotUnavailable && (

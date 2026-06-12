@@ -175,3 +175,16 @@ export const orderLineItems = pgTable('order_line_items', {
   createdAt: ts('created_at').notNull(),
   updatedAt: ts('updated_at').notNull(),
 });
+
+export const wishlists = pgTable('wishlists', {
+  id: id('id').primaryKey(),
+  classroomId: id('classroom_id'),
+  userId: id('user_id'),
+});
+
+export const wishlistItems = pgTable('wishlist_items', {
+  id: id('id').primaryKey(),
+  wishlistId: id('wishlist_id').notNull(),
+  desiredQuantity: integer('desired_quantity'),
+  totalPurchased: integer('total_purchased'),
+});

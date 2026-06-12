@@ -2,9 +2,8 @@
 
 import { headers } from 'next/headers';
 import { signMagicLinkToken } from '@/lib/book-fair-admin/auth';
-import { findCustomerIdByEmail } from '@/lib/book-fair-admin/bigcommerce';
 import { sendMagicLinkEmail } from '@/lib/book-fair-admin/email';
-import { getCoordinatorByBcUserId } from '@/lib/book-fair-admin/queries';
+import { getSchoolIdByAveDollarsEmail } from '@/lib/book-fair-admin/queries';
 import { allowLoginAttempt } from '@/lib/book-fair-admin/rate-limit';
 
 // Always the same response, whether or not an email was sent — prevents
@@ -34,12 +33,19 @@ export async function requestMagicLink(
   }
 
   try {
-    const bcUserId = await findCustomerIdByEmail(email);
-    if (bcUserId == null) return { message: GENERIC_MESSAGE };
+    // Authorization gate: the email must be a school's Ave $ admin.
+    let schoolId = await getSchoolIdByAveDollarsEmail(email);
 
-    // Authorization gate: a fair_admin_profiles row IS the coordinator role.
-    const coordinator = await getCoordinatorByBcUserId(bcUserId);
-    if (!coordinator) return { message: GENERIC_MESSAGE };
+    // Dev-only convenience: let a test email stand in for a real Ave $ admin so
+    // the dashboard can be demoed without touching production data.
+    if (
+      schoolId == null &&
+      process.env.NODE_ENV !== 'production' &&
+      email === 'dennisjmccarthy+test@gmail.com'
+    ) {
+      schoolId = 1363; // The Saint Constantine School
+    }
+    if (schoolId == null) return { message: GENERIC_MESSAGE };
 
     const secret = process.env.AUTH_JWT_SECRET;
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
@@ -49,7 +55,7 @@ export async function requestMagicLink(
     }
 
     const token = await signMagicLinkToken(
-      { bcUserId, userId: coordinator.userId, schoolId: coordinator.schoolId },
+      { bcUserId: 0, userId: 0, schoolId },
       secret
     );
     const link = `${baseUrl.replace(/\/$/, '')}/book-fair-admin/verify?token=${encodeURIComponent(token)}`;

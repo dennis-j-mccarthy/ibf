@@ -11,8 +11,11 @@ const globalForDb = globalThis as unknown as {
 
 export function getDb(): NeonHttpDatabase {
   if (globalForDb.bookFairDb) return globalForDb.bookFairDb;
-  const url = process.env.DATABASE_URL;
-  if (!url) throw new Error('DATABASE_URL is not set');
+  // Dedicated platform DB connection, kept separate from the website's
+  // DATABASE_URL so the dashboard never reads or depends on the marketing
+  // site's database.
+  const url = process.env.PLATFORM_DATABASE_URL;
+  if (!url) throw new Error('PLATFORM_DATABASE_URL is not set');
   const db = drizzle(neon(url));
   globalForDb.bookFairDb = db;
   return db;
