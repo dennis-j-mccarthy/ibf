@@ -3,7 +3,16 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import QRCode from 'qrcode';
 
-export type WidgetType = 'countdown' | 'goal' | 'teacher' | 'family' | 'signup' | 'leaderboard';
+export type WidgetType =
+  | 'countdown'
+  | 'goal'
+  | 'teacher'
+  | 'family'
+  | 'signup'
+  | 'leaderboard'
+  | 'family-countdown'
+  | 'grant'
+  | 'support';
 
 export interface WidgetData {
   schoolName: string;
@@ -68,7 +77,7 @@ function Frame({
           src="/images/Loupio-p-500.png"
           alt=""
           aria-hidden="true"
-          className="pointer-events-none absolute -bottom-2 -right-2 w-20 h-20 object-contain animate-[loupio-bob_3s_ease-in-out_infinite] drop-shadow"
+          className="pointer-events-none absolute -bottom-3 -right-3 w-28 h-28 object-contain animate-[loupio-bob_3s_ease-in-out_infinite] drop-shadow-lg"
         />
       )}
 
@@ -234,7 +243,7 @@ function LeaderboardWidget({ data, options }: { data: WidgetData; options: Widge
           Wishlists are filling up — check back soon!
         </p>
       ) : (
-        <ol className="space-y-1.5 pr-12">
+        <ol className="space-y-1.5 pr-16">
           {rows.map((r, i) => (
             <li key={r.name} className="flex items-center gap-2.5">
               <span
@@ -254,6 +263,89 @@ function LeaderboardWidget({ data, options }: { data: WidgetData; options: Widge
           ))}
         </ol>
       )}
+    </Frame>
+  );
+}
+
+// ---- Parent-audience widgets ---------------------------------------------
+
+function CtaButton({ url, label, accent }: { url?: string | null; label: string; accent: string }) {
+  return (
+    <a
+      href={url ?? '#'}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-block text-center font-bold text-white rounded-full px-5 py-2.5 text-sm transition-transform hover:scale-105"
+      style={{ ...font, background: accent }}
+    >
+      {label} →
+    </a>
+  );
+}
+
+function FamilyCountdownWidget({ data, options }: { data: WidgetData; options: WidgetOptions }) {
+  const [days, setDays] = useState<number | null>(null);
+  useEffect(() => {
+    if (!data.fairStartDate) return;
+    const tick = () => setDays(daysUntil(data.fairStartDate!));
+    tick();
+    const id = setInterval(tick, 60_000);
+    return () => clearInterval(id);
+  }, [data.fairStartDate]);
+  const dark = options.theme === 'dark';
+  return (
+    <Frame theme={options.theme} loupio={options.loupio} accent="#ff6445">
+      <Eyebrow color="#ff6445">Families — get ready!</Eyebrow>
+      <p className="text-lg font-bold leading-tight mb-2 pr-16" style={font}>
+        Our Book Fair is almost here
+      </p>
+      <div className="flex items-end gap-2 mb-3">
+        <span className="text-5xl font-extrabold leading-none" style={{ ...font, color: dark ? '#ffd41d' : '#02176f' }}>
+          {days ?? '—'}
+        </span>
+        <span className="text-base font-bold mb-0.5" style={font}>
+          {days === 1 ? 'day' : 'days'} to go · {rangeLabel(data.fairStartDate, data.fairEndDate)}
+        </span>
+      </div>
+      <CtaButton url={data.familyUrl} label="Sign up & shop" accent="#ff6445" />
+    </Frame>
+  );
+}
+
+function GrantWidget({ data, options }: { data: WidgetData; options: WidgetOptions }) {
+  const dark = options.theme === 'dark';
+  return (
+    <Frame theme={options.theme} loupio={options.loupio} accent="#6c47ff">
+      <Eyebrow color="#6c47ff">Parents</Eyebrow>
+      <p className="text-xl font-bold leading-tight mb-2 pr-16" style={font}>
+        Grant a classroom wishlist
+      </p>
+      <p className="text-sm mb-3 pr-16" style={{ color: dark ? 'rgba(255,255,255,0.75)' : '#7e828f' }}>
+        Browse your child&apos;s classroom wishlist and gift a book the teacher hand-picked.
+      </p>
+      <CtaButton url={data.familyUrl} label="Shop the wishlists" accent="#6c47ff" />
+    </Frame>
+  );
+}
+
+function SupportWidget({ data, options }: { data: WidgetData; options: WidgetOptions }) {
+  const dark = options.theme === 'dark';
+  const goal = data.goal || (data.prevSales ? Math.ceil(data.prevSales / 500) * 500 : 5000);
+  const current = data.currentSales ?? 0;
+  const pct = goal > 0 ? Math.min(100, (current / goal) * 100) : 0;
+  return (
+    <Frame theme={options.theme} loupio={options.loupio} accent="#50db92">
+      <Eyebrow color="#1a9d5f">Support {data.schoolName}</Eyebrow>
+      <p className="text-xl font-bold leading-tight mb-3 pr-16" style={font}>
+        Every book helps our school
+      </p>
+      <div className="h-3 rounded-full overflow-hidden mb-1.5" style={{ background: dark ? 'rgba(255,255,255,0.15)' : '#eef0f5' }}>
+        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: '#50db92' }} />
+      </div>
+      <p className="text-xs font-semibold mb-3" style={{ color: dark ? 'rgba(255,255,255,0.7)' : '#7e828f' }}>
+        {money(current)} of {money(goal)} raised
+      </p>
+      <CtaButton url={data.familyUrl} label="Shop & support" accent="#50db92" />
     </Frame>
   );
 }
@@ -282,15 +374,23 @@ export function BookFairWidget({
       return <InviteWidget data={data} options={options} variant="signup" />;
     case 'leaderboard':
       return <LeaderboardWidget data={data} options={options} />;
+    case 'family-countdown':
+      return <FamilyCountdownWidget data={data} options={options} />;
+    case 'grant':
+      return <GrantWidget data={data} options={options} />;
+    case 'support':
+      return <SupportWidget data={data} options={options} />;
     default:
       return null;
   }
 }
 
-export const WIDGET_TYPES: { type: WidgetType; label: string; icon: ReactNode }[] = [
+export type WidgetAudience = 'school' | 'families';
+
+export const WIDGET_TYPES: { type: WidgetType; label: string; audience: WidgetAudience; icon: ReactNode }[] = [
   {
     type: 'countdown',
-    label: 'Countdown',
+    label: 'Countdown', audience: 'school',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="13" r="8" />
@@ -300,7 +400,7 @@ export const WIDGET_TYPES: { type: WidgetType; label: string; icon: ReactNode }[
   },
   {
     type: 'goal',
-    label: 'Goal & sales',
+    label: 'Goal & sales', audience: 'school',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="9" />
@@ -311,7 +411,7 @@ export const WIDGET_TYPES: { type: WidgetType; label: string; icon: ReactNode }[
   },
   {
     type: 'teacher',
-    label: 'Teacher invite',
+    label: 'Teacher invite', audience: 'school',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 3 1 8l11 5 9-4.09V14h2V8L12 3z" />
@@ -321,7 +421,7 @@ export const WIDGET_TYPES: { type: WidgetType; label: string; icon: ReactNode }[
   },
   {
     type: 'family',
-    label: 'Family invite',
+    label: 'Family invite', audience: 'families',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="9" cy="8" r="3" />
@@ -332,7 +432,7 @@ export const WIDGET_TYPES: { type: WidgetType; label: string; icon: ReactNode }[
   },
   {
     type: 'signup',
-    label: 'Sign-up',
+    label: 'Sign-up', audience: 'school',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 5v14M5 12h14" />
@@ -341,10 +441,41 @@ export const WIDGET_TYPES: { type: WidgetType; label: string; icon: ReactNode }[
   },
   {
     type: 'leaderboard',
-    label: 'Wishlist leaderboard',
+    label: 'Wishlist leaderboard', audience: 'school',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4zM5 4H4a2 2 0 0 0 0 4h1M19 4h1a2 2 0 0 1 0 4h-1" />
+      </svg>
+    ),
+  },
+  {
+    type: 'family-countdown',
+    label: 'Family countdown',
+    audience: 'families',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="17" rx="2" />
+        <path d="M3 9h18M8 2v4M16 2v4M12 13v4M10 15h4" />
+      </svg>
+    ),
+  },
+  {
+    type: 'grant',
+    label: 'Grant a wishlist',
+    audience: 'families',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
+      </svg>
+    ),
+  },
+  {
+    type: 'support',
+    label: 'Support our school',
+    audience: 'families',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z" />
       </svg>
     ),
   },

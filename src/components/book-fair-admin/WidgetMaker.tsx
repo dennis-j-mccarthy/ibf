@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { toPng } from 'html-to-image';
 import HeaderIcon from './HeaderIcon';
-import { BookFairWidget, WIDGET_TYPES, type WidgetData, type WidgetType } from './widgets';
+import { BookFairWidget, WIDGET_TYPES, type WidgetAudience, type WidgetData, type WidgetType } from './widgets';
 
 // Default iframe height per widget so the embed code fits without scrollbars.
 const HEIGHTS: Record<WidgetType, number> = {
@@ -12,7 +13,16 @@ const HEIGHTS: Record<WidgetType, number> = {
   family: 250,
   signup: 250,
   leaderboard: 300,
+  'family-countdown': 250,
+  grant: 220,
+  support: 250,
 };
+
+const AUDIENCES: { key: 'all' | WidgetAudience; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'school', label: 'School' },
+  { key: 'families', label: 'Families' },
+];
 
 export default function WidgetMaker({
   schoolId,
@@ -24,14 +34,37 @@ export default function WidgetMaker({
   data: WidgetData;
 }) {
   const [type, setType] = useState<WidgetType>('countdown');
+  const [audience, setAudience] = useState<'all' | WidgetAudience>('all');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [loupio, setLoupio] = useState(true);
   const [copied, setCopied] = useState(false);
+  const previewRef = useRef<HTMLDivElement>(null);
   // Use the live origin so the embed code points at wherever this is viewed.
   const [origin, setOrigin] = useState(originProp);
   useEffect(() => {
     if (window.location.origin) setOrigin(window.location.origin);
   }, []);
+
+  const widgets = WIDGET_TYPES.filter((w) => audience === 'all' || w.audience === audience);
+
+  const pickAudience = (key: 'all' | WidgetAudience) => {
+    setAudience(key);
+    const list = WIDGET_TYPES.filter((w) => key === 'all' || w.audience === key);
+    if (!list.some((w) => w.type === type) && list[0]) setType(list[0].type);
+  };
+
+  const downloadPng = async () => {
+    if (!previewRef.current) return;
+    try {
+      const url = await toPng(previewRef.current, { pixelRatio: 2, cacheBust: true });
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `bookfair-${type}.png`;
+      a.click();
+    } catch {
+      /* ignore */
+    }
+  };
 
   const params = new URLSearchParams({ schoolId: String(schoolId), theme });
   if (!loupio) params.set('loupio', '0');
@@ -61,9 +94,25 @@ export default function WidgetMaker({
         Pick a widget, customize it, and paste the code onto your school website.
       </p>
 
+      {/* Audience filter */}
+      <div className="inline-flex bg-[#f5f6fa] rounded-full p-1 mb-4">
+        {AUDIENCES.map((a) => (
+          <button
+            key={a.key}
+            type="button"
+            onClick={() => pickAudience(a.key)}
+            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+              audience === a.key ? 'bg-[#6c47ff] text-white' : 'text-[#7e828f] hover:text-[#02176f]'
+            }`}
+          >
+            {a.label}
+          </button>
+        ))}
+      </div>
+
       {/* Widget type chips */}
       <div className="flex flex-wrap gap-2 mb-6">
-        {WIDGET_TYPES.map((w) => {
+        {widgets.map((w) => {
           const active = w.type === type;
           return (
             <button
@@ -88,10 +137,20 @@ export default function WidgetMaker({
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-[#a0a4b0] mb-2">Live preview</p>
           <div className="rounded-xl bg-[#eef1f6] p-6 flex items-center justify-center min-h-[260px]">
-            <div className="w-full max-w-[340px]">
+            <div ref={previewRef} className="w-full max-w-[340px]">
               <BookFairWidget type={type} data={data} options={{ theme, loupio }} />
             </div>
           </div>
+          <button
+            type="button"
+            onClick={downloadPng}
+            className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-[#0088ff] hover:underline"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M12 4v12m0 0l-4-4m4 4l4-4" />
+            </svg>
+            Download PNG for social
+          </button>
         </div>
 
         {/* Options + embed code */}

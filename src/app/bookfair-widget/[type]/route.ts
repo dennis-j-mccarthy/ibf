@@ -33,7 +33,7 @@ function rangeLabel(start?: string | null, end?: string | null): string {
 function frame(inner: string, opts: { theme: Theme; loupio: boolean; accent: string; origin: string }) {
   const dark = opts.theme === 'dark';
   const loupio = opts.loupio
-    ? `<img src="${opts.origin}/images/Loupio-p-500.png" alt="" aria-hidden="true" style="position:absolute;bottom:-8px;right:-8px;width:84px;height:84px;object-fit:contain;pointer-events:none;animation:loupio-bob 3s ease-in-out infinite;filter:drop-shadow(0 4px 6px rgba(0,0,0,.2))">`
+    ? `<img src="${opts.origin}/images/Loupio-p-500.png" alt="" aria-hidden="true" style="position:absolute;bottom:-12px;right:-12px;width:116px;height:116px;object-fit:contain;pointer-events:none;animation:loupio-bob 3s ease-in-out infinite;filter:drop-shadow(0 6px 10px rgba(0,0,0,.22))">`
     : '';
   const logo = dark ? 'ibf-logo-white.png' : 'ibf-logo-blue.png';
   return `<div style="position:relative;overflow:hidden;border-radius:18px;box-shadow:0 10px 24px rgba(0,0,0,.12);background:${
@@ -54,6 +54,11 @@ const eyebrow = (text: string, color: string) =>
   `<p style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:${color};margin:0 0 6px">${esc(
     text
   )}</p>`;
+
+const cta = (url: string, label: string, accent: string) =>
+  `<a href="${esc(url)}" target="_blank" rel="noopener" style="display:inline-block;text-align:center;font-weight:700;color:#fff;background:${accent};border-radius:99px;padding:11px 20px;font-size:14px;text-decoration:none">${esc(
+    label
+  )} →</a>`;
 
 async function buildWidget(
   type: string,
@@ -165,7 +170,7 @@ async function buildWidget(
         ? `<p style="font-size:14px;color:${
             dark ? 'rgba(255,255,255,.7)' : '#7e828f'
           }">Wishlists are filling up — check back soon!</p>`
-        : `<ol style="list-style:none;margin:0;padding:0 48px 0 0;display:flex;flex-direction:column;gap:6px">${rows
+        : `<ol style="list-style:none;margin:0;padding:0 64px 0 0;display:flex;flex-direction:column;gap:6px">${rows
             .map(
               (r, i) =>
                 `<li style="display:flex;align-items:center;gap:10px">
@@ -185,6 +190,77 @@ async function buildWidget(
       `${eyebrow('Wishlist leaderboard', '#b8860b')}
        <p style="font-size:18px;font-weight:700;line-height:1.15;margin:0 0 12px">Most books wishlisted</p>${list}`,
       '#ffc107'
+    );
+  }
+
+  if (type === 'family-countdown') {
+    const [school, fair] = await Promise.all([getSchool(schoolId), getUpcomingFair(schoolId)]);
+    const days = fair?.startDate ? daysUntil(fair.startDate) : null;
+    const url = `https://store.ignatiusbookfairs.com?signup=true&schoolId=${schoolId}&role=parent`;
+    return f(
+      `${eyebrow('Families — get ready!', '#ff6445')}
+       <p style="font-size:18px;font-weight:700;line-height:1.15;margin:0 0 8px;padding-right:64px">Our Book Fair is almost here</p>
+       <div style="display:flex;align-items:flex-end;gap:8px;margin-bottom:12px">
+         <span style="font-size:48px;font-weight:800;line-height:1;color:${dark ? '#ffd41d' : '#02176f'}">${days ?? '—'}</span>
+         <span style="font-size:15px;font-weight:700;margin-bottom:2px">${days === 1 ? 'day' : 'days'} to go · ${esc(
+        rangeLabel(fair?.startDate, fair?.endDate)
+      )}</span>
+       </div>
+       ${cta(url, 'Sign up & shop', '#ff6445')}`,
+      '#ff6445'
+    );
+  }
+
+  if (type === 'grant') {
+    const school = await getSchool(schoolId);
+    const url = `https://store.ignatiusbookfairs.com?signup=true&schoolId=${schoolId}&role=parent`;
+    return f(
+      `${eyebrow('Parents', '#6c47ff')}
+       <p style="font-size:20px;font-weight:700;line-height:1.15;margin:0 0 8px;padding-right:64px">Grant a classroom wishlist</p>
+       <p style="font-size:14px;margin:0 0 12px;padding-right:64px;color:${
+         dark ? 'rgba(255,255,255,.75)' : '#7e828f'
+       }">Browse ${esc(
+        school?.name ? "your child's" : "your child's"
+      )} classroom wishlist and gift a book the teacher hand-picked.</p>
+       ${cta(url, 'Shop the wishlists', '#6c47ff')}`,
+      '#6c47ff'
+    );
+  }
+
+  if (type === 'support') {
+    const [school, fair, pastFairs] = await Promise.all([
+      getSchool(schoolId),
+      getUpcomingFair(schoolId),
+      getPastFairs(schoolId),
+    ]);
+    const [upcomingDeal, pastDeals] = await Promise.all([
+      fair?.hsDealId ? getDeal(fair.hsDealId) : Promise.resolve(null),
+      getDeals(pastFairs.map((p) => p.hsDealId).filter((id): id is string => !!id)),
+    ]);
+    let prevSales: number | null = null;
+    for (const pf of pastFairs) {
+      const v = parseDollarString(pf.hsDealId ? pastDeals.get(pf.hsDealId)?.properties.total_sales ?? null : null);
+      if (v !== null) {
+        prevSales = v;
+        break;
+      }
+    }
+    const current = parseDollarString(upcomingDeal?.properties.total_sales ?? null) ?? 0;
+    const goalParam = Number(sp.get('goal'));
+    const goal = goalParam > 0 ? goalParam : prevSales ? Math.ceil(prevSales / 500) * 500 : 5000;
+    const pct = goal > 0 ? Math.min(100, (current / goal) * 100) : 0;
+    const url = `https://store.ignatiusbookfairs.com?signup=true&schoolId=${schoolId}&role=parent`;
+    return f(
+      `${eyebrow(`Support ${school?.name ?? 'our school'}`, '#1a9d5f')}
+       <p style="font-size:20px;font-weight:700;line-height:1.15;margin:0 0 12px;padding-right:64px">Every book helps our school</p>
+       <div style="height:12px;border-radius:99px;overflow:hidden;margin-bottom:6px;background:${
+         dark ? 'rgba(255,255,255,.15)' : '#eef0f5'
+       }"><div style="height:100%;border-radius:99px;width:${pct}%;background:#50db92"></div></div>
+       <p style="font-size:12px;font-weight:600;margin:0 0 12px;color:${
+         dark ? 'rgba(255,255,255,.7)' : '#7e828f'
+       }">${money(current)} of ${money(goal)} raised</p>
+       ${cta(url, 'Shop & support', '#50db92')}`,
+      '#50db92'
     );
   }
 
