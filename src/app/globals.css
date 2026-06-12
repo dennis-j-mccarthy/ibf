@@ -432,3 +432,7 @@ select.form-field {
   0%, 100% { transform: scale(1.6) rotate(0deg); }
   50% { transform: scale(1.95) rotate(8deg); }
 }
+@keyframes loupio-bob {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-9px) rotate(3deg); }
+}

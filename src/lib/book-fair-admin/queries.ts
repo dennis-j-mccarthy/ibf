@@ -165,6 +165,27 @@ export interface WishlistSummary {
   classroomsStarted: number; // classrooms with at least one wishlist item
 }
 
+// Top classrooms by books wishlisted — powers the leaderboard widget.
+export async function getWishlistLeaderboard(
+  schoolId: number,
+  limit = 5
+): Promise<{ name: string; itemCount: number }[]> {
+  const db = getDb();
+  const rows = await db
+    .select({
+      name: classrooms.classroomName,
+      itemCount: sql<number>`count(${wishlistItems.id})::int`,
+    })
+    .from(classrooms)
+    .leftJoin(wishlists, eq(wishlists.classroomId, classrooms.id))
+    .leftJoin(wishlistItems, eq(wishlistItems.wishlistId, wishlists.id))
+    .where(eq(classrooms.schoolId, schoolId))
+    .groupBy(classrooms.id, classrooms.classroomName)
+    .orderBy(desc(sql`count(${wishlistItems.id})`))
+    .limit(limit);
+  return rows.filter((r) => r.itemCount > 0).map((r) => ({ name: r.name, itemCount: r.itemCount }));
+}
+
 // School-wide wishlist rollup for the "Wishlist insights" strip.
 export async function getWishlistSummary(schoolId: number): Promise<WishlistSummary> {
   const db = getDb();

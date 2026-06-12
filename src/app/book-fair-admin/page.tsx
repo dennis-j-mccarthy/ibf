@@ -12,6 +12,8 @@ import PastFairsSection, {
 import { type TaxCertStatus } from '@/components/book-fair-admin/PrepChecklist';
 import RepCard from '@/components/book-fair-admin/RepCard';
 import ResourceHub from '@/components/book-fair-admin/ResourceHub';
+import WidgetMaker from '@/components/book-fair-admin/WidgetMaker';
+import type { WidgetData } from '@/components/book-fair-admin/widgets';
 import { fairStatusStep } from '@/lib/book-fair-admin/fair-status';
 import { getRep } from '@/lib/book-fair-admin/reps';
 import { getCompany, getDeal, getDeals, parseDollarString } from '@/lib/book-fair-admin/hubspot';
@@ -26,6 +28,7 @@ import {
   getSchoolParentSummary,
   getUpcomingFair,
   getWishlistItemCountsByClassroom,
+  getWishlistLeaderboard,
 } from '@/lib/book-fair-admin/queries';
 import { requireSession } from '@/lib/book-fair-admin/session';
 import { getResources } from '@/lib/data';
@@ -60,6 +63,7 @@ export default async function BookFairAdminDashboard({
     parentCounts,
     parentSummary,
     wishlistCounts,
+    wishlistLeaderboard,
     hasFairAdmin,
   ] = await Promise.all([
     getSchool(schoolId),
@@ -69,6 +73,7 @@ export default async function BookFairAdminDashboard({
     getParentCountsByClassroom(schoolId),
     getSchoolParentSummary(schoolId),
     getWishlistItemCountsByClassroom(schoolId),
+    getWishlistLeaderboard(schoolId, 5),
     getHasFairAdmin(schoolId),
   ]);
   const wishlistByClassroom = new Map(wishlistCounts.map((w) => [w.classroomId, w.itemCount]));
@@ -235,6 +240,18 @@ export default async function BookFairAdminDashboard({
   const familyUrl = `https://store.ignatiusbookfairs.com?signup=true&schoolId=${schoolId}&role=parent`;
   const teacherUrl = `https://store.ignatiusbookfairs.com?signup=true&schoolId=${schoolId}&role=teacher`;
 
+  const widgetData: WidgetData = {
+    schoolName,
+    fairStartDate: upcomingFair?.startDate ?? null,
+    fairEndDate: upcomingFair?.endDate ?? null,
+    prevSales: lastFairSales,
+    goal: null,
+    currentSales,
+    familyUrl,
+    teacherUrl,
+    leaderboard: wishlistLeaderboard,
+  };
+
   return (
     <div className="bg-[#f5f5f5] min-h-screen">
       <div className="max-w-[1100px] mx-auto px-4 sm:px-6 py-8 space-y-6">
@@ -305,6 +322,7 @@ export default async function BookFairAdminDashboard({
                 <ShareSignupCard url={teacherUrl} variant="teacher" flat />
               </div>
             </section>
+            <WidgetMaker schoolId={schoolId} origin={process.env.NEXT_PUBLIC_APP_URL ?? ''} data={widgetData} />
             <ResourceHub resources={resources} audience={resourceAudience} isVirtual={plannerType === 'catholic-virtual'} />
             <InviteTree classrooms={treeClassrooms} schoolId={schoolId} nowMs={Date.now()} />
           </>

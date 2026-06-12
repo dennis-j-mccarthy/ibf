@@ -44,6 +44,18 @@ const ICONS: Record<string, { bg: string; color: string; svg: ReactNode }> = {
       </svg>
     ),
   },
+  widgets: {
+    bg: 'bg-[#f0ecff]',
+    color: 'text-[#6c47ff]',
+    svg: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="7" height="7" rx="1.5" />
+        <rect x="14" y="3" width="7" height="7" rx="1.5" />
+        <rect x="3" y="14" width="7" height="7" rx="1.5" />
+        <rect x="14" y="14" width="7" height="7" rx="1.5" />
+      </svg>
+    ),
+  },
   goal: {
     bg: 'bg-[#e6f9f0]',
     color: 'text-[#1a9d5f]',
