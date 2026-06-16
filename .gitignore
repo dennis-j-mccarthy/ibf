@@ -47,3 +47,6 @@ next-env.d.ts
 
 src/generated/
 .env*.local
+
+# never commit DB dumps
+prisma/backup-*
