@@ -42,7 +42,7 @@ export async function requestMagicLink(
       'dennisjmccarthy+test@gmail.com': 1363, // The Saint Constantine School
       'dennis.mccarthy@ignatiusbookclub.com': 3976, // Saint Andrew (full roster)
     };
-    if (schoolId == null && process.env.NODE_ENV !== 'production' && DEV_TEST_EMAILS[email]) {
+    if (schoolId == null && process.env.VERCEL_ENV !== 'production' && DEV_TEST_EMAILS[email]) {
       schoolId = DEV_TEST_EMAILS[email];
     }
     if (schoolId == null) return { message: GENERIC_MESSAGE };

@@ -1,5 +1,6 @@
-// LOCAL DEV ONLY — one-click "skip login" for the Book Fair Admin dashboard.
-// Returns 404 in production so it is inert when deployed. Lives outside the
+// DEV + PREVIEW ONLY — one-click "skip login" for the Book Fair Admin dashboard.
+// Gated on VERCEL_ENV so it works locally and on Vercel PREVIEW deployments but
+// returns 404 on the real production deployment. Lives outside the
 // /book-fair-admin prefix on purpose, so middleware's auth gate doesn't
 // intercept it. Revert by deleting this file (src/app/dev-bfa-login/).
 import { NextResponse } from 'next/server';
@@ -12,7 +13,7 @@ import {
 export const runtime = 'nodejs';
 
 export async function GET(request: Request) {
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.VERCEL_ENV === 'production') {
     return new NextResponse('Not found', { status: 404 });
   }
 
