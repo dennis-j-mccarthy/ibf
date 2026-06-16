@@ -50,3 +50,4 @@ src/generated/
 
 # never commit DB dumps
 prisma/backup-*
+.dashboard-readonly-url
