@@ -23,7 +23,6 @@ const Footer = () => {
     { href: '/', label: 'HOME' },
     { href: '/about', label: 'ABOUT' },
     { href: '/faqs', label: 'FAQS' },
-    { href: '/press-room', label: 'PRESS ROOM' },
     { href: 'https://shop.ignatiusbookfairs.com/', label: 'SHOP', external: true },
     { href: '/terms-of-service', label: 'TERMS OF SERVICE' },
   ];
