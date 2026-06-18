@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
 import { useVersion } from '@/contexts/VersionContext';
+import SiteSearch from './SiteSearch';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -77,6 +78,7 @@ const Header = () => {
 
           {/* Right side: Action buttons */}
           <nav className="hidden md:flex items-center gap-6" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+            <SiteSearch />
             <Link
               href="/"
               className={`text-white text-sm font-semibold border border-white rounded px-4 py-2 hover:bg-white ${isCatholic ? 'hover:text-[#0088ff]' : 'hover:text-[#ff6445]'} transition-colors uppercase tracking-wide`}
