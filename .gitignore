@@ -50,3 +50,6 @@ next-env.d.ts
 src/generated/
 .env*.local
 public/kb-preview.html
+
+# local read-only DB url (never commit)
+.dashboard-readonly-url
