@@ -166,13 +166,6 @@ interface BlogCardProps {
 }
 
 function BlogCard({ blog, categoryColor, taggingMode, onTagToggle }: BlogCardProps) {
-  const formattedDate = blog.publishedAt
-    ? new Date(blog.publishedAt).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      })
-    : null;
 
   const tags = getBlogTags(blog.category);
 
@@ -231,10 +224,7 @@ function BlogCard({ blog, categoryColor, taggingMode, onTagToggle }: BlogCardPro
           </p>
         )}
 
-        <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100">
-          {formattedDate && (
-            <span className="text-gray-400 text-xs">{formattedDate}</span>
-          )}
+        <div className="flex items-center justify-end mt-auto pt-3 border-t border-gray-100">
           <span className="text-[#0066ff] text-sm font-semibold group-hover:underline">
             Read More →
           </span>

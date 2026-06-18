@@ -39,14 +39,6 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     notFound();
   }
 
-  const formattedDate = blog.publishedAt
-    ? new Date(blog.publishedAt).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      })
-    : null;
-
   return (
     <>
       {/* Hero Section */}
@@ -80,10 +72,6 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             <h1 className="font-brother font-bold text-white mb-4" style={{ fontSize: '30px', lineHeight: '120%' }}>
               {blog.title}
             </h1>
-
-            {formattedDate && (
-              <p className="text-white/70 text-sm">{formattedDate}</p>
-            )}
           </div>
         </div>
       </section>
