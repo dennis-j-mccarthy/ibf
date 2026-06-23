@@ -15,11 +15,22 @@ export default function HomePageClient({ children }: { children?: React.ReactNod
   const { version, setVersion } = useVersion();
   const [showChooser, setShowChooser] = useState(false);
 
-  // Open the mode chooser via ?chooser=1 (linkable, works on previews) or
-  // Option/Alt + M on the homepage. e.code === 'KeyM' is layout-independent —
-  // on macOS Option+M emits the "µ" character, so we match the physical key.
+  // Open the mode chooser:
+  //  - automatically on a visitor's first homepage visit (until they've made
+  //    a choice, tracked via the `modeChooserSeen` localStorage flag), unless
+  //    they arrived with an explicit ?mode= param (already pre-selected);
+  //  - any time via ?chooser=1 (linkable, works on previews);
+  //  - any time via Option/Alt + M. e.code === 'KeyM' is layout-independent —
+  //    on macOS Option+M emits the "µ" character, so we match the physical key.
+  const MODE_CHOOSER_SEEN_KEY = 'modeChooserSeen';
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('chooser') === '1') {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('chooser') === '1') {
+      setShowChooser(true);
+    } else if (
+      !params.get('mode') &&
+      !localStorage.getItem(MODE_CHOOSER_SEEN_KEY)
+    ) {
       setShowChooser(true);
     }
     const onKey = (e: KeyboardEvent) => {
@@ -61,8 +72,15 @@ export default function HomePageClient({ children }: { children?: React.ReactNod
       {showChooser && (
         <ModeChooserModal
           current={version}
-          onChoose={(m) => { setVersion(m); setShowChooser(false); }}
-          onClose={() => setShowChooser(false)}
+          onChoose={(m) => {
+            setVersion(m);
+            localStorage.setItem(MODE_CHOOSER_SEEN_KEY, '1');
+            setShowChooser(false);
+          }}
+          onClose={() => {
+            localStorage.setItem(MODE_CHOOSER_SEEN_KEY, '1');
+            setShowChooser(false);
+          }}
         />
       )}
     </>
