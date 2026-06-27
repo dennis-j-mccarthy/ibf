@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Read", "Glob", "Grep", "Edit", "Write",
+      "Bash(npm install)", "Bash(npm install *)",
+      "Bash(npm run build)", "Bash(npm run dev)",
+      "Bash(npm run lint)", "Bash(npm run typecheck)",
+      "Bash(npx tsc *)",
+      "Bash(git status)", "Bash(git diff *)", "Bash(git log *)", "Bash(git add *)",
+      "Bash(ls *)", "Bash(cat *)", "Bash(mkdir *)"
+    ],
+    "deny": [
+      "Bash(psql *)", "Bash(* psql *)",
+      "Bash(npx drizzle-kit *)", "Bash(drizzle-kit *)",
+      "Bash(curl *)", "Bash(wget *)",
+      "Bash(* api.hubapi.com *)", "Bash(* api.bigcommerce.com *)",
+      "Bash(git push *)", "Bash(git commit *)", "Bash(rm *)"
+    ]
+  },
+  "spinnerTipsEnabled": false,
+  "feedbackSurveyRate": 0
+}

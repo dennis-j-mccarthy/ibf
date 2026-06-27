@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # database
 prisma/dev.db
@@ -50,6 +51,9 @@ next-env.d.ts
 src/generated/
 .env*.local
 public/kb-preview.html
+
+# never commit DB dumps
+prisma/backup-*
 
 # local read-only DB url (never commit)
 .dashboard-readonly-url
