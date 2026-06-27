@@ -3,7 +3,13 @@ import { verifySession, COOKIE_NAME } from '@/lib/auth/session';
 import { SESSION_COOKIE_NAME, verifySessionToken } from '@/lib/book-fair-admin/auth';
 
 // Public endpoints inside the protected prefixes.
-const PUBLIC_PATHS = new Set(['/admin/login', '/api/admin/login', '/api/admin/logout']);
+const PUBLIC_PATHS = new Set([
+  '/admin/login',
+  '/admin/verify',
+  '/api/admin/login',
+  '/api/admin/logout',
+  '/api/admin/magic-link/request',
+]);
 const BOOK_FAIR_PUBLIC_PATHS = new Set(['/book-fair-admin/login', '/book-fair-admin/verify']);
 
 export async function middleware(req: NextRequest) {
