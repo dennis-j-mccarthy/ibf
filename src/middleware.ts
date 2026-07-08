@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { verifySession, COOKIE_NAME } from '@/lib/auth/session';
+import { isAllowedAdminEmail } from '@/lib/auth/admin-allowlist';
 import { SESSION_COOKIE_NAME, verifySessionToken } from '@/lib/book-fair-admin/auth';
 
 // Public endpoints inside the protected prefixes.
@@ -42,16 +43,31 @@ export async function middleware(req: NextRequest) {
     process.env.ADMIN_SESSION_SECRET ?? ''
   );
 
-  if (user) return NextResponse.next();
-
-  if (pathname.startsWith('/api/')) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!user) {
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const url = req.nextUrl.clone();
+    url.pathname = '/admin/login';
+    url.searchParams.set('next', pathname);
+    return NextResponse.redirect(url);
   }
 
-  const url = req.nextUrl.clone();
-  url.pathname = '/admin/login';
-  url.searchParams.set('next', pathname);
-  return NextResponse.redirect(url);
+  // Authenticated. The bot-knowledge CMS is admin-only; staff-domain sessions
+  // (who can now sign in for the Upcoming Fairs list) must not reach it.
+  const isAdminOnly =
+    pathname.startsWith('/admin/bot-knowledge') || pathname.startsWith('/api/admin/bot-answers');
+  if (isAdminOnly && !isAllowedAdminEmail(user)) {
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    const url = req.nextUrl.clone();
+    url.pathname = '/admin/fairs';
+    url.search = '';
+    return NextResponse.redirect(url);
+  }
+
+  return NextResponse.next();
 }
 
 export const config = {

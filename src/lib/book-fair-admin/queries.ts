@@ -123,6 +123,38 @@ export async function getPastFairs(schoolId: number): Promise<FairRow[]> {
     .orderBy(desc(fairs.startDate));
 }
 
+export type UpcomingFairRow = {
+  fairId: number;
+  schoolId: number | null;
+  schoolName: string | null;
+  city: string | null;
+  state: string | null;
+  startDate: string;
+  endDate: string;
+  hsDealId: string | null;
+};
+
+// Staff-wide view: every school's not-yet-finished fair, soonest first. HubSpot
+// deal enrichment (stage, type) is layered on by the caller via getDeals().
+export async function getUpcomingFairsAllSchools(): Promise<UpcomingFairRow[]> {
+  const db = getDb();
+  return db
+    .select({
+      fairId: fairs.id,
+      schoolId: fairs.schoolId,
+      schoolName: schools.name,
+      city: schools.city,
+      state: schools.state,
+      startDate: fairs.startDate,
+      endDate: fairs.endDate,
+      hsDealId: fairs.hsDealId,
+    })
+    .from(fairs)
+    .leftJoin(schools, eq(schools.id, fairs.schoolId))
+    .where(gte(fairs.endDate, sql`now()`))
+    .orderBy(asc(fairs.startDate));
+}
+
 // ---------- Classrooms & invite tree ----------
 
 export type ClassroomTeacherRow = {

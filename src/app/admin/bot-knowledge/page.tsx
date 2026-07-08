@@ -133,6 +133,9 @@ export default function BotKnowledgeAdmin() {
         <div className="max-w-5xl mx-auto px-5 py-4 flex items-center justify-between">
           <h1 className="font-brother text-xl font-semibold">Chatbot Knowledge Base</h1>
           <div className="flex items-center gap-4">
+            <a href="/admin/fairs" className="text-sm underline opacity-90 hover:opacity-100">
+              Upcoming Fairs
+            </a>
             <a href="/bot-knowledge" target="_blank" className="text-sm underline opacity-90 hover:opacity-100">
               View source page
             </a>

@@ -13,10 +13,14 @@
 // Postgres when they change. Writing them would corrupt production data.
 // ======================================================================
 //
-// Note: the spec asks to batch past-fair Deal reads. HubSpot's batch-read
-// endpoint is POST-only, which conflicts with the GET-only constraint above;
-// the constraint wins, so we issue parallel single-object GETs instead,
-// deduplicated per request via React cache().
+// Reads come in two shapes:
+//   - getDeal/getDeals: single-object GETs, deduped per request via cache().
+//     Right for the coordinator dashboard, which reads a handful of deals.
+//   - getDealsByIds: HubSpot's POST /batch/read (100 ids/call). Right for the
+//     staff Upcoming Fairs list, which reads hundreds of deals at once — one
+//     GET each would blow the rate limit. batch/read is still a NON-MUTATING
+//     read (it returns properties, never writes them), so it honors the
+//     "never write Deal properties" rule below even though it isn't a GET.
 
 import { cache } from 'react';
 
@@ -124,6 +128,48 @@ export async function getDeals(dealIds: string[]): Promise<Map<string, HubSpotDe
   const unique = [...new Set(dealIds)];
   const results = await Promise.all(unique.map((id) => getDeal(id)));
   return new Map(unique.map((id, i) => [id, results[i]]));
+}
+
+// Batch-read many deals: one POST /batch/read per 100 ids (see header comment).
+// NON-MUTATING read only. Every id is present in the returned map; ids HubSpot
+// couldn't return (deleted/inaccessible) map to null.
+export async function getDealsByIds(dealIds: string[]): Promise<Map<string, HubSpotDeal | null>> {
+  const unique = [...new Set(dealIds)];
+  const out = new Map<string, HubSpotDeal | null>(unique.map((id) => [id, null]));
+  if (unique.length === 0) return out;
+
+  const token = process.env.HUBSPOT_PRIVATE_APP_TOKEN ?? process.env.HUBSPOT_ACCESS_TOKEN;
+  if (!token) {
+    console.error('HUBSPOT_PRIVATE_APP_TOKEN / HUBSPOT_ACCESS_TOKEN are not set');
+    return out;
+  }
+
+  const chunks: string[][] = [];
+  for (let i = 0; i < unique.length; i += 100) chunks.push(unique.slice(i, i + 100));
+
+  await Promise.all(
+    chunks.map(async (chunk) => {
+      try {
+        const res = await fetch(`${HUBSPOT_BASE}/crm/v3/objects/deals/batch/read`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          cache: 'no-store',
+          body: JSON.stringify({ properties: DEAL_PROPERTIES, inputs: chunk.map((id) => ({ id })) }),
+        });
+        if (!res.ok) {
+          console.error(`HubSpot batch read failed: ${res.status}`);
+          return;
+        }
+        const data = (await res.json()) as { results?: Array<{ id: string; properties: HubSpotDeal['properties'] }> };
+        for (const r of data.results ?? []) {
+          out.set(String(r.id), { id: String(r.id), properties: r.properties ?? {} });
+        }
+      } catch (error) {
+        console.error('HubSpot batch read error:', error);
+      }
+    })
+  );
+  return out;
 }
 
 // total_sales is a string in HubSpot — parse defensively. Returns the numeric

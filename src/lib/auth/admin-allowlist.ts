@@ -22,3 +22,20 @@ export function allowedAdminEmails(): Set<string> {
 export function isAllowedAdminEmail(email: string): boolean {
   return allowedAdminEmails().has(email.trim().toLowerCase());
 }
+
+// Broader "staff" gate for the Upcoming Fairs list (/admin/fairs). Anyone at an
+// Ignatius/Ave Maria staff domain counts as staff — deliberately wider than the
+// exact-email admin allowlist above, which stays scoped to the bot-knowledge CMS.
+const STAFF_EMAIL_DOMAINS = ['avemaria.edu', 'ignatiusbookclub.com'];
+
+export function isStaffEmail(email: string): boolean {
+  const normalized = email.trim().toLowerCase();
+  const at = normalized.lastIndexOf('@');
+  if (at === -1) return false;
+  return STAFF_EMAIL_DOMAINS.includes(normalized.slice(at + 1));
+}
+
+// May request a sign-in link / hold a session at all (admins are a subset of staff).
+export function isAllowedStaffOrAdmin(email: string): boolean {
+  return isAllowedAdminEmail(email) || isStaffEmail(email);
+}

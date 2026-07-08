@@ -3,7 +3,7 @@
 // old link), then sets the standard ibf_admin session cookie.
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminMagicLink } from '@/lib/auth/magic-link';
-import { isAllowedAdminEmail } from '@/lib/auth/admin-allowlist';
+import { isAllowedAdminEmail, isAllowedStaffOrAdmin } from '@/lib/auth/admin-allowlist';
 import { signSession, COOKIE_NAME, DEFAULT_TTL_MS } from '@/lib/auth/session';
 
 export const runtime = 'nodejs';
@@ -24,14 +24,17 @@ export async function GET(request: NextRequest) {
 
   // Re-authorize at click time — the allowlist may have changed since the
   // link was issued.
-  if (!isAllowedAdminEmail(email)) return fail();
+  if (!isAllowedStaffOrAdmin(email)) return fail();
 
+  // Full admins land on the bot-knowledge CMS; staff-only users land on the
+  // Upcoming Fairs list (the only /admin area they may see).
+  const fallback = isAllowedAdminEmail(email) ? '/admin/bot-knowledge' : '/admin/fairs';
   // Only honor a same-origin admin sub-page as the post-login destination.
   const nextParam = request.nextUrl.searchParams.get('next');
   const next =
     nextParam && nextParam.startsWith('/admin/') && nextParam !== '/admin/login'
       ? nextParam
-      : '/admin/bot-knowledge';
+      : fallback;
 
   const session = await signSession(email, secret);
   const response = NextResponse.redirect(new URL(next, request.url));

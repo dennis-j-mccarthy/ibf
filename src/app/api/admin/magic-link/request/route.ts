@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { signAdminMagicLink } from '@/lib/auth/magic-link';
-import { isAllowedAdminEmail } from '@/lib/auth/admin-allowlist';
+import { isAllowedStaffOrAdmin } from '@/lib/auth/admin-allowlist';
 import { sendAdminMagicLinkEmail } from '@/lib/auth/email';
 import { allowAdminLinkRequest } from '@/lib/auth/rate-limit';
 
@@ -44,8 +44,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(GENERIC);
   }
 
-  // Authorization gate. Silent (generic response) on failure.
-  if (isAllowedAdminEmail(email)) {
+  // Authorization gate. Silent (generic response) on failure. Admins and staff
+  // (by domain) may both request a link; page-level access is enforced later.
+  if (isAllowedStaffOrAdmin(email)) {
     const token = await signAdminMagicLink(email, secret);
     const url = new URL('/admin/verify', baseUrl(request));
     url.searchParams.set('token', token);
