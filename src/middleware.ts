@@ -53,8 +53,10 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Authenticated. The bot-knowledge CMS is admin-only; staff-domain sessions
-  // (who can now sign in for the Upcoming Fairs list) must not reach it.
+  // Authenticated. Any /admin route not on this deny-list is open to every
+  // staff-domain session. When adding a NEW admin-only area, add its path
+  // prefix here (page and API) — otherwise it defaults to staff-accessible.
+  // The bot-knowledge CMS is admin-only; staff sign in only for /admin/fairs.
   const isAdminOnly =
     pathname.startsWith('/admin/bot-knowledge') || pathname.startsWith('/api/admin/bot-answers');
   if (isAdminOnly && !isAllowedAdminEmail(user)) {
@@ -63,6 +65,15 @@ export async function middleware(req: NextRequest) {
     }
     const url = req.nextUrl.clone();
     url.pathname = '/admin/fairs';
+    url.search = '';
+    return NextResponse.redirect(url);
+  }
+
+  // /admin has no page of its own — send each role to its home with a real
+  // HTTP redirect (the server-component fallback only redirects client-side).
+  if (pathname === '/admin') {
+    const url = req.nextUrl.clone();
+    url.pathname = isAllowedAdminEmail(user) ? '/admin/bot-knowledge' : '/admin/fairs';
     url.search = '';
     return NextResponse.redirect(url);
   }

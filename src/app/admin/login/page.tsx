@@ -54,9 +54,9 @@ function LoginForm() {
         {sent ? (
           <div className="text-sm text-[#1a1b1f]">
             <div className="mb-4 text-green-700 bg-green-50 border border-green-200 rounded-md px-3 py-3">
-              If <span className="font-semibold">{email}</span> is an authorized admin, a sign-in
-              link is on its way. Open it on this device to finish signing in — it expires in
-              15 minutes.
+              If <span className="font-semibold">{email}</span> is an authorized staff member, a
+              sign-in link is on its way. Open it on this device to finish signing in — it expires
+              in 15 minutes.
             </div>
             <button
               type="button"
@@ -86,7 +86,7 @@ function LoginForm() {
               {submitting ? 'Sending…' : 'Email me a sign-in link'}
             </button>
             <p className="text-xs text-[#7e828f] mt-3">
-              Passwordless sign-in. We&rsquo;ll email a one-time link to authorized admins.
+              Passwordless sign-in. We&rsquo;ll email a one-time link to authorized staff.
             </p>
           </form>
         )}
