@@ -77,6 +77,7 @@ export default async function UpcomingFairsPage() {
       const rawType = (deal?.properties.dealtype ?? '').toLowerCase();
       return {
         key: r.fairId,
+        schoolId: r.schoolId,
         schoolName: r.schoolName ?? 'Unknown school',
         location: [r.city, r.state].filter(Boolean).join(', '),
         dateRange: fmtRange(r.startDate, r.endDate),
@@ -95,28 +96,40 @@ export default async function UpcomingFairsPage() {
   return (
     <div className="min-h-screen bg-[#f5f5f5]">
       <header className="bg-[#02176f] text-white">
-        <div className="max-w-5xl mx-auto px-5 py-4 flex items-center justify-between">
-          <h1 className="font-brother text-xl font-semibold">Upcoming Book Fairs</h1>
-          <div className="flex items-center gap-4">
+        <div className="max-w-5xl mx-auto px-5 h-16 flex items-center justify-between gap-6">
+          <h1 className="font-brother text-lg sm:text-xl font-semibold whitespace-nowrap truncate">
+            Upcoming Book Fairs
+          </h1>
+          <nav className="flex items-center gap-1 shrink-0 whitespace-nowrap text-sm">
             {isAdmin && (
-              <a href="/admin/bot-knowledge" className="text-sm underline opacity-90 hover:opacity-100">
+              <a
+                href="/admin/bot-knowledge"
+                className="px-3 py-1.5 rounded-md text-white/90 hover:bg-white/10 hover:text-white transition-colors"
+              >
                 Knowledge base
               </a>
             )}
+            {isAdmin && <span className="mx-2 h-5 w-px bg-white/20" aria-hidden />}
             {email && (
-              <span className="hidden sm:inline text-sm opacity-90">
-                Signed in as <strong className="font-semibold">{email}</strong>
+              <span
+                className="hidden md:inline-flex items-center gap-1.5 text-white/70 max-w-[220px]"
+                title={`Signed in as ${email}`}
+              >
+                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <span className="truncate">{email}</span>
               </span>
             )}
             <form action={logout}>
               <button
                 type="submit"
-                className="text-sm bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-md font-medium"
+                className="ml-1 bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-md font-medium transition-colors"
               >
                 Log out
               </button>
             </form>
-          </div>
+          </nav>
         </div>
       </header>
 

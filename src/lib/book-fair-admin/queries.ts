@@ -155,6 +155,35 @@ export async function getUpcomingFairsAllSchools(): Promise<UpcomingFairRow[]> {
     .orderBy(asc(fairs.startDate));
 }
 
+// Deal + company references for the staff fair-detail popup. Platform school
+// fields double as fallbacks when HubSpot company data is unavailable.
+export type FairDetailRefs = {
+  hsDealId: string | null;
+  hsCompanyId: string | null;
+  schoolName: string | null;
+  city: string | null;
+  state: string | null;
+  street: string | null;
+};
+
+export async function getFairDetailRefs(fairId: number): Promise<FairDetailRefs | null> {
+  const db = getDb();
+  const rows = await db
+    .select({
+      hsDealId: fairs.hsDealId,
+      hsCompanyId: schools.hsCompanyId,
+      schoolName: schools.name,
+      city: schools.city,
+      state: schools.state,
+      street: schools.street,
+    })
+    .from(fairs)
+    .leftJoin(schools, eq(schools.id, fairs.schoolId))
+    .where(eq(fairs.id, fairId))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
 // ---------- Classrooms & invite tree ----------
 
 export type ClassroomTeacherRow = {

@@ -47,6 +47,10 @@ const DEAL_PROPERTIES = [
   'chair_organizer_last_name',
   'chair_organizer_email',
   'principal_name',
+  // Staff fair-detail popup (read-only).
+  'account_number',
+  'fair_type',
+  'students_enrolled',
 ] as const;
 
 const COMPANY_PROPERTIES = [
@@ -55,6 +59,12 @@ const COMPANY_PROPERTIES = [
   'sales_tax_expiration',
   'company_identifier',
   'domain',
+  // Staff fair-detail popup (read-only).
+  'name',
+  'city',
+  'state',
+  'address',
+  'grade_levels',
 ] as const;
 
 export interface HubSpotDeal {
