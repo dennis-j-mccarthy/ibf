@@ -56,9 +56,13 @@ export async function middleware(req: NextRequest) {
   // Authenticated. Any /admin route not on this deny-list is open to every
   // staff-domain session. When adding a NEW admin-only area, add its path
   // prefix here (page and API) — otherwise it defaults to staff-accessible.
-  // The bot-knowledge CMS is admin-only; staff sign in only for /admin/fairs.
+  // The bot-knowledge CMS and the blog CMS are admin-only; staff sign in only
+  // for /admin/fairs.
   const isAdminOnly =
-    pathname.startsWith('/admin/bot-knowledge') || pathname.startsWith('/api/admin/bot-answers');
+    pathname.startsWith('/admin/bot-knowledge') ||
+    pathname.startsWith('/api/admin/bot-answers') ||
+    pathname.startsWith('/admin/blog') ||
+    pathname.startsWith('/api/admin/blog');
   if (isAdminOnly && !isAllowedAdminEmail(user)) {
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });

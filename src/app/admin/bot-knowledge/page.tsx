@@ -142,6 +142,12 @@ export default function BotKnowledgeAdmin() {
               Upcoming Fairs
             </a>
             <a
+              href="/admin/blog"
+              className="px-3 py-1.5 rounded-md text-white/90 hover:bg-white/10 hover:text-white transition-colors"
+            >
+              Blog
+            </a>
+            <a
               href="/bot-knowledge"
               target="_blank"
               className="px-3 py-1.5 rounded-md text-white/90 hover:bg-white/10 hover:text-white transition-colors"
