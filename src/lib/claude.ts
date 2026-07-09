@@ -62,3 +62,116 @@ Return:
   }
   return JSON.parse(textBlock.text) as GeneratedArticle;
 }
+
+// ---------- Promo kits ----------
+
+export type PromoKit = {
+  instagram: { caption: string; hashtags: string[] }[];
+  facebook: { post: string }[];
+  x: { post: string }[];
+  email: { subject: string; preheader: string; bodyHtml: string };
+};
+
+const PROMO_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    instagram: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          caption: { type: 'string' },
+          hashtags: { type: 'array', items: { type: 'string' } },
+        },
+        required: ['caption', 'hashtags'],
+      },
+    },
+    facebook: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        properties: { post: { type: 'string' } },
+        required: ['post'],
+      },
+    },
+    x: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        properties: { post: { type: 'string' } },
+        required: ['post'],
+      },
+    },
+    email: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        subject: { type: 'string' },
+        preheader: { type: 'string' },
+        bodyHtml: { type: 'string' },
+      },
+      required: ['subject', 'preheader', 'bodyHtml'],
+    },
+  },
+  required: ['instagram', 'facebook', 'x', 'email'],
+} as const;
+
+export async function generatePromoKit(input: {
+  title: string;
+  summary: string;
+  category: string;
+  articleText: string;
+  url: string;
+}): Promise<PromoKit> {
+  const client = new Anthropic();
+
+  const user = `Create a social-media + email promo kit for this Ignatius Book Fairs blog post. Drive readers to the article and, ultimately, to booking or promoting a school book fair.
+
+TITLE: ${input.title}
+CATEGORY: ${input.category}
+SUMMARY: ${input.summary}
+ARTICLE URL: ${input.url}
+ARTICLE TEXT:
+${input.articleText.slice(0, 4000)}
+
+Return:
+- instagram: 3 variants, each { caption (warm, 1–3 short paragraphs, 1–2 tasteful emoji max), hashtags (5–8 relevant, no # symbol — just the words) }.
+- facebook: 2 variants, each { post } — slightly longer, friendly, ends with the article link as plain text.
+- x: 3 variants, each { post } — under 280 characters, punchy, include the URL.
+- email: { subject (compelling, under 60 chars), preheader (under 100 chars), bodyHtml (2–4 short paragraphs promoting the post as clean HTML using only <p>, <strong>, <em>, <a>; end with a clear call-to-action link to the article) }.`;
+
+  const stream = client.messages.stream({
+    model: 'claude-opus-4-8',
+    max_tokens: 16000,
+    thinking: { type: 'adaptive' },
+    system: SYSTEM,
+    output_config: {
+      effort: 'medium',
+      format: { type: 'json_schema', schema: PROMO_SCHEMA },
+    },
+    messages: [{ role: 'user', content: user }],
+  });
+
+  const message = await stream.finalMessage();
+  if (message.stop_reason === 'refusal') {
+    throw new Error('The model declined to generate promos.');
+  }
+  const textBlock = message.content.find((b) => b.type === 'text');
+  if (!textBlock || textBlock.type !== 'text') {
+    throw new Error('No promo content was generated.');
+  }
+  return JSON.parse(textBlock.text) as PromoKit;
+}
+
+// Strip HTML tags to plain text for feeding article content to the model.
+export function htmlToText(html: string): string {
+  return html
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&[a-z]+;/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}

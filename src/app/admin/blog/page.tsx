@@ -471,6 +471,12 @@ export default function BlogAdmin() {
                   >
                     ★
                   </button>
+                  <a
+                    href={`/admin/blog/promo/${b.id}`}
+                    className="text-sm px-3 py-1.5 rounded-md border border-[#dddddd] text-gray-700 hover:bg-gray-50"
+                  >
+                    Promos
+                  </a>
                   <button
                     onClick={() => startEdit(b)}
                     className="text-sm px-3 py-1.5 rounded-md border border-[#dddddd] text-gray-700 hover:bg-gray-50"
