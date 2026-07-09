@@ -49,6 +49,11 @@ export default function BlogAdmin() {
   const [draft, setDraft] = useState<Draft>(EMPTY);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiTopic, setAiTopic] = useState('');
+  const [aiCategory, setAiCategory] = useState('');
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiError, setAiError] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -146,6 +151,32 @@ export default function BlogAdmin() {
     alert('Newsletter HTML copied to clipboard.');
   };
 
+  const generateAI = async () => {
+    if (!aiTopic.trim()) {
+      setAiError('Enter a topic.');
+      return;
+    }
+    setAiBusy(true);
+    setAiError('');
+    const res = await fetch('/api/admin/blog/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topic: aiTopic, category: aiCategory || null }),
+    });
+    setAiBusy(false);
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      setAiError(d.error || 'Generation failed');
+      return;
+    }
+    const created: Blog = await res.json();
+    setAiOpen(false);
+    setAiTopic('');
+    setAiCategory('');
+    await load();
+    startEdit(created); // open the new draft for review
+  };
+
   const logout = async () => {
     await fetch('/api/admin/logout', { method: 'POST' });
     router.push('/admin/login');
@@ -225,14 +256,74 @@ export default function BlogAdmin() {
         <div className="flex items-center justify-between">
           <p className="text-sm text-gray-600">{items.length} post(s)</p>
           {editingId === null && (
-            <button
-              onClick={startNew}
-              className="bg-[#00c853] hover:bg-[#00a843] text-white font-semibold px-4 py-2 rounded-md"
-            >
-              New post
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setAiOpen((v) => !v);
+                  setAiError('');
+                }}
+                className="border border-[#02176f] text-[#02176f] hover:bg-[#02176f]/5 font-semibold px-4 py-2 rounded-md"
+              >
+                Generate with AI
+              </button>
+              <button
+                onClick={startNew}
+                className="bg-[#00c853] hover:bg-[#00a843] text-white font-semibold px-4 py-2 rounded-md"
+              >
+                New post
+              </button>
+            </div>
           )}
         </div>
+
+        {/* AI generator */}
+        {aiOpen && editingId === null && (
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h2 className="font-brother text-[#02176f] text-lg font-semibold mb-3">Generate a draft with AI</h2>
+            {aiError && (
+              <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+                {aiError}
+              </div>
+            )}
+            <label className={label}>Topic</label>
+            <textarea
+              className={`${input} mb-4`}
+              rows={2}
+              value={aiTopic}
+              onChange={(e) => setAiTopic(e.target.value)}
+              placeholder="e.g. How to boost teacher participation in your Catholic school book fair"
+            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className={label}>Category (optional)</label>
+                <select className={input} value={aiCategory} onChange={(e) => setAiCategory(e.target.value)}>
+                  <option value="">Let AI choose</option>
+                  <option value="Catholic">Catholic</option>
+                  <option value="Public">Public</option>
+                  <option value="General">General</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={generateAI}
+                disabled={aiBusy}
+                className="bg-[#02176f] hover:bg-[#021a85] text-white font-semibold px-5 py-2 rounded-md disabled:opacity-60"
+              >
+                {aiBusy ? 'Generating…' : 'Generate draft'}
+              </button>
+              <button
+                onClick={() => setAiOpen(false)}
+                className="px-5 py-2 rounded-md border border-[#dddddd] text-gray-700"
+              >
+                Cancel
+              </button>
+            </div>
+            <p className="text-xs text-gray-400 mt-3">
+              Creates an unpublished draft you can review and edit before publishing.
+            </p>
+          </div>
+        )}
 
         {/* Editor */}
         {editingId !== null && (
