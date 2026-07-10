@@ -386,11 +386,20 @@ export default function RecordTutorialPage() {
           )}
         </div>
 
-        <p className="mt-6 text-xs text-gray-400 leading-relaxed">
-          Tip: choose &quot;Chrome Tab&quot; or a window when prompted, and check &quot;Share tab audio&quot; if you want the
-          computer&apos;s sound in the recording. Your microphone is captured automatically. Recording runs entirely in your
-          browser until you publish.
-        </p>
+        <div className="mt-6 text-xs text-gray-500 leading-relaxed space-y-1.5">
+          <p>
+            <strong className="text-gray-600">Best in Chrome or Edge:</strong> record any window or tab and freely switch
+            away while you demo — the recording keeps running.
+          </p>
+          <p>
+            <strong className="text-gray-600">In Safari:</strong> share your <strong>whole screen</strong> (Safari can&apos;t
+            reliably keep capturing a single window or tab once it&apos;s in the background).
+          </p>
+          <p className="text-gray-400">
+            Check &quot;Share audio&quot; in the picker if you want computer sound. Your microphone is captured automatically.
+            Recording runs entirely in your browser until you publish.
+          </p>
+        </div>
       </main>
     </div>
   );
