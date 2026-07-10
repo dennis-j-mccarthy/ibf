@@ -175,3 +175,58 @@ export function htmlToText(html: string): string {
     .replace(/\s+/g, ' ')
     .trim();
 }
+
+// ---------- Newsletter compose helpers ----------
+
+const NL_OPTIONS_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  properties: { options: { type: 'array', items: { type: 'string' } } },
+  required: ['options'],
+} as const;
+
+const NL_TEXT_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  properties: { text: { type: 'string' } },
+  required: ['text'],
+} as const;
+
+export async function suggestNewsletter(input: {
+  kind: 'title' | 'subject' | 'preamble';
+  timeframe: string;
+  articles: { title: string; summary: string; category: string }[];
+}): Promise<{ options?: string[]; text?: string }> {
+  const client = new Anthropic();
+  const list = input.articles
+    .map((a, i) => `${i + 1}. ${a.title}${a.summary ? ` — ${a.summary}` : ''}`)
+    .join('\n');
+  const ctx = `Timeframe: ${input.timeframe || '(unspecified)'}\nArticles featured in this newsletter:\n${list}`;
+
+  let user: string;
+  let schema: typeof NL_OPTIONS_SCHEMA | typeof NL_TEXT_SCHEMA;
+  if (input.kind === 'title') {
+    user = `Suggest 3 short, warm newsletter TITLES (masthead lines, e.g. "Summer Reading Roundup") that fit the timeframe and these articles. Keep each under ~40 characters. Return { options: [3 strings] }.\n\n${ctx}`;
+    schema = NL_OPTIONS_SCHEMA;
+  } else if (input.kind === 'subject') {
+    user = `Suggest 3 compelling EMAIL SUBJECT LINES (each under 60 characters, no clickbait) for this newsletter. Return { options: [3 strings] }.\n\n${ctx}`;
+    schema = NL_OPTIONS_SCHEMA;
+  } else {
+    user = `Write a warm 2–3 sentence PREAMBLE (intro paragraph) for this newsletter that ties the featured articles together and fits the timeframe. Plain text, no salutation like "Dear friends". Return { text }.\n\n${ctx}`;
+    schema = NL_TEXT_SCHEMA;
+  }
+
+  const stream = client.messages.stream({
+    model: 'claude-opus-4-8',
+    max_tokens: 8000,
+    thinking: { type: 'adaptive' },
+    system: SYSTEM,
+    output_config: { effort: 'low', format: { type: 'json_schema', schema } },
+    messages: [{ role: 'user', content: user }],
+  });
+  const message = await stream.finalMessage();
+  if (message.stop_reason === 'refusal') throw new Error('The model declined this request.');
+  const textBlock = message.content.find((b) => b.type === 'text');
+  if (!textBlock || textBlock.type !== 'text') throw new Error('No suggestion was generated.');
+  return JSON.parse(textBlock.text) as { options?: string[]; text?: string };
+}

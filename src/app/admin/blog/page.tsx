@@ -110,6 +110,14 @@ export default function BlogAdmin() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [nlTitle, setNlTitle] = useState('');
+  const [nlTimeframe, setNlTimeframe] = useState('');
+  const [nlSubject, setNlSubject] = useState('');
+  const [nlPreamble, setNlPreamble] = useState('');
+  const [nlBusy, setNlBusy] = useState<'title' | 'subject' | 'preamble' | null>(null);
+  const [nlError, setNlError] = useState('');
+  const [titleOpts, setTitleOpts] = useState<string[]>([]);
+  const [subjectOpts, setSubjectOpts] = useState<string[]>([]);
   const [aiOpen, setAiOpen] = useState(false);
   const [aiTopic, setAiTopic] = useState('');
   const [aiCategory, setAiCategory] = useState('');
@@ -133,7 +141,32 @@ export default function BlogAdmin() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  // Default the timeframe to the current month/year on first load.
+  useEffect(() => {
+    setNlTimeframe(new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }));
+  }, []);
+
   const starred = items.filter((b) => b.starred);
+
+  const suggestNL = async (kind: 'title' | 'subject' | 'preamble') => {
+    setNlBusy(kind);
+    setNlError('');
+    const res = await fetch('/api/admin/blog/newsletter-suggest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kind, timeframe: nlTimeframe }),
+    });
+    setNlBusy(null);
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      setNlError(d.error || 'Suggestion failed');
+      return;
+    }
+    const data: { options?: string[]; text?: string } = await res.json();
+    if (kind === 'title') setTitleOpts(data.options ?? []);
+    else if (kind === 'subject') setSubjectOpts(data.options ?? []);
+    else setNlPreamble(data.text ?? '');
+  };
 
   const startNew = () => {
     setDraft({ ...EMPTY });
@@ -244,10 +277,12 @@ export default function BlogAdmin() {
   <tr><td align="center" style="padding:28px 12px;">
     <table width="600" cellpadding="0" cellspacing="0" role="presentation" style="width:100%;max-width:600px;">
       <tr><td style="background:#02176f;border-radius:16px 16px 0 0;padding:30px 24px;text-align:center;">
-        <div style="font:700 24px/1 Georgia,'Times New Roman',serif;color:#ffffff;letter-spacing:.02em;">Ignatius Book Fairs</div>
-        <div style="font:400 13px/1.5 Arial,Helvetica,sans-serif;color:#aac2ff;margin-top:8px;">News &amp; reading picks for Catholic and public schools</div>
+        <div style="font:700 12px/1 Arial,Helvetica,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#aac2ff;margin:0 0 8px 0;">Ignatius Book Fairs</div>
+        <div style="font:700 25px/1.2 Georgia,'Times New Roman',serif;color:#ffffff;letter-spacing:.01em;">${esc(nlTitle) || 'Newsletter'}</div>
+        ${nlTimeframe ? `<div style="font:400 13px/1.5 Arial,Helvetica,sans-serif;color:#aac2ff;margin-top:8px;">${esc(nlTimeframe)}</div>` : ''}
       </td></tr>
       <tr><td style="background:#ffffff;padding:28px 20px 4px 20px;">
+        ${nlPreamble ? `<p style="margin:0 0 26px 0;font:400 16px/1.7 Georgia,'Times New Roman',serif;color:#3a3d47;">${esc(nlPreamble)}</p>` : ''}
         <table width="100%" cellpadding="0" cellspacing="0" role="presentation">${articles}</table>
       </td></tr>
       <tr><td style="background:#ffffff;border-radius:0 0 16px 16px;border-top:1px solid #eceef2;padding:24px;text-align:center;font:400 12px/1.7 Arial,Helvetica,sans-serif;color:#8b8f99;">
@@ -549,10 +584,10 @@ export default function BlogAdmin() {
           className="fixed inset-0 z-50 bg-black/40 flex items-start justify-center p-4 overflow-auto"
           onClick={() => setPreviewOpen(false)}
         >
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl my-8" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl my-8" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
               <h3 className="font-brother text-[#02176f] font-semibold">
-                Newsletter preview <span className="text-gray-400 font-normal">({starred.length})</span>
+                Compose newsletter <span className="text-gray-400 font-normal">({starred.length})</span>
               </h3>
               <div className="flex gap-2">
                 <button onClick={copyNewsletter} className="text-sm px-3 py-1.5 rounded-md border border-[#dddddd] text-gray-700 hover:bg-gray-50">
@@ -563,10 +598,78 @@ export default function BlogAdmin() {
                 </button>
               </div>
             </div>
-            <div
-              className="max-h-[78vh] overflow-auto rounded-b-xl"
-              dangerouslySetInnerHTML={{ __html: newsletterHtml() }}
-            />
+
+            <div className="max-h-[80vh] overflow-auto">
+              {/* Compose */}
+              <div className="p-5 space-y-4 border-b border-gray-100">
+                {nlError && (
+                  <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">{nlError}</div>
+                )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium text-[#02176f]">Title</span>
+                      <button onClick={() => suggestNL('title')} disabled={nlBusy !== null} className="text-xs font-medium text-[#0066ff] hover:underline disabled:opacity-50">
+                        {nlBusy === 'title' ? 'Suggesting…' : 'Suggest'}
+                      </button>
+                    </div>
+                    <input className={input} value={nlTitle} onChange={(e) => setNlTitle(e.target.value)} placeholder="Summer Reading Roundup" />
+                    {titleOpts.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {titleOpts.map((o, i) => (
+                          <button key={i} onClick={() => { setNlTitle(o); setTitleOpts([]); }} className="text-xs px-2.5 py-1 rounded-full border border-gray-200 text-gray-700 hover:bg-gray-50">
+                            {o}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <span className="block text-sm font-medium text-[#02176f] mb-1">Timeframe</span>
+                    <input className={input} value={nlTimeframe} onChange={(e) => setNlTimeframe(e.target.value)} placeholder="July 2026" />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-medium text-[#02176f]">Email subject</span>
+                    <div className="flex gap-3">
+                      {nlSubject && (
+                        <button onClick={() => navigator.clipboard.writeText(nlSubject)} className="text-xs font-medium text-gray-500 hover:underline">
+                          Copy
+                        </button>
+                      )}
+                      <button onClick={() => suggestNL('subject')} disabled={nlBusy !== null} className="text-xs font-medium text-[#0066ff] hover:underline disabled:opacity-50">
+                        {nlBusy === 'subject' ? 'Suggesting…' : 'Suggest'}
+                      </button>
+                    </div>
+                  </div>
+                  <input className={input} value={nlSubject} onChange={(e) => setNlSubject(e.target.value)} placeholder="This month’s reading picks from Ignatius Book Fairs" />
+                  {subjectOpts.length > 0 && (
+                    <div className="flex flex-col gap-1.5 mt-2">
+                      {subjectOpts.map((o, i) => (
+                        <button key={i} onClick={() => { setNlSubject(o); setSubjectOpts([]); }} className="text-xs text-left px-2.5 py-1.5 rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50">
+                          {o}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-medium text-[#02176f]">Preamble</span>
+                    <button onClick={() => suggestNL('preamble')} disabled={nlBusy !== null} className="text-xs font-medium text-[#0066ff] hover:underline disabled:opacity-50">
+                      {nlBusy === 'preamble' ? 'Writing…' : 'Write with AI'}
+                    </button>
+                  </div>
+                  <textarea rows={3} className={input} value={nlPreamble} onChange={(e) => setNlPreamble(e.target.value)} placeholder="A warm intro tying these articles together…" />
+                </div>
+              </div>
+
+              {/* Live preview */}
+              <div dangerouslySetInnerHTML={{ __html: newsletterHtml() }} />
+            </div>
           </div>
         </div>
       )}
