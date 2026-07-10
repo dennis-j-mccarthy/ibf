@@ -207,13 +207,57 @@ export default function BlogAdmin() {
     load();
   };
 
-  const newsletterHtml = () =>
-    starred
+  // A designed, email-safe newsletter (inline styles + table layout) — this is
+  // exactly what Copy HTML produces and what the Preview renders.
+  const newsletterHtml = () => {
+    const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const articles = starred
       .map(
-        (b) =>
-          `<h2>${b.title}</h2>\n${b.summary ? `<p>${b.summary}</p>\n` : ''}<p><a href="${SITE}/blog/${b.slug}">Read more →</a></p>`
+        (b) => `
+        <tr><td style="padding:0 0 24px 0;">
+          <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border:1px solid #eceef2;border-radius:12px;overflow:hidden;background:#ffffff;">
+            ${
+              b.thumbnail
+                ? `<tr><td style="font-size:0;line-height:0;"><a href="${SITE}/blog/${b.slug}"><img src="${b.thumbnail}" alt="" width="560" style="display:block;width:100%;max-height:240px;object-fit:cover;border:0;" /></a></td></tr>`
+                : ''
+            }
+            <tr><td style="padding:22px 24px 24px 24px;">
+              ${
+                b.category
+                  ? `<div style="font:700 11px/1 Arial,Helvetica,sans-serif;letter-spacing:.09em;text-transform:uppercase;color:#0088ff;margin:0 0 10px 0;">${esc(b.category)}</div>`
+                  : ''
+              }
+              <a href="${SITE}/blog/${b.slug}" style="text-decoration:none;"><h2 style="margin:0 0 10px 0;font:700 21px/1.3 Georgia,'Times New Roman',serif;color:#02176f;">${esc(b.title)}</h2></a>
+              ${
+                b.summary
+                  ? `<p style="margin:0 0 18px 0;font:400 15px/1.65 Arial,Helvetica,sans-serif;color:#4a4d57;">${esc(b.summary)}</p>`
+                  : ''
+              }
+              <a href="${SITE}/blog/${b.slug}" style="display:inline-block;background:#02176f;color:#ffffff;font:600 14px/1 Arial,Helvetica,sans-serif;text-decoration:none;padding:12px 22px;border-radius:8px;">Read the article &rarr;</a>
+            </td></tr>
+          </table>
+        </td></tr>`
       )
-      .join('\n\n');
+      .join('');
+
+    return `<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#eef0f4;margin:0;padding:0;">
+  <tr><td align="center" style="padding:28px 12px;">
+    <table width="600" cellpadding="0" cellspacing="0" role="presentation" style="width:100%;max-width:600px;">
+      <tr><td style="background:#02176f;border-radius:16px 16px 0 0;padding:30px 24px;text-align:center;">
+        <div style="font:700 24px/1 Georgia,'Times New Roman',serif;color:#ffffff;letter-spacing:.02em;">Ignatius Book Fairs</div>
+        <div style="font:400 13px/1.5 Arial,Helvetica,sans-serif;color:#aac2ff;margin-top:8px;">News &amp; reading picks for Catholic and public schools</div>
+      </td></tr>
+      <tr><td style="background:#ffffff;padding:28px 20px 4px 20px;">
+        <table width="100%" cellpadding="0" cellspacing="0" role="presentation">${articles}</table>
+      </td></tr>
+      <tr><td style="background:#ffffff;border-radius:0 0 16px 16px;border-top:1px solid #eceef2;padding:24px;text-align:center;font:400 12px/1.7 Arial,Helvetica,sans-serif;color:#8b8f99;">
+        Ignatius Book Fairs &middot; <a href="${SITE}" style="color:#0088ff;text-decoration:none;">ignatiusbookfairs.com</a><br/>
+        You&rsquo;re receiving this because you&rsquo;re part of the Ignatius Book Fairs community.
+      </td></tr>
+    </table>
+  </td></tr>
+</table>`;
+  };
 
   const markNewsletterSent = async () => {
     if (!confirm(`Mark the newsletter as sent? This clears all ${starred.length} starred post(s).`)) return;
@@ -519,20 +563,10 @@ export default function BlogAdmin() {
                 </button>
               </div>
             </div>
-            <div className="p-6 bg-[#f5f5f5]">
-              <div className="mx-auto max-w-xl bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-                <div className="bg-[#02176f] text-white text-center py-4 font-brother font-semibold text-lg">
-                  Ignatius Book Fairs
-                </div>
-                <div
-                  className="px-6 py-5 prose prose-sm max-w-none prose-headings:font-brother prose-headings:text-[#02176f] [&_a]:text-[#0066ff]"
-                  dangerouslySetInnerHTML={{ __html: newsletterHtml() }}
-                />
-                <div className="px-6 py-4 border-t border-gray-100 text-center text-xs text-gray-400">
-                  You’re receiving this because you’re part of the Ignatius Book Fairs community.
-                </div>
-              </div>
-            </div>
+            <div
+              className="max-h-[78vh] overflow-auto rounded-b-xl"
+              dangerouslySetInnerHTML={{ __html: newsletterHtml() }}
+            />
           </div>
         </div>
       )}
