@@ -41,8 +41,9 @@ export async function getResourcesByCategory(category: string) {
 
 export async function getBlogs(options?: { category?: string; featured?: boolean; limit?: number }) {
   const blogs = await prisma.blog.findMany({
-    where: { 
+    where: {
       archived: false,
+      publishedAt: { not: null }, // only published posts are public (drafts hidden)
       ...(options?.category && { category: options.category }),
       ...(options?.featured !== undefined && { featured: options.featured }),
     },
@@ -53,8 +54,10 @@ export async function getBlogs(options?: { category?: string; featured?: boolean
 }
 
 export async function getBlogBySlug(slug: string) {
-  const blog = await prisma.blog.findUnique({
-    where: { slug },
+  // Public read: a draft (publishedAt null) or archived post is treated as not
+  // found, so drafts aren't reachable by direct URL either.
+  const blog = await prisma.blog.findFirst({
+    where: { slug, archived: false, publishedAt: { not: null } },
   });
   return blog;
 }
