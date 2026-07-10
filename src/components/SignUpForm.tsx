@@ -175,6 +175,7 @@ const SignUpForm = () => {
     email: '',
     phone: '',
     howDidYouHear: '',
+    promoCode: '', // maps to HubSpot property inquire_promo_code
     referrerOrg: '', // Name and zip code of referring organization (shown when howDidYouHear === 'Referral')
     comments: '',
     previouslyHadFair: null as boolean | null, // null = not answered yet, true = yes, false = no
@@ -1121,26 +1122,40 @@ const SignUpForm = () => {
                     style={{ fontFamily: 'brother-1816, sans-serif' }}
                   />
 
-                  <div className="mb-2.5">
-                    <label className="block text-[#0088ff] text-sm mb-1" style={{ fontFamily: 'brother-1816, sans-serif' }}>How did you hear about us? *</label>
-                    <select
-                      name="howDidYouHear"
-                      value={formData.howDidYouHear}
-                      onChange={handleChange}
-                      required
-                      className="w-full h-11 px-4 rounded-lg border-0 bg-[#0088ff] text-white tracking-wide"
-                      style={{ fontFamily: 'brother-1816, sans-serif' }}
-                    >
-                      <option value="">Select one...</option>
-                      <option value="Referral">Referral</option>
-                      <option value="Search engine">Search engine</option>
-                      <option value="Radio">Radio</option>
-                      <option value="Social media">Social media</option>
-                      <option value="Event">Event</option>
-                      <option value="Email">Email</option>
-                      <option value="Contacted by a Representative">Contacted by a Representative</option>
-                      <option value="Other">Other</option>
-                    </select>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2.5">
+                    <div>
+                      <label className="block text-[#0088ff] text-sm mb-1" style={{ fontFamily: 'brother-1816, sans-serif' }}>How did you hear about us? *</label>
+                      <select
+                        name="howDidYouHear"
+                        value={formData.howDidYouHear}
+                        onChange={handleChange}
+                        required
+                        className="w-full h-11 px-4 rounded-lg border-0 bg-[#0088ff] text-white tracking-wide"
+                        style={{ fontFamily: 'brother-1816, sans-serif' }}
+                      >
+                        <option value="">Select one...</option>
+                        <option value="Referral">Referral</option>
+                        <option value="Search engine">Search engine</option>
+                        <option value="Radio">Radio</option>
+                        <option value="Social media">Social media</option>
+                        <option value="Event">Event</option>
+                        <option value="Email">Email</option>
+                        <option value="Contacted by a Representative">Contacted by a Representative</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[#0088ff] text-sm mb-1" style={{ fontFamily: 'brother-1816, sans-serif' }}>Promo code</label>
+                      <input
+                        type="text"
+                        name="promoCode"
+                        placeholder="Promo code"
+                        value={formData.promoCode}
+                        onChange={handleChange}
+                        className="w-full h-11 px-4 rounded-lg border-0 bg-[#0088ff] text-white placeholder-white tracking-wide"
+                        style={{ fontFamily: 'brother-1816, sans-serif' }}
+                      />
+                    </div>
                   </div>
 
                   {/* Conditional field for Referral */}

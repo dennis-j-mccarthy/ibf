@@ -75,6 +75,7 @@ export async function POST(request: NextRequest) {
         { name: 'email', value: formData.email || '' },
         { name: 'phone', value: formData.phone || '' },
         { name: 'how_did_you_hear_about_us', value: formData.howDidYouHear || '' },
+        { name: 'inquire_promo_code', value: formData.promoCode || '' },
         { name: 'referrer_org', value: formData.referrerOrg || '' },
         { name: 'message', value: formData.comments || '' },
       ].filter(f => f.value !== '');
@@ -160,6 +161,7 @@ export async function POST(request: NextRequest) {
         { name: 'email', value: formData.email || '' },
         { name: 'phone', value: formData.phone || '' },
         { name: 'how_did_you_hear_about_us', value: formData.howDidYouHear || '' },
+        { name: 'inquire_promo_code', value: formData.promoCode || '' },
         { name: 'message', value: formData.comments || '' },
       ].filter(f => f.value !== '');
 
