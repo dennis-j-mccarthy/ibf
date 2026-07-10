@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
 type Blog = {
@@ -40,6 +40,66 @@ const EMPTY: Draft = {
 const input =
   'w-full px-3 py-2 border border-[#dddddd] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0066ff]';
 const label = 'block text-sm font-medium text-[#02176f] mb-1';
+const SITE = 'https://www.ignatiusbookfairs.com';
+
+// --- inline SVG icons (no emoji) ---
+const iconProps = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, viewBox: '0 0 24 24' } as const;
+const StarIcon = ({ filled }: { filled?: boolean }) => (
+  <svg className="w-4 h-4" {...iconProps} fill={filled ? 'currentColor' : 'none'}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.5a.56.56 0 011.04 0l2.09 4.24 4.68.68a.56.56 0 01.31.96l-3.39 3.3.8 4.67a.56.56 0 01-.81.59L12 15.9l-4.19 2.2a.56.56 0 01-.81-.58l.8-4.68-3.39-3.3a.56.56 0 01.31-.96l4.68-.68 2.09-4.24z" />
+  </svg>
+);
+const PromoIcon = () => (
+  <svg className="w-4 h-4" {...iconProps}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M11 5.9v13.3a1.76 1.76 0 01-3.42.6l-1.53-4.4M18 13a3 3 0 100-6M5.44 13.68A4 4 0 017 6h1.83c4.1 0 7.62-1.23 9.17-3v14c-1.55-1.77-5.07-3-9.17-3H7a4 4 0 01-1.56-.32z" />
+  </svg>
+);
+const EditIcon = () => (
+  <svg className="w-4 h-4" {...iconProps}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M16.86 4.49l1.69-1.69a1.87 1.87 0 112.65 2.65L10.58 16.07a4.5 4.5 0 01-1.9 1.13L6 18l.8-2.69a4.5 4.5 0 011.13-1.9l8.93-8.92z" />
+  </svg>
+);
+const TrashIcon = () => (
+  <svg className="w-4 h-4" {...iconProps}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.35 9m-4.78 0L9.26 9M4.77 5.79c.34-.06.68-.11 1.02-.16m0 0a48 48 0 013.48-.4m7.5 0v-.91c0-1.18-.91-2.16-2.09-2.2a51.96 51.96 0 00-3.32 0c-1.18.04-2.09 1.02-2.09 2.2v.91m7.5 0a48.67 48.67 0 00-7.5 0m11.16.16l-.71 13.88a2.25 2.25 0 01-2.24 2.08H8.08a2.25 2.25 0 01-2.24-2.08L5.13 5.95" />
+  </svg>
+);
+const Chevron = ({ open }: { open: boolean }) => (
+  <svg className={`w-4 h-4 shrink-0 text-gray-400 transition-transform ${open ? 'rotate-90' : ''}`} {...iconProps}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+  </svg>
+);
+
+function IconButton({
+  onClick,
+  title,
+  children,
+  danger,
+  active,
+}: {
+  onClick: () => void;
+  title: string;
+  children: ReactNode;
+  danger?: boolean;
+  active?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      aria-label={title}
+      className={`grid place-items-center w-8 h-8 rounded-md border transition-colors ${
+        active
+          ? 'border-blue-200 text-blue-600 bg-blue-50'
+          : danger
+            ? 'border-gray-200 text-gray-400 hover:text-red-600 hover:border-red-200 hover:bg-red-50'
+            : 'border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-[#02176f]'
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
 
 export default function BlogAdmin() {
   const router = useRouter();
@@ -49,6 +109,7 @@ export default function BlogAdmin() {
   const [draft, setDraft] = useState<Draft>(EMPTY);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [aiTopic, setAiTopic] = useState('');
   const [aiCategory, setAiCategory] = useState('');
@@ -66,11 +127,18 @@ export default function BlogAdmin() {
     load();
   }, [load]);
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setPreviewOpen(false);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   const starred = items.filter((b) => b.starred);
 
   const startNew = () => {
     setDraft({ ...EMPTY });
     setEditingId('new');
+    setAiOpen(false);
     setError('');
   };
   const startEdit = (b: Blog) => {
@@ -83,6 +151,8 @@ export default function BlogAdmin() {
     setDraft(EMPTY);
     setError('');
   };
+  // Accordion toggle: only one post open at a time.
+  const toggle = (b: Blog) => (editingId === b.id ? cancel() : startEdit(b));
 
   const save = async () => {
     if (!draft.title?.trim()) {
@@ -122,7 +192,10 @@ export default function BlogAdmin() {
   const remove = async (id: number) => {
     if (!confirm('Delete this post? This cannot be undone.')) return;
     const res = await fetch(`/api/admin/blog/${id}`, { method: 'DELETE' });
-    if (res.ok) load();
+    if (res.ok) {
+      if (editingId === id) cancel();
+      load();
+    }
   };
 
   const toggleStar = async (b: Blog) => {
@@ -134,20 +207,25 @@ export default function BlogAdmin() {
     load();
   };
 
+  const newsletterHtml = () =>
+    starred
+      .map(
+        (b) =>
+          `<h2>${b.title}</h2>\n${b.summary ? `<p>${b.summary}</p>\n` : ''}<p><a href="${SITE}/blog/${b.slug}">Read more →</a></p>`
+      )
+      .join('\n\n');
+
   const markNewsletterSent = async () => {
     if (!confirm(`Mark the newsletter as sent? This clears all ${starred.length} starred post(s).`)) return;
     const res = await fetch('/api/admin/blog/newsletter-sent', { method: 'POST' });
-    if (res.ok) load();
+    if (res.ok) {
+      setPreviewOpen(false);
+      load();
+    }
   };
 
   const copyNewsletter = async () => {
-    const html = starred
-      .map(
-        (b) =>
-          `<h2>${b.title}</h2>\n${b.summary ? `<p>${b.summary}</p>\n` : ''}<p><a href="https://www.ignatiusbookfairs.com/blog/${b.slug}">Read more →</a></p>`
-      )
-      .join('\n\n');
-    await navigator.clipboard.writeText(html);
+    await navigator.clipboard.writeText(newsletterHtml());
     alert('Newsletter HTML copied to clipboard.');
   };
 
@@ -187,30 +265,81 @@ export default function BlogAdmin() {
     <span className={`text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded ${cls}`}>{text}</span>
   );
 
+  // The editor form, reused for a new post and inside each accordion.
+  const editor = (isNew: boolean) => (
+    <div className={isNew ? 'p-6' : 'px-4 sm:px-6 pb-6 pt-2 border-t border-gray-100'}>
+      {error && (
+        <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</div>
+      )}
+      <label className={label}>Title</label>
+      <input className={`${input} mb-4`} value={draft.title ?? ''} onChange={(e) => setDraft({ ...draft, title: e.target.value })} />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+        <div>
+          <label className={label}>Category</label>
+          <input className={input} value={draft.category ?? ''} onChange={(e) => setDraft({ ...draft, category: e.target.value })} placeholder="Catholic, Public, …" />
+        </div>
+        <div>
+          <label className={label}>Accent color</label>
+          <input className={input} value={draft.color ?? ''} onChange={(e) => setDraft({ ...draft, color: e.target.value })} placeholder="#02176f" />
+        </div>
+      </div>
+
+      <label className={label}>Summary</label>
+      <textarea className={`${input} mb-4`} rows={2} value={draft.summary ?? ''} onChange={(e) => setDraft({ ...draft, summary: e.target.value })} />
+
+      <label className={label}>Thumbnail URL</label>
+      <input className={`${input} mb-4`} value={draft.thumbnail ?? ''} onChange={(e) => setDraft({ ...draft, thumbnail: e.target.value })} placeholder="https://…" />
+
+      <label className={label}>Content (HTML)</label>
+      <textarea className={`${input} mb-4 font-mono text-xs`} rows={12} value={draft.content ?? ''} onChange={(e) => setDraft({ ...draft, content: e.target.value })} />
+
+      <label className={label}>Embed HTML (optional)</label>
+      <textarea className={`${input} mb-4 font-mono text-xs`} rows={3} value={draft.embedHtml ?? ''} onChange={(e) => setDraft({ ...draft, embedHtml: e.target.value })} />
+
+      <div className="flex flex-wrap gap-5 mb-6 text-sm text-[#02176f]">
+        <label className="flex items-center gap-2">
+          <input type="checkbox" checked={draft.published !== false} onChange={(e) => setDraft({ ...draft, published: e.target.checked })} />
+          Published
+        </label>
+        <label className="flex items-center gap-2">
+          <input type="checkbox" checked={draft.featured === true} onChange={(e) => setDraft({ ...draft, featured: e.target.checked })} />
+          Featured
+        </label>
+        <label className="flex items-center gap-2">
+          <input type="checkbox" checked={draft.starred === true} onChange={(e) => setDraft({ ...draft, starred: e.target.checked })} />
+          Queue for newsletter
+        </label>
+      </div>
+
+      <div className="flex gap-3">
+        <button onClick={save} disabled={saving} className="bg-[#02176f] hover:bg-[#021a85] text-white font-semibold px-5 py-2 rounded-md disabled:opacity-60">
+          {saving ? 'Saving…' : 'Save'}
+        </button>
+        <button onClick={cancel} className="px-5 py-2 rounded-md border border-[#dddddd] text-gray-700">
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-[#f5f5f5]">
       <header className="bg-[#02176f] text-white">
         <div className="max-w-5xl mx-auto px-5 h-16 flex items-center justify-between gap-6">
           <h1 className="font-brother text-lg sm:text-xl font-semibold whitespace-nowrap">Blog</h1>
           <nav className="flex items-center gap-1 shrink-0 whitespace-nowrap text-sm">
-            <a
-              href="/admin/bot-knowledge"
-              className="px-3 py-1.5 rounded-md text-white/90 hover:bg-white/10 hover:text-white transition-colors"
-            >
+            <a href="/admin" className="px-3 py-1.5 rounded-md text-white/90 hover:bg-white/10 hover:text-white transition-colors">
+              Dashboard
+            </a>
+            <a href="/admin/bot-knowledge" className="px-3 py-1.5 rounded-md text-white/90 hover:bg-white/10 hover:text-white transition-colors">
               Knowledge base
             </a>
-            <a
-              href="/blog"
-              target="_blank"
-              className="px-3 py-1.5 rounded-md text-white/90 hover:bg-white/10 hover:text-white transition-colors"
-            >
+            <a href="/blog" target="_blank" className="px-3 py-1.5 rounded-md text-white/90 hover:bg-white/10 hover:text-white transition-colors">
               View blog
             </a>
             <span className="mx-2 h-5 w-px bg-white/20" aria-hidden />
-            <button
-              onClick={logout}
-              className="bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-md font-medium transition-colors"
-            >
+            <button onClick={logout} className="bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-md font-medium transition-colors">
               Log out
             </button>
           </nav>
@@ -220,22 +349,19 @@ export default function BlogAdmin() {
       <main className="max-w-5xl mx-auto px-5 py-6 space-y-6">
         {/* Newsletter queue */}
         <section className="bg-white rounded-xl shadow-sm p-5">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-2 gap-3 flex-wrap">
             <h2 className="font-brother text-[#02176f] text-lg font-semibold">
               Newsletter queue <span className="text-gray-400 font-normal text-base">({starred.length})</span>
             </h2>
             {starred.length > 0 && (
               <div className="flex gap-2">
-                <button
-                  onClick={copyNewsletter}
-                  className="text-sm px-3 py-1.5 rounded-md border border-[#dddddd] text-gray-700 hover:bg-gray-50"
-                >
+                <button onClick={() => setPreviewOpen(true)} className="text-sm px-3 py-1.5 rounded-md bg-[#02176f] text-white font-medium hover:bg-[#021a85]">
+                  Preview
+                </button>
+                <button onClick={copyNewsletter} className="text-sm px-3 py-1.5 rounded-md border border-[#dddddd] text-gray-700 hover:bg-gray-50">
                   Copy HTML
                 </button>
-                <button
-                  onClick={markNewsletterSent}
-                  className="text-sm px-3 py-1.5 rounded-md bg-[#02176f] text-white font-medium hover:bg-[#021a85]"
-                >
+                <button onClick={markNewsletterSent} className="text-sm px-3 py-1.5 rounded-md border border-[#dddddd] text-gray-700 hover:bg-gray-50">
                   Mark sent
                 </button>
               </div>
@@ -255,35 +381,28 @@ export default function BlogAdmin() {
         {/* Toolbar */}
         <div className="flex items-center justify-between">
           <p className="text-sm text-gray-600">{items.length} post(s)</p>
-          {editingId === null && (
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  setAiOpen((v) => !v);
-                  setAiError('');
-                }}
-                className="border border-[#02176f] text-[#02176f] hover:bg-[#02176f]/5 font-semibold px-4 py-2 rounded-md"
-              >
-                Generate with AI
-              </button>
-              <button
-                onClick={startNew}
-                className="bg-[#00c853] hover:bg-[#00a843] text-white font-semibold px-4 py-2 rounded-md"
-              >
-                New post
-              </button>
-            </div>
-          )}
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                setAiOpen((v) => !v);
+                setAiError('');
+              }}
+              className="border border-[#02176f] text-[#02176f] hover:bg-[#02176f]/5 font-semibold px-4 py-2 rounded-md"
+            >
+              Generate with AI
+            </button>
+            <button onClick={startNew} className="bg-[#00c853] hover:bg-[#00a843] text-white font-semibold px-4 py-2 rounded-md">
+              New post
+            </button>
+          </div>
         </div>
 
         {/* AI generator */}
-        {aiOpen && editingId === null && (
+        {aiOpen && (
           <div className="bg-white rounded-xl shadow-sm p-6">
             <h2 className="font-brother text-[#02176f] text-lg font-semibold mb-3">Generate a draft with AI</h2>
             {aiError && (
-              <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
-                {aiError}
-              </div>
+              <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">{aiError}</div>
             )}
             <label className={label}>Topic</label>
             <textarea
@@ -305,196 +424,118 @@ export default function BlogAdmin() {
               </div>
             </div>
             <div className="flex gap-3">
-              <button
-                onClick={generateAI}
-                disabled={aiBusy}
-                className="bg-[#02176f] hover:bg-[#021a85] text-white font-semibold px-5 py-2 rounded-md disabled:opacity-60"
-              >
+              <button onClick={generateAI} disabled={aiBusy} className="bg-[#02176f] hover:bg-[#021a85] text-white font-semibold px-5 py-2 rounded-md disabled:opacity-60">
                 {aiBusy ? 'Generating…' : 'Generate draft'}
               </button>
-              <button
-                onClick={() => setAiOpen(false)}
-                className="px-5 py-2 rounded-md border border-[#dddddd] text-gray-700"
-              >
+              <button onClick={() => setAiOpen(false)} className="px-5 py-2 rounded-md border border-[#dddddd] text-gray-700">
                 Cancel
               </button>
             </div>
-            <p className="text-xs text-gray-400 mt-3">
-              Creates an unpublished draft you can review and edit before publishing.
-            </p>
+            <p className="text-xs text-gray-400 mt-3">Creates an unpublished draft you can review and edit before publishing.</p>
           </div>
         )}
 
-        {/* Editor */}
-        {editingId !== null && (
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <h2 className="font-brother text-[#02176f] text-lg font-semibold mb-4">
-              {editingId === 'new' ? 'New post' : 'Edit post'}
-            </h2>
-            {error && (
-              <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
-                {error}
-              </div>
-            )}
-            <label className={label}>Title</label>
-            <input
-              className={`${input} mb-4`}
-              value={draft.title ?? ''}
-              onChange={(e) => setDraft({ ...draft, title: e.target.value })}
-            />
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className={label}>Category</label>
-                <input
-                  className={input}
-                  value={draft.category ?? ''}
-                  onChange={(e) => setDraft({ ...draft, category: e.target.value })}
-                  placeholder="Catholic, Public, …"
-                />
-              </div>
-              <div>
-                <label className={label}>Accent color</label>
-                <input
-                  className={input}
-                  value={draft.color ?? ''}
-                  onChange={(e) => setDraft({ ...draft, color: e.target.value })}
-                  placeholder="#02176f"
-                />
-              </div>
-            </div>
-
-            <label className={label}>Summary</label>
-            <textarea
-              className={`${input} mb-4`}
-              rows={2}
-              value={draft.summary ?? ''}
-              onChange={(e) => setDraft({ ...draft, summary: e.target.value })}
-            />
-
-            <label className={label}>Thumbnail URL</label>
-            <input
-              className={`${input} mb-4`}
-              value={draft.thumbnail ?? ''}
-              onChange={(e) => setDraft({ ...draft, thumbnail: e.target.value })}
-              placeholder="https://…"
-            />
-
-            <label className={label}>Content (HTML)</label>
-            <textarea
-              className={`${input} mb-4 font-mono text-xs`}
-              rows={12}
-              value={draft.content ?? ''}
-              onChange={(e) => setDraft({ ...draft, content: e.target.value })}
-            />
-
-            <label className={label}>Embed HTML (optional)</label>
-            <textarea
-              className={`${input} mb-4 font-mono text-xs`}
-              rows={3}
-              value={draft.embedHtml ?? ''}
-              onChange={(e) => setDraft({ ...draft, embedHtml: e.target.value })}
-            />
-
-            <div className="flex flex-wrap gap-5 mb-6 text-sm text-[#02176f]">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={draft.published !== false}
-                  onChange={(e) => setDraft({ ...draft, published: e.target.checked })}
-                />
-                Published
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={draft.featured === true}
-                  onChange={(e) => setDraft({ ...draft, featured: e.target.checked })}
-                />
-                Featured
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={draft.starred === true}
-                  onChange={(e) => setDraft({ ...draft, starred: e.target.checked })}
-                />
-                Queue for newsletter
-              </label>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={save}
-                disabled={saving}
-                className="bg-[#02176f] hover:bg-[#021a85] text-white font-semibold px-5 py-2 rounded-md disabled:opacity-60"
-              >
-                {saving ? 'Saving…' : 'Save'}
-              </button>
-              <button onClick={cancel} className="px-5 py-2 rounded-md border border-[#dddddd] text-gray-700">
-                Cancel
-              </button>
-            </div>
+        {/* New post editor */}
+        {editingId === 'new' && (
+          <div className="bg-white rounded-xl shadow-sm">
+            <h2 className="font-brother text-[#02176f] text-lg font-semibold px-6 pt-5">New post</h2>
+            {editor(true)}
           </div>
         )}
 
-        {/* List */}
+        {/* Posts — single-open accordions */}
         {loading ? (
           <p className="text-gray-500">Loading…</p>
+        ) : items.length === 0 ? (
+          <div className="bg-white rounded-xl shadow-sm p-6 text-gray-500">No posts yet.</div>
         ) : (
-          <div className="bg-white rounded-xl shadow-sm divide-y divide-gray-100">
-            {items.length === 0 && <p className="p-6 text-gray-500">No posts yet.</p>}
-            {items.map((b) => (
-              <div key={b.id} className="p-4 flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-medium text-[#02176f] truncate">{b.title}</span>
-                    {b.publishedAt == null && badge('draft', 'bg-gray-200 text-gray-600')}
-                    {b.archived && badge('archived', 'bg-gray-200 text-gray-600')}
-                    {b.featured && badge('featured', 'bg-amber-100 text-amber-700')}
-                    {b.starred && badge('queued', 'bg-blue-100 text-blue-700')}
+          <div className="space-y-2.5">
+            {items.map((b) => {
+              const open = editingId === b.id;
+              return (
+                <div key={b.id} className="bg-white rounded-xl shadow-sm">
+                  <div className="flex items-center justify-between gap-3 px-4 py-3">
+                    <button onClick={() => toggle(b)} className="flex-1 min-w-0 text-left flex items-center gap-2.5">
+                      <Chevron open={open} />
+                      <span className="min-w-0">
+                        <span className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium text-[#02176f] truncate">{b.title}</span>
+                          {b.publishedAt == null && badge('draft', 'bg-gray-200 text-gray-600')}
+                          {b.archived && badge('archived', 'bg-gray-200 text-gray-600')}
+                          {b.featured && badge('featured', 'bg-amber-100 text-amber-700')}
+                          {b.starred && badge('queued', 'bg-blue-100 text-blue-700')}
+                        </span>
+                        <span className="block text-xs text-gray-400 mt-0.5">
+                          {b.category ? `${b.category} · ` : ''}/blog/{b.slug}
+                          {b.newsletteredAt ? ' · sent in newsletter' : ''}
+                        </span>
+                      </span>
+                    </button>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <IconButton title={b.starred ? 'Remove from newsletter queue' : 'Queue for newsletter'} onClick={() => toggleStar(b)} active={b.starred}>
+                        <StarIcon filled={b.starred} />
+                      </IconButton>
+                      <a
+                        href={`/admin/blog/promo/${b.id}`}
+                        title="Promo kit"
+                        aria-label="Promo kit"
+                        className="grid place-items-center w-8 h-8 rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-[#02176f] transition-colors"
+                      >
+                        <PromoIcon />
+                      </a>
+                      <IconButton title="Edit" onClick={() => toggle(b)}>
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton title="Delete" onClick={() => remove(b.id)} danger>
+                        <TrashIcon />
+                      </IconButton>
+                    </div>
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {b.category ? `${b.category} · ` : ''}/blog/{b.slug}
-                    {b.newsletteredAt ? ' · sent in newsletter' : ''}
-                  </p>
+                  {open && editor(false)}
                 </div>
-                <div className="flex gap-2 shrink-0">
-                  <button
-                    onClick={() => toggleStar(b)}
-                    title={b.starred ? 'Remove from newsletter queue' : 'Queue for newsletter'}
-                    className={`text-sm px-2.5 py-1.5 rounded-md border ${
-                      b.starred
-                        ? 'border-blue-200 text-blue-600 bg-blue-50'
-                        : 'border-[#dddddd] text-gray-500 hover:bg-gray-50'
-                    }`}
-                  >
-                    ★
-                  </button>
-                  <a
-                    href={`/admin/blog/promo/${b.id}`}
-                    className="text-sm px-3 py-1.5 rounded-md border border-[#dddddd] text-gray-700 hover:bg-gray-50"
-                  >
-                    Promos
-                  </a>
-                  <button
-                    onClick={() => startEdit(b)}
-                    className="text-sm px-3 py-1.5 rounded-md border border-[#dddddd] text-gray-700 hover:bg-gray-50"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => remove(b.id)}
-                    className="text-sm px-3 py-1.5 rounded-md border border-red-200 text-red-600 hover:bg-red-50"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </main>
+
+      {/* Newsletter preview modal */}
+      {previewOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/40 flex items-start justify-center p-4 overflow-auto"
+          onClick={() => setPreviewOpen(false)}
+        >
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl my-8" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+              <h3 className="font-brother text-[#02176f] font-semibold">
+                Newsletter preview <span className="text-gray-400 font-normal">({starred.length})</span>
+              </h3>
+              <div className="flex gap-2">
+                <button onClick={copyNewsletter} className="text-sm px-3 py-1.5 rounded-md border border-[#dddddd] text-gray-700 hover:bg-gray-50">
+                  Copy HTML
+                </button>
+                <button onClick={() => setPreviewOpen(false)} className="text-sm px-3 py-1.5 rounded-md bg-[#02176f] text-white hover:bg-[#021a85]">
+                  Close
+                </button>
+              </div>
+            </div>
+            <div className="p-6 bg-[#f5f5f5]">
+              <div className="mx-auto max-w-xl bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                <div className="bg-[#02176f] text-white text-center py-4 font-brother font-semibold text-lg">
+                  Ignatius Book Fairs
+                </div>
+                <div
+                  className="px-6 py-5 prose prose-sm max-w-none prose-headings:font-brother prose-headings:text-[#02176f] [&_a]:text-[#0066ff]"
+                  dangerouslySetInnerHTML={{ __html: newsletterHtml() }}
+                />
+                <div className="px-6 py-4 border-t border-gray-100 text-center text-xs text-gray-400">
+                  You’re receiving this because you’re part of the Ignatius Book Fairs community.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

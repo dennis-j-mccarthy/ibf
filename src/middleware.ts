@@ -73,11 +73,11 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // /admin has no page of its own — send each role to its home with a real
-  // HTTP redirect (the server-component fallback only redirects client-side).
-  if (pathname === '/admin') {
+  // /admin renders the admin dashboard for full admins; staff-only sessions go
+  // straight to their one tool (the Upcoming Fairs list).
+  if (pathname === '/admin' && !isAllowedAdminEmail(user)) {
     const url = req.nextUrl.clone();
-    url.pathname = isAllowedAdminEmail(user) ? '/admin/bot-knowledge' : '/admin/fairs';
+    url.pathname = '/admin/fairs';
     url.search = '';
     return NextResponse.redirect(url);
   }

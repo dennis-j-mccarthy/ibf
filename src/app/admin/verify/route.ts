@@ -26,9 +26,9 @@ export async function GET(request: NextRequest) {
   // link was issued.
   if (!isAllowedStaffOrAdmin(email)) return fail();
 
-  // Full admins land on the bot-knowledge CMS; staff-only users land on the
+  // Full admins land on the admin dashboard; staff-only users land on the
   // Upcoming Fairs list (the only /admin area they may see).
-  const fallback = isAllowedAdminEmail(email) ? '/admin/bot-knowledge' : '/admin/fairs';
+  const fallback = isAllowedAdminEmail(email) ? '/admin' : '/admin/fairs';
   // Only honor a same-origin admin sub-page as the post-login destination.
   const nextParam = request.nextUrl.searchParams.get('next');
   const next =

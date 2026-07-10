@@ -136,6 +136,12 @@ export default function BotKnowledgeAdmin() {
           </h1>
           <nav className="flex items-center gap-1 shrink-0 whitespace-nowrap text-sm">
             <a
+              href="/admin"
+              className="px-3 py-1.5 rounded-md text-white/90 hover:bg-white/10 hover:text-white transition-colors"
+            >
+              Dashboard
+            </a>
+            <a
               href="/admin/fairs"
               className="px-3 py-1.5 rounded-md text-white/90 hover:bg-white/10 hover:text-white transition-colors"
             >
