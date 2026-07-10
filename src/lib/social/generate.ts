@@ -63,21 +63,28 @@ For EACH post also write a "caption" (the platform caption — warm, a little lo
 Fields you don't use for a given theme: set "sub"/"statLabel" to "" and "items" to [] as appropriate. Keep statements SHORT (fit a poster). Make the set varied across archetypes.`;
 
 export async function generateSocialPosts(input: {
-  title: string;
-  content: string; // plain text of the blog post
-  strategy?: string; // overarching campaign angle
+  title?: string;
+  content?: string; // plain text of the blog post (optional if strategy given)
+  strategy?: string; // overarching campaign angle/direction
   count?: number;
 }): Promise<SocialPost[]> {
   const client = new Anthropic();
   const count = Math.min(Math.max(input.count ?? 5, 1), 8);
+  const hasContent = !!input.content?.trim();
 
-  const user = `Create ${count} on-brand social posts that spin and angle THIS blog content into bold IBF statements. Vary the archetypes.
+  const user = hasContent
+    ? `Create ${count} on-brand social posts that spin and angle THIS blog content into bold IBF statements. Vary the archetypes.
 
-${input.strategy ? `CAMPAIGN STRATEGY / THEME: ${input.strategy}\n` : ''}BLOG TITLE: ${input.title}
+${input.strategy ? `CAMPAIGN STRATEGY / THEME: ${input.strategy}\n` : ''}BLOG TITLE: ${input.title || ''}
 
 BLOG CONTENT:
-${input.content.slice(0, 6000)}
+${(input.content || '').slice(0, 6000)}
 
+Return ${count} posts as structured JSON. Each must stand on its own as a scroll-stopping, on-brand graphic + caption.`
+    : `Create ${count} on-brand social posts for THIS CAMPAIGN (there is no blog — work from the strategic direction alone). Invent concrete, on-brand, specific angles that fit the strategy; vary the archetypes.
+
+CAMPAIGN STRATEGY / DIRECTION: ${input.strategy || ''}
+${input.title ? `CAMPAIGN NAME: ${input.title}\n` : ''}
 Return ${count} posts as structured JSON. Each must stand on its own as a scroll-stopping, on-brand graphic + caption.`;
 
   const stream = client.messages.stream({

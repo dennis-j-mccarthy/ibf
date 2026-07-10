@@ -16,7 +16,7 @@ export default async function PromoPage({ params }: { params: Promise<{ id: stri
 
   const post = await prisma.blog.findUnique({
     where: { id: blogId },
-    select: { id: true, title: true, slug: true, summary: true, category: true, thumbnail: true },
+    select: { id: true, title: true, slug: true, summary: true, category: true, thumbnail: true, content: true },
   });
   if (!post) notFound();
 

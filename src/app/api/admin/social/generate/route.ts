@@ -19,8 +19,9 @@ export async function POST(request: NextRequest) {
   const strategy = typeof body.strategy === 'string' ? body.strategy.trim() : undefined;
   const count = typeof body.count === 'number' ? body.count : undefined;
 
-  if (!content) {
-    return NextResponse.json({ error: 'Blog content is required' }, { status: 400 });
+  // Either a blog's content OR a campaign strategy is enough to generate.
+  if (!content && !strategy) {
+    return NextResponse.json({ error: 'Provide blog content or a campaign strategy.' }, { status: 400 });
   }
 
   try {

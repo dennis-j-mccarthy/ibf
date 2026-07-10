@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import type { PromoKit } from '@/lib/claude';
+import DesignedPosts from '@/app/admin/social/DesignedPosts';
 
 type Post = {
   id: number;
@@ -10,7 +11,11 @@ type Post = {
   summary: string | null;
   category: string | null;
   thumbnail: string | null;
+  content: string | null;
 };
+
+const stripHtml = (html: string) =>
+  html.replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim();
 
 function CopyButton({ text }: { text: string }) {
   const [done, setDone] = useState(false);
@@ -119,6 +124,15 @@ export default function PromoView({ post }: { post: Post }) {
         {error && (
           <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</div>
         )}
+
+        {/* On-brand designed graphics (design system, 5 themes, Fredoka) */}
+        <section className="bg-white rounded-xl shadow-sm p-5">
+          <div className="mb-4">
+            <h3 className="font-brother text-[#02176f] text-base font-semibold">Designed graphics</h3>
+            <p className="text-sm text-gray-500">On-brand posts from your design system — bold statements, brand colors, Fredoka. Generated from this post.</p>
+          </div>
+          <DesignedPosts title={post.title} content={stripHtml(post.content ?? post.summary ?? '')} strategy="" count={5} />
+        </section>
 
         {loading ? (
           <p className="text-gray-500">Loading…</p>
