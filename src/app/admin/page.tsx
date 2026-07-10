@@ -50,8 +50,8 @@ export default async function AdminDashboard() {
     },
     {
       href: '/admin/blog',
-      title: 'Blog',
-      desc: 'Write, publish, generate posts, and build the newsletter.',
+      title: 'Content generator',
+      desc: 'Write, publish, and generate blog posts, promos, and newsletters.',
       stat: num(blogTotal),
       statLabel: `posts · ${num(blogDrafts)} drafts · ${num(blogQueued)} queued`,
       accent: '#00c853',
