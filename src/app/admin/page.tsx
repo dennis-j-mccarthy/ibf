@@ -78,6 +78,21 @@ export default async function AdminDashboard() {
         />
       ),
     },
+    {
+      href: '/admin/social',
+      title: 'Social Posts',
+      desc: 'Spin a blog post into on-brand designed social graphics + captions.',
+      stat: '5',
+      statLabel: 'themes',
+      accent: '#ff6445',
+      icon: (
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
+        />
+      ),
+    },
   ];
 
   return (

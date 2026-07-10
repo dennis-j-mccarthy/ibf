@@ -62,7 +62,9 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith('/admin/bot-knowledge') ||
     pathname.startsWith('/api/admin/bot-answers') ||
     pathname.startsWith('/admin/blog') ||
-    pathname.startsWith('/api/admin/blog');
+    pathname.startsWith('/api/admin/blog') ||
+    pathname.startsWith('/admin/social') ||
+    pathname.startsWith('/api/admin/social');
   if (isAdminOnly && !isAllowedAdminEmail(user)) {
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
