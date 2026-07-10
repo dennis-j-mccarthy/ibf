@@ -17,11 +17,12 @@ export default async function AdminDashboard() {
   const store = await cookies();
   const email = await verifySession(store.get(COOKIE_NAME)?.value, process.env.ADMIN_SESSION_SECRET ?? '');
 
-  const [blogTotal, blogDrafts, blogQueued, botCount] = await Promise.all([
+  const [blogTotal, blogDrafts, blogQueued, botCount, tutorialCount] = await Promise.all([
     prisma.blog.count({ where: { archived: false } }).catch(() => null),
     prisma.blog.count({ where: { archived: false, publishedAt: null } }).catch(() => null),
     prisma.blog.count({ where: { starred: true } }).catch(() => null),
     prisma.botAnswer.count().catch(() => null),
+    prisma.resource.count({ where: { category: 'Tutorials', isActive: true } }).catch(() => null),
   ]);
   let fairCount: number | null = null;
   try {
@@ -75,6 +76,21 @@ export default async function AdminDashboard() {
           strokeLinecap="round"
           strokeLinejoin="round"
           d="M8 10.5h8M8 14h5M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"
+        />
+      ),
+    },
+    {
+      href: '/admin/tutorials/record',
+      title: 'Tutorials',
+      desc: 'Record screen + webcam tutorials and publish them to Resources.',
+      stat: num(tutorialCount),
+      statLabel: 'tutorials',
+      accent: '#ff6445',
+      icon: (
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z"
         />
       ),
     },

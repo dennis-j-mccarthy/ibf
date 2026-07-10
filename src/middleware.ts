@@ -7,6 +7,7 @@ import { SESSION_COOKIE_NAME, verifySessionToken } from '@/lib/book-fair-admin/a
 const PUBLIC_PATHS = new Set([
   '/admin/login',
   '/admin/verify',
+  '/admin/dev-login', // local-only; the route handler 404s in production
   '/api/admin/login',
   '/api/admin/logout',
   '/api/admin/magic-link/request',
@@ -62,7 +63,10 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith('/admin/bot-knowledge') ||
     pathname.startsWith('/api/admin/bot-answers') ||
     pathname.startsWith('/admin/blog') ||
-    pathname.startsWith('/api/admin/blog');
+    pathname.startsWith('/api/admin/blog') ||
+    pathname.startsWith('/admin/tutorials') ||
+    pathname.startsWith('/api/admin/tutorials') ||
+    pathname.startsWith('/api/admin/resources');
   if (isAdminOnly && !isAllowedAdminEmail(user)) {
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
