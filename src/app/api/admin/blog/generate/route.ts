@@ -21,9 +21,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'A topic is required' }, { status: 400 });
   }
 
+  const audience = typeof body.audience === 'string' && body.audience.trim() ? body.audience.trim() : undefined;
+  const bullets = Array.isArray(body.bullets)
+    ? body.bullets.filter((b: unknown): b is string => typeof b === 'string' && b.trim() !== '').slice(0, 5)
+    : undefined;
+  const thumbnail = typeof body.thumbnail === 'string' && body.thumbnail.trim() ? body.thumbnail.trim() : null;
+
   let article;
   try {
-    article = await generateArticle({ topic, category: body.category || undefined });
+    article = await generateArticle({ topic, category: body.category || undefined, audience, bullets });
   } catch (error) {
     console.error('Article generation failed:', error);
     return NextResponse.json(
@@ -40,6 +46,7 @@ export async function POST(request: NextRequest) {
       content: article.contentHtml,
       summary: article.summary,
       category: article.category || body.category || null,
+      thumbnail,
       publishedAt: null, // created as a draft for review before publishing
     },
   });

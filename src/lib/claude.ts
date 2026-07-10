@@ -28,11 +28,16 @@ const SYSTEM = `You are the content writer for Ignatius Book Fairs (ignatiusbook
 export async function generateArticle(input: {
   topic: string;
   category?: string;
+  audience?: string;
+  bullets?: string[];
 }): Promise<GeneratedArticle> {
   const client = new Anthropic(); // reads ANTHROPIC_API_KEY
 
+  const points = (input.bullets ?? []).map((b) => b.trim()).filter(Boolean);
   const user = `Write a blog post about: ${input.topic}.
 ${input.category ? `Intended category: ${input.category}.` : ''}
+${input.audience ? `Write primarily for this audience: ${input.audience}. Tailor tone, examples, and takeaways to them.` : ''}
+${points.length ? `Make sure the article covers these key points (weave them in naturally as sections):\n${points.map((p) => `- ${p}`).join('\n')}` : ''}
 
 Return:
 - title: a specific, compelling title (no clickbait).

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
 type Blog = {
@@ -54,11 +54,6 @@ const PromoIcon = () => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M11 5.9v13.3a1.76 1.76 0 01-3.42.6l-1.53-4.4M18 13a3 3 0 100-6M5.44 13.68A4 4 0 017 6h1.83c4.1 0 7.62-1.23 9.17-3v14c-1.55-1.77-5.07-3-9.17-3H7a4 4 0 01-1.56-.32z" />
   </svg>
 );
-const EditIcon = () => (
-  <svg className="w-4 h-4" {...iconProps}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M16.86 4.49l1.69-1.69a1.87 1.87 0 112.65 2.65L10.58 16.07a4.5 4.5 0 01-1.9 1.13L6 18l.8-2.69a4.5 4.5 0 011.13-1.9l8.93-8.92z" />
-  </svg>
-);
 const TrashIcon = () => (
   <svg className="w-4 h-4" {...iconProps}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.35 9m-4.78 0L9.26 9M4.77 5.79c.34-.06.68-.11 1.02-.16m0 0a48 48 0 013.48-.4m7.5 0v-.91c0-1.18-.91-2.16-2.09-2.2a51.96 51.96 0 00-3.32 0c-1.18.04-2.09 1.02-2.09 2.2v.91m7.5 0a48.67 48.67 0 00-7.5 0m11.16.16l-.71 13.88a2.25 2.25 0 01-2.24 2.08H8.08a2.25 2.25 0 01-2.24-2.08L5.13 5.95" />
@@ -101,6 +96,70 @@ function IconButton({
   );
 }
 
+// Lightweight rich-text editor (contentEditable + execCommand). Outputs HTML
+// into the Blog `content` field. Uncontrolled after mount to keep the caret
+// stable; parent reads changes via onChange.
+function RichText({ value, onChange }: { value: string; onChange: (html: string) => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (ref.current) ref.current.innerHTML = value || '';
+    try {
+      document.execCommand('styleWithCSS', false, 'false');
+    } catch {
+      /* older browsers */
+    }
+    // Initialize once; subsequent value changes come from this editor itself.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const exec = (cmd: string, arg?: string) => {
+    ref.current?.focus();
+    document.execCommand(cmd, false, arg);
+    onChange(ref.current?.innerHTML ?? '');
+  };
+  const Btn = ({ onClick, title, children }: { onClick: () => void; title: string; children: ReactNode }) => (
+    <button
+      type="button"
+      title={title}
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={onClick}
+      className="min-w-8 h-8 px-2 grid place-items-center rounded text-sm text-gray-600 hover:bg-white hover:text-[#02176f]"
+    >
+      {children}
+    </button>
+  );
+  return (
+    <div className="border border-[#dddddd] rounded-md overflow-hidden">
+      <div className="flex flex-wrap items-center gap-0.5 bg-gray-50 border-b border-gray-200 p-1">
+        <Btn title="Bold" onClick={() => exec('bold')}><span className="font-bold">B</span></Btn>
+        <Btn title="Italic" onClick={() => exec('italic')}><span className="italic">I</span></Btn>
+        <span className="w-px h-5 bg-gray-200 mx-1" />
+        <Btn title="Heading" onClick={() => exec('formatBlock', '<h2>')}>H2</Btn>
+        <Btn title="Subheading" onClick={() => exec('formatBlock', '<h3>')}>H3</Btn>
+        <Btn title="Paragraph" onClick={() => exec('formatBlock', '<p>')}>P</Btn>
+        <span className="w-px h-5 bg-gray-200 mx-1" />
+        <Btn title="Bullet list" onClick={() => exec('insertUnorderedList')}>• List</Btn>
+        <Btn
+          title="Link"
+          onClick={() => {
+            const url = prompt('Link URL (https://…)');
+            if (url) exec('createLink', url);
+          }}
+        >
+          Link
+        </Btn>
+        <Btn title="Clear formatting" onClick={() => exec('removeFormat')}>Clear</Btn>
+      </div>
+      <div
+        ref={ref}
+        contentEditable
+        suppressContentEditableWarning
+        onInput={() => onChange(ref.current?.innerHTML ?? '')}
+        className="prose prose-sm max-w-none min-h-[260px] px-4 py-3 focus:outline-none prose-headings:font-brother prose-headings:text-[#02176f] [&_a]:text-[#0066ff]"
+      />
+    </div>
+  );
+}
+
 export default function BlogAdmin() {
   const router = useRouter();
   const [items, setItems] = useState<Blog[]>([]);
@@ -121,6 +180,9 @@ export default function BlogAdmin() {
   const [aiOpen, setAiOpen] = useState(false);
   const [aiTopic, setAiTopic] = useState('');
   const [aiCategory, setAiCategory] = useState('');
+  const [aiAudience, setAiAudience] = useState('');
+  const [aiBullets, setAiBullets] = useState<string[]>(['', '', '']);
+  const [aiThumbnail, setAiThumbnail] = useState('');
   const [aiBusy, setAiBusy] = useState(false);
   const [aiError, setAiError] = useState('');
 
@@ -318,7 +380,13 @@ export default function BlogAdmin() {
     const res = await fetch('/api/admin/blog/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ topic: aiTopic, category: aiCategory || null }),
+      body: JSON.stringify({
+        topic: aiTopic,
+        category: aiCategory || null,
+        audience: aiAudience || null,
+        bullets: aiBullets.filter((b) => b.trim()),
+        thumbnail: aiThumbnail || null,
+      }),
     });
     setAiBusy(false);
     if (!res.ok) {
@@ -330,6 +398,9 @@ export default function BlogAdmin() {
     setAiOpen(false);
     setAiTopic('');
     setAiCategory('');
+    setAiAudience('');
+    setAiBullets(['', '', '']);
+    setAiThumbnail('');
     await load();
     startEdit(created); // open the new draft for review
   };
@@ -370,8 +441,10 @@ export default function BlogAdmin() {
       <label className={label}>Thumbnail URL</label>
       <input className={`${input} mb-4`} value={draft.thumbnail ?? ''} onChange={(e) => setDraft({ ...draft, thumbnail: e.target.value })} placeholder="https://…" />
 
-      <label className={label}>Content (HTML)</label>
-      <textarea className={`${input} mb-4 font-mono text-xs`} rows={12} value={draft.content ?? ''} onChange={(e) => setDraft({ ...draft, content: e.target.value })} />
+      <label className={label}>Content</label>
+      <div className="mb-4">
+        <RichText value={draft.content ?? ''} onChange={(html) => setDraft({ ...draft, content: html })} />
+      </div>
 
       <label className={label}>Embed HTML (optional)</label>
       <textarea className={`${input} mb-4 font-mono text-xs`} rows={3} value={draft.embedHtml ?? ''} onChange={(e) => setDraft({ ...draft, embedHtml: e.target.value })} />
@@ -501,7 +574,60 @@ export default function BlogAdmin() {
                   <option value="General">General</option>
                 </select>
               </div>
+              <div>
+                <label className={label}>Audience</label>
+                <select className={input} value={aiAudience} onChange={(e) => setAiAudience(e.target.value)}>
+                  <option value="">Everyone</option>
+                  <option value="Parents">Parents</option>
+                  <option value="Teachers">Teachers</option>
+                  <option value="Administrators">Administrators</option>
+                </select>
+              </div>
             </div>
+
+            <label className={label}>Key points to cover (optional, up to 5)</label>
+            <div className="space-y-2 mb-4">
+              {aiBullets.map((bullet, i) => (
+                <div key={i} className="flex gap-2">
+                  <input
+                    className={input}
+                    value={bullet}
+                    onChange={(e) => setAiBullets(aiBullets.map((b, idx) => (idx === i ? e.target.value : b)))}
+                    placeholder={`Point ${i + 1}`}
+                  />
+                  {aiBullets.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setAiBullets(aiBullets.filter((_, idx) => idx !== i))}
+                      title="Remove point"
+                      className="px-3 text-gray-400 hover:text-red-600"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              ))}
+              {aiBullets.length < 5 && (
+                <button type="button" onClick={() => setAiBullets([...aiBullets, ''])} className="text-sm text-[#0066ff] hover:underline">
+                  + Add point
+                </button>
+              )}
+            </div>
+
+            <label className={label}>Title image URL (optional)</label>
+            <div className="flex items-start gap-3 mb-4">
+              <input
+                className={input}
+                value={aiThumbnail}
+                onChange={(e) => setAiThumbnail(e.target.value)}
+                placeholder="https://…  (upload coming soon)"
+              />
+              {aiThumbnail && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={aiThumbnail} alt="" className="w-16 h-16 rounded-md object-cover border border-gray-200 shrink-0" />
+              )}
+            </div>
+
             <div className="flex gap-3">
               <button onClick={generateAI} disabled={aiBusy} className="bg-[#02176f] hover:bg-[#021a85] text-white font-semibold px-5 py-2 rounded-md disabled:opacity-60">
                 {aiBusy ? 'Generating…' : 'Generate draft'}
@@ -536,6 +662,10 @@ export default function BlogAdmin() {
                   <div className="flex items-center justify-between gap-3 px-4 py-3">
                     <button onClick={() => toggle(b)} className="flex-1 min-w-0 text-left flex items-center gap-2.5">
                       <Chevron open={open} />
+                      {b.thumbnail && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={b.thumbnail} alt="" className="w-10 h-10 rounded object-cover shrink-0 border border-gray-100" />
+                      )}
                       <span className="min-w-0">
                         <span className="flex items-center gap-2 flex-wrap">
                           <span className="font-medium text-[#02176f] truncate">{b.title}</span>
@@ -562,9 +692,6 @@ export default function BlogAdmin() {
                       >
                         <PromoIcon />
                       </a>
-                      <IconButton title="Edit" onClick={() => toggle(b)}>
-                        <EditIcon />
-                      </IconButton>
                       <IconButton title="Delete" onClick={() => remove(b.id)} danger>
                         <TrashIcon />
                       </IconButton>
