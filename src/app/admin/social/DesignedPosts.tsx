@@ -30,12 +30,17 @@ const PLATFORMS = [
 
 const MODE_HEX: Record<string, string> = { catholic: '#0088ff', parish: '#50db92', public: '#ff6445', virtual: '#42ade2' };
 
-function ogUrl(p: Post, size: string) {
+// Lifestyle photo pool for photo-hero posts (public/brand/photos). photo-05 is
+// the Loupio mascot, excluded from full-bleed backgrounds.
+const PHOTOS = ['photo-01.jpg', 'photo-02.jpg', 'photo-03.jpg', 'photo-04.jpg', 'photo-06.jpg', 'photo-07.jpg', 'photo-08.jpg', 'photo-09.jpg', 'photo-10.jpg', 'photo-11.jpg', 'photo-12.jpg', 'photo-13.jpg', 'photo-14.jpg', 'photo-15.jpg'];
+
+function ogUrl(p: Post, size: string, index = 0) {
   const q = new URLSearchParams({
     theme: p.theme, mode: p.mode, size,
     statement: p.statement || '', sub: p.sub || '', eyebrow: p.eyebrow || '',
     statLabel: p.statLabel || '', items: (p.items || []).join('|'),
   });
+  if (p.theme === 'photo-hero') q.set('img', PHOTOS[index % PHOTOS.length]);
   return `/api/og/post?${q.toString()}`;
 }
 
@@ -140,7 +145,7 @@ export default function DesignedPosts({
             <div key={i} className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
               <div className="bg-gray-50 grid place-items-center p-4">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={ogUrl(p, platform)} alt={p.statement} onLoad={() => setLoaded((n) => { const nx = n + 1; if (nx >= posts.length) setPhase('done'); return nx; })} className="w-full max-w-[420px] rounded-lg shadow" />
+                <img src={ogUrl(p, platform, i)} alt={p.statement} onLoad={() => setLoaded((n) => { const nx = n + 1; if (nx >= posts.length) setPhase('done'); return nx; })} className="w-full max-w-[420px] rounded-lg shadow" />
               </div>
               <div className="p-5">
                 <div className="flex items-center gap-2 mb-2">
@@ -152,7 +157,7 @@ export default function DesignedPosts({
                   <p className="text-sm text-[#0088ff] mt-2">{p.hashtags.map((h) => `#${h.replace(/^#/, '')}`).join(' ')}</p>
                 )}
                 <div className="mt-4 flex gap-3">
-                  <a href={ogUrl(p, platform)} download={`ibf-${p.theme}-${i + 1}.png`} className="text-sm bg-[#02176f] text-white px-4 py-2 rounded-lg hover:bg-[#02176f]/90 transition-colors">Download</a>
+                  <a href={ogUrl(p, platform, i)} download={`ibf-${p.theme}-${i + 1}.png`} className="text-sm bg-[#02176f] text-white px-4 py-2 rounded-lg hover:bg-[#02176f]/90 transition-colors">Download</a>
                   <button onClick={() => navigator.clipboard?.writeText(`${p.caption}\n\n${(p.hashtags || []).map((h) => `#${h.replace(/^#/, '')}`).join(' ')}`)} className="text-sm border border-gray-300 text-[#02176f] px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors">Copy caption</button>
                 </div>
               </div>

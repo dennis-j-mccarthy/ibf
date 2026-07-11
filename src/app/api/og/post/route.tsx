@@ -17,7 +17,7 @@ const SIZES: Record<string, [number, number]> = {
   x: [1600, 900],
 };
 
-type Theme = 'statement' | 'stat' | 'checklist' | 'steps' | 'quote';
+type Theme = 'statement' | 'stat' | 'checklist' | 'steps' | 'quote' | 'photo-hero';
 
 // Small CSS checkmark (Fredoka has no reliable ✓ glyph, so draw one).
 function Check({ color }: { color: string }) {
@@ -127,6 +127,25 @@ export async function GET(req: Request) {
           {sub ? <div style={{ display: 'flex', fontSize: 32, fontWeight: 600, letterSpacing: 2, color: neutrals.slate, marginTop: 34, textTransform: 'uppercase' }}>{sub}</div> : null}
         </div>
         <div style={{ display: 'flex' }}><Wordmark color={accents.darkBlue} /></div>
+      </div>
+    );
+  } else if (theme === 'photo-hero') {
+    // Photo Hero — full-bleed lifestyle photo + dark wash, bold statement at bottom.
+    const imgUrl = `${origin}/brand/photos/${q.get('img') || 'photo-02.jpg'}`;
+    const sSize = w >= 1600 ? 84 : statement.length > 42 ? 76 : 100;
+    node = (
+      <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', fontFamily: 'Fredoka' }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={imgUrl} width={w} height={h} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', background: 'linear-gradient(to top, rgba(2,23,111,0.95) 4%, rgba(2,23,111,0.45) 42%, rgba(2,23,111,0) 74%)' }} />
+        <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', width: '100%', height: '100%', padding: pad }}>
+          {eyebrow ? (
+            <div style={{ display: 'flex', alignSelf: 'flex-start', backgroundColor: accents.yellow, color: accents.darkBlue, fontSize: 22, fontWeight: 700, letterSpacing: 3, padding: '10px 20px', borderRadius: 999, marginBottom: 26 }}>{eyebrow}</div>
+          ) : null}
+          <div style={{ display: 'flex', fontSize: sSize, fontWeight: 700, lineHeight: 1.0, letterSpacing: -2, color: '#fff', maxWidth: w - 184 }}>{statement}</div>
+          {sub ? <div style={{ display: 'flex', fontSize: 34, fontWeight: 400, lineHeight: 1.3, color: 'rgba(255,255,255,0.92)', marginTop: 22, maxWidth: 820 }}>{sub}</div> : null}
+          <div style={{ display: 'flex', marginTop: 30, fontSize: 22, fontWeight: 600, letterSpacing: 2, color: 'rgba(255,255,255,0.85)' }}>IGNATIUSBOOKFAIRS.COM</div>
+        </div>
       </div>
     );
   } else {

@@ -5,7 +5,7 @@ import Anthropic from '@anthropic-ai/sdk';
 // Claude Opus 4.8, adaptive thinking, and structured outputs.
 
 export type SocialPost = {
-  theme: 'statement' | 'stat' | 'checklist' | 'steps' | 'quote';
+  theme: 'statement' | 'stat' | 'checklist' | 'steps' | 'quote' | 'photo-hero';
   mode: 'catholic' | 'parish' | 'public' | 'virtual';
   eyebrow: string;
   statement: string;
@@ -26,7 +26,7 @@ const POST_SCHEMA = {
         type: 'object',
         additionalProperties: false,
         properties: {
-          theme: { type: 'string', enum: ['statement', 'stat', 'checklist', 'steps', 'quote'] },
+          theme: { type: 'string', enum: ['statement', 'stat', 'checklist', 'steps', 'quote', 'photo-hero'] },
           mode: { type: 'string', enum: ['catholic', 'parish', 'public', 'virtual'] },
           eyebrow: { type: 'string' },
           statement: { type: 'string' },
@@ -55,6 +55,7 @@ You write posts that render into fixed design-system LAYOUT ARCHETYPES. Use the 
 - "checklist": a headline "statement" + 3–5 short "items" (each a few words) of what's included.
 - "steps": a headline "statement" + 3–4 short ordered "items" describing a process.
 - "quote": a real-sounding testimonial in "statement" + attribution in "sub" (e.g. "Jenna M. · mom of 3").
+- "photo-hero": a bold, aspirational/emotional statement designed to sit over a full-bleed lifestyle photo of a child reading. Great for the strongest emotional hook of the set. A real brand photo is supplied automatically — you only write the statement (+ optional short "sub"). Include 1–2 of these in a set.
 
 MODE sets the color; pick the one that fits the content: catholic (blue), parish (green), public (coral), virtual (sky).
 
