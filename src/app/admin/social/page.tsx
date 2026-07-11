@@ -10,7 +10,15 @@ export const metadata: Metadata = {
 };
 
 // Middleware guarantees an admin session (admin-only deny-list).
-export default async function SocialPostsPage() {
+export default async function SocialPostsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ blogId?: string }>;
+}) {
+  const sp = await searchParams;
+  const parsed = sp.blogId ? parseInt(sp.blogId, 10) : NaN;
+  const initialBlogId = Number.isNaN(parsed) ? undefined : parsed;
+
   const blogs = await prisma.blog
     .findMany({
       where: { archived: false },
@@ -22,6 +30,7 @@ export default async function SocialPostsPage() {
 
   return (
     <SocialStudio
+      initialBlogId={initialBlogId}
       blogs={blogs.map((b) => ({
         id: b.id,
         title: b.title,

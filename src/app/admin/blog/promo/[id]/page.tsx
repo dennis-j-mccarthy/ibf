@@ -1,24 +1,9 @@
-import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
-import { prisma } from '@/lib/prisma';
-import PromoView from './PromoView';
+import { redirect } from 'next/navigation';
 
-export const dynamic = 'force-dynamic';
-export const metadata: Metadata = {
-  title: 'Promo kit | Ignatius Book Fairs',
-  robots: { index: false, follow: false },
-};
-
+// The old blog "Promo kit" is now unified with /admin/social (one flow for
+// generating posts from a content piece OR a campaign strategy). Redirect any
+// old links into the single generator with the blog preselected.
 export default async function PromoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const blogId = parseInt(id, 10);
-  if (isNaN(blogId)) notFound();
-
-  const post = await prisma.blog.findUnique({
-    where: { id: blogId },
-    select: { id: true, title: true, slug: true, summary: true, category: true, thumbnail: true, content: true },
-  });
-  if (!post) notFound();
-
-  return <PromoView post={post} />;
+  redirect(`/admin/social?blogId=${encodeURIComponent(id)}`);
 }

@@ -8,9 +8,10 @@ type Blog = { id: number; title: string; content: string; summary: string | null
 const stripHtml = (html: string) =>
   html.replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim();
 
-export default function SocialStudio({ blogs }: { blogs: Blog[] }) {
-  const [mode, setMode] = useState<'blog' | 'paste' | 'campaign'>(blogs.length ? 'blog' : 'campaign');
-  const [blogId, setBlogId] = useState<number>(blogs[0]?.id ?? 0);
+export default function SocialStudio({ blogs, initialBlogId }: { blogs: Blog[]; initialBlogId?: number }) {
+  const preselect = initialBlogId != null && blogs.some((b) => b.id === initialBlogId);
+  const [mode, setMode] = useState<'blog' | 'paste' | 'campaign'>(preselect || blogs.length ? 'blog' : 'campaign');
+  const [blogId, setBlogId] = useState<number>(preselect ? initialBlogId! : blogs[0]?.id ?? 0);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [strategy, setStrategy] = useState('');

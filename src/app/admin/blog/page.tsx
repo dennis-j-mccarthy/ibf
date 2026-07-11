@@ -685,9 +685,9 @@ export default function BlogAdmin() {
                         <StarIcon filled={b.starred} />
                       </IconButton>
                       <a
-                        href={`/admin/blog/promo/${b.id}`}
-                        title="Promo kit"
-                        aria-label="Promo kit"
+                        href={`/admin/social?blogId=${b.id}`}
+                        title="Social posts"
+                        aria-label="Social posts"
                         className="grid place-items-center w-8 h-8 rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-[#02176f] transition-colors"
                       >
                         <PromoIcon />
