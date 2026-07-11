@@ -5,6 +5,11 @@ import { generateSocialPosts } from '@/lib/social/generate';
 export const runtime = 'nodejs';
 export const maxDuration = 120; // generating a set of posts can take a while
 
+// Streams NDJSON so the connection stays warm during the long model call — an
+// idle POST would otherwise die with a client-side "Failed to fetch". Lines:
+//   {"type":"progress"}   (heartbeat as tokens arrive)
+//   {"type":"done","posts":[...]}
+//   {"type":"error","error":"..."}
 export async function POST(request: NextRequest) {
   if (!(await getAdminEmail())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -19,19 +24,34 @@ export async function POST(request: NextRequest) {
   const strategy = typeof body.strategy === 'string' ? body.strategy.trim() : undefined;
   const count = typeof body.count === 'number' ? body.count : undefined;
 
-  // Either a blog's content OR a campaign strategy is enough to generate.
   if (!content && !strategy) {
     return NextResponse.json({ error: 'Provide blog content or a campaign strategy.' }, { status: 400 });
   }
 
-  try {
-    const posts = await generateSocialPosts({ title, content, strategy, count });
-    return NextResponse.json({ posts });
-  } catch (error) {
-    console.error('Social post generation failed:', error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Generation failed' },
-      { status: 502 }
-    );
-  }
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    async start(controller) {
+      const send = (obj: unknown) => controller.enqueue(encoder.encode(JSON.stringify(obj) + '\n'));
+      // Extra heartbeat every 10s in case the model is quiet (thinking) so the
+      // connection never idles long enough to be dropped.
+      const beat = setInterval(() => send({ type: 'progress' }), 10000);
+      try {
+        const posts = await generateSocialPosts(
+          { title, content, strategy, count },
+          { onProgress: () => send({ type: 'progress' }) }
+        );
+        send({ type: 'done', posts });
+      } catch (error) {
+        console.error('Social post generation failed:', error);
+        send({ type: 'error', error: error instanceof Error ? error.message : 'Generation failed' });
+      } finally {
+        clearInterval(beat);
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: { 'Content-Type': 'application/x-ndjson; charset=utf-8', 'Cache-Control': 'no-store' },
+  });
 }

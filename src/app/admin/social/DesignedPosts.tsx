@@ -77,13 +77,31 @@ export default function DesignedPosts({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title, content, strategy, count }),
       });
-      if (!res.ok) {
+      // Non-stream error responses (401/503/400) still come back as JSON.
+      if (!res.ok || !res.body) {
         const j = await res.json().catch(() => ({}));
         throw new Error(j.error || `Generation failed (${res.status})`);
       }
-      const data = (await res.json()) as { posts: Post[] };
-      if (!data.posts?.length) throw new Error('No posts returned.');
-      setPosts(data.posts); setPhase('rendering');
+      // Read the NDJSON stream: progress heartbeats keep the connection alive.
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = '';
+      let result: Post[] | null = null;
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop() || '';
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          const msg = JSON.parse(line) as { type: string; posts?: Post[]; error?: string };
+          if (msg.type === 'error') throw new Error(msg.error || 'Generation failed');
+          if (msg.type === 'done') result = msg.posts ?? [];
+        }
+      }
+      if (!result?.length) throw new Error('No posts returned.');
+      setPosts(result); setPhase('rendering');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Generation failed');
       setPhase('idle');

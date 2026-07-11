@@ -62,12 +62,15 @@ For EACH post also write a "caption" (the platform caption — warm, a little lo
 
 Fields you don't use for a given theme: set "sub"/"statLabel" to "" and "items" to [] as appropriate. Keep statements SHORT (fit a poster). Make the set varied across archetypes.`;
 
-export async function generateSocialPosts(input: {
-  title?: string;
-  content?: string; // plain text of the blog post (optional if strategy given)
-  strategy?: string; // overarching campaign angle/direction
-  count?: number;
-}): Promise<SocialPost[]> {
+export async function generateSocialPosts(
+  input: {
+    title?: string;
+    content?: string; // plain text of the blog post (optional if strategy given)
+    strategy?: string; // overarching campaign angle/direction
+    count?: number;
+  },
+  opts?: { onProgress?: () => void } // called as tokens stream in (keeps the HTTP connection alive)
+): Promise<SocialPost[]> {
   const client = new Anthropic();
   const count = Math.min(Math.max(input.count ?? 5, 1), 8);
   const hasContent = !!input.content?.trim();
@@ -89,12 +92,14 @@ Return ${count} posts as structured JSON. Each must stand on its own as a scroll
 
   const stream = client.messages.stream({
     model: 'claude-opus-4-8',
-    max_tokens: 16000,
+    max_tokens: 12000,
     thinking: { type: 'adaptive' },
     system: SYSTEM,
     output_config: { effort: 'medium', format: { type: 'json_schema', schema: POST_SCHEMA } },
     messages: [{ role: 'user', content: user }],
   });
+
+  if (opts?.onProgress) stream.on('text', () => opts.onProgress!());
 
   const message = await stream.finalMessage();
   if (message.stop_reason === 'refusal') throw new Error('The model declined to generate posts.');
