@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       const beat = setInterval(() => send({ type: 'progress' }), 10000);
       try {
         const posts = await generateSocialPosts(
-          { title, content, strategy, count, reels, books, brandBrief: brief },
+          { title, content, strategy, count, reels, books, brandBrief: brief, photos: photoPool.length },
           { onProgress: () => send({ type: 'progress' }) }
         );
         // Assign real brand photos to photo-hero posts from the Training library

@@ -76,6 +76,7 @@ export async function generateSocialPosts(
     count?: number; // square (1:1) posts
     reels?: number; // reel (9:16 vertical) posts
     books?: { title: string; url: string }[]; // featured books to mention
+    photos?: number; // count of brand photos available for photo-hero backgrounds
     brandBrief?: string; // compiled Training profile injected into the system prompt
   },
   opts?: { onProgress?: () => void } // called as tokens stream in (keeps the HTTP connection alive)
@@ -98,9 +99,19 @@ export async function generateSocialPosts(
     ? `\nFEATURED BOOKS — build the ${bookPosts} "book-grid" post(s) around these titles (covers are added automatically, so don't describe them), and also weave the titles into other captions naturally where they fit:\n${books.map((b) => `- ${b.title}`).join('\n')}\n`
     : '';
 
+  // When the brand photo library has images, actively build photo-hero posts from
+  // them (real photos are attached automatically after generation). Aim for about
+  // half of the non-book posts, capped by how many distinct photos exist.
+  const nonBook = total - bookPosts;
+  const photoAvail = Math.max(0, input.photos ?? 0);
+  const photoPosts = photoAvail > 0 ? Math.min(nonBook, photoAvail, Math.max(1, Math.round(nonBook / 2))) : 0;
+  const photoLine = photoPosts
+    ? `\nBRAND PHOTOS AVAILABLE — make exactly ${photoPosts} of the non-book posts "theme":"photo-hero" (a real brand photo is attached automatically to each; write only the bold statement + optional short "sub", never describe the photo). Spread them across reels and squares.\n`
+    : '';
+
   const user = hasContent
     ? `Create ${total} on-brand social posts that spin and angle THIS blog content into bold IBF statements. Vary the archetypes. ${formatLine}
-${booksLine}
+${booksLine}${photoLine}
 ${input.strategy ? `CAMPAIGN STRATEGY / THEME: ${input.strategy}\n` : ''}BLOG TITLE: ${input.title || ''}
 
 BLOG CONTENT:
@@ -108,7 +119,7 @@ ${(input.content || '').slice(0, 6000)}
 
 Return ${total} posts as structured JSON. Each must stand on its own as a scroll-stopping, on-brand graphic + caption.`
     : `Create ${total} on-brand social posts for THIS CAMPAIGN (there is no blog — work from the strategic direction alone). Invent concrete, on-brand, specific angles that fit the strategy; vary the archetypes. ${formatLine}
-${booksLine}
+${booksLine}${photoLine}
 CAMPAIGN STRATEGY / DIRECTION: ${input.strategy || ''}
 ${input.title ? `CAMPAIGN NAME: ${input.title}\n` : ''}
 Return ${total} posts as structured JSON. Each must stand on its own as a scroll-stopping, on-brand graphic + caption.`;

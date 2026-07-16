@@ -130,8 +130,9 @@ export function brandBrief(p: TrainingProfileData, opts?: { forAudience?: string
   return `\n\n--- BRAND TRAINING (authoritative — follow this over generic instincts) ---\n${parts.join('\n\n')}\n--- end brand training ---`;
 }
 
-// Photo backgrounds usable behind a "photo-hero" post: real photos of people,
-// excluding graphic doodads. Returns absolute/site URLs.
+// Photo backgrounds usable behind a "photo-hero" post: any real photo in the
+// library except graphic doodads (which are stickers/elements, not full-bleed
+// backgrounds). Returns absolute/site URLs.
 export function photoBackgrounds(images: TrainingImageData[]): TrainingImageData[] {
-  return images.filter((i) => i.category !== 'doodads' && i.category !== 'other');
+  return images.filter((i) => i.category !== 'doodads');
 }
