@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { featuredBooksHtml } from '@/lib/books';
 
 // AI content generation for the blog admin. Uses the Anthropic SDK (reads
 // ANTHROPIC_API_KEY), Claude Opus 4.8, adaptive thinking, and structured
@@ -30,14 +31,17 @@ export async function generateArticle(input: {
   category?: string;
   audience?: string;
   bullets?: string[];
+  books?: { title: string; url: string; image: string; sku?: string }[];
 }): Promise<GeneratedArticle> {
   const client = new Anthropic(); // reads ANTHROPIC_API_KEY
 
   const points = (input.bullets ?? []).map((b) => b.trim()).filter(Boolean);
+  const books = input.books ?? [];
   const user = `Write a blog post about: ${input.topic}.
 ${input.category ? `Intended category: ${input.category}.` : ''}
 ${input.audience ? `Write primarily for this audience: ${input.audience}. Tailor tone, examples, and takeaways to them.` : ''}
 ${points.length ? `Make sure the article covers these key points (weave them in naturally as sections):\n${points.map((p) => `- ${p}`).join('\n')}` : ''}
+${books.length ? `Feature these specific books — mention each by title naturally in the body (recommend/describe them). A "Featured Books" gallery with covers is appended automatically after your content, so do NOT insert images or a list of covers yourself:\n${books.map((b) => `- ${b.title}`).join('\n')}` : ''}
 
 Return:
 - title: a specific, compelling title (no clickbait).
@@ -65,7 +69,10 @@ Return:
   if (!textBlock || textBlock.type !== 'text') {
     throw new Error('No article content was generated.');
   }
-  return JSON.parse(textBlock.text) as GeneratedArticle;
+  const article = JSON.parse(textBlock.text) as GeneratedArticle;
+  // Append the deterministic Featured Books gallery (real covers + shop links).
+  if (books.length) article.contentHtml += featuredBooksHtml(books);
+  return article;
 }
 
 // ---------- Promo kits ----------

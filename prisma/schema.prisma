@@ -55,6 +55,7 @@ model Blog {
   category        String?   // Catholic, Public, etc.
   color           String?   // Accent color for the post
   embedHtml       String?   // Custom embed HTML content
+  featuredBooks   Json?     // [{url,title,image,sku}] fetched from shop.ignatiusbookfairs.com
   featured        Boolean   @default(false)
   archived        Boolean   @default(false)
   starred         Boolean   @default(false)  // queued for the next newsletter

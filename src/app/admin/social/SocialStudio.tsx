@@ -3,7 +3,8 @@
 import { useMemo, useState } from 'react';
 import DesignedPosts from './DesignedPosts';
 
-type Blog = { id: number; title: string; content: string; summary: string | null; published: boolean };
+type Book = { title: string; url: string; image: string };
+type Blog = { id: number; title: string; content: string; summary: string | null; published: boolean; featuredBooks: Book[] | null };
 
 const stripHtml = (html: string) =>
   html.replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim();
@@ -16,13 +17,15 @@ export default function SocialStudio({ blogs, initialBlogId }: { blogs: Blog[]; 
   const [content, setContent] = useState('');
   const [strategy, setStrategy] = useState('');
   const [count, setCount] = useState(5);
+  const [reels, setReels] = useState(0);
 
   const selectedBlog = useMemo(() => blogs.find((b) => b.id === blogId), [blogs, blogId]);
 
   const source = useMemo(() => {
-    if (mode === 'blog') return { title: selectedBlog?.title ?? '', content: stripHtml(selectedBlog?.content ?? ''), strategy };
-    if (mode === 'paste') return { title, content, strategy };
-    return { title, content: '', strategy }; // campaign (no blog)
+    const books = (mode === 'blog' ? selectedBlog?.featuredBooks : null) ?? [];
+    if (mode === 'blog') return { title: selectedBlog?.title ?? '', content: stripHtml(selectedBlog?.content ?? ''), strategy, books };
+    if (mode === 'paste') return { title, content, strategy, books: [] as Book[] };
+    return { title, content: '', strategy, books: [] as Book[] }; // campaign (no blog)
   }, [mode, selectedBlog, title, content, strategy]);
 
   return (
@@ -75,17 +78,28 @@ export default function SocialStudio({ blogs, initialBlogId }: { blogs: Blog[]; 
                   placeholder='e.g. "Make the Switch" — win over Catholic schools still using Scholastic; lean on trust, curation, and mission alignment.'
                   className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm" />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Posts</label>
-                <select value={count} onChange={(e) => setCount(Number(e.target.value))} className="w-40 border border-gray-300 rounded-lg px-3 py-2.5 text-sm">
-                  {[3, 4, 5, 6, 8].map((n) => <option key={n} value={n}>{n}</option>)}
-                </select>
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Square posts (1:1)</label>
+                  <select value={count} onChange={(e) => setCount(Number(e.target.value))} className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm">
+                    {[3, 4, 5, 6, 8].map((n) => <option key={n} value={n}>{n}</option>)}
+                  </select>
+                </div>
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Reels (9:16)</label>
+                  <select value={reels} onChange={(e) => setReels(Number(e.target.value))} className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm">
+                    {[0, 1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}</option>)}
+                  </select>
+                </div>
               </div>
+              {source.books.length > 0 && (
+                <p className="text-xs text-gray-500">Featuring {source.books.length} book{source.books.length > 1 ? 's' : ''} from this post — a book-cover graphic is added automatically.</p>
+              )}
             </div>
           </div>
 
           <div className="mt-6 border-t border-gray-100 pt-6">
-            <DesignedPosts title={source.title} content={source.content} strategy={source.strategy} count={count} />
+            <DesignedPosts title={source.title} content={source.content} strategy={source.strategy} count={count} reels={reels} books={source.books} />
           </div>
         </div>
       </main>

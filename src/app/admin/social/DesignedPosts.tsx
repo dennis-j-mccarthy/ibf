@@ -8,8 +8,10 @@ import { useEffect, useState } from 'react';
 // each returned post through the design-system og renderer, with a progress bar
 // that actually advances during the (slow) generation call.
 
+type Book = { title: string; url: string; image: string };
 type Post = {
   theme: string;
+  format?: string; // 'square' | 'reel'
   mode: string;
   eyebrow: string;
   statement: string;
@@ -18,6 +20,7 @@ type Post = {
   items: string[];
   caption: string;
   hashtags: string[];
+  books?: { title: string; image: string }[]; // for the book-grid card
 };
 
 const PLATFORMS = [
@@ -35,19 +38,21 @@ const MODE_HEX: Record<string, string> = { catholic: '#0088ff', parish: '#50db92
 const PHOTOS = ['photo-01.jpg', 'photo-02.jpg', 'photo-03.jpg', 'photo-04.jpg', 'photo-06.jpg', 'photo-07.jpg', 'photo-08.jpg', 'photo-09.jpg', 'photo-10.jpg', 'photo-11.jpg', 'photo-12.jpg', 'photo-13.jpg', 'photo-14.jpg', 'photo-15.jpg'];
 
 function ogUrl(p: Post, size: string, index = 0) {
+  const eff = p.format === 'reel' ? 'tiktok' : size; // reels render 9:16 regardless of platform
   const q = new URLSearchParams({
-    theme: p.theme, mode: p.mode, size,
+    theme: p.theme, mode: p.mode, size: eff,
     statement: p.statement || '', sub: p.sub || '', eyebrow: p.eyebrow || '',
     statLabel: p.statLabel || '', items: (p.items || []).join('|'),
   });
   if (p.theme === 'photo-hero') q.set('img', PHOTOS[index % PHOTOS.length]);
+  if (p.theme === 'book-grid' && p.books?.length) q.set('books', JSON.stringify(p.books));
   return `/api/og/post?${q.toString()}`;
 }
 
 export default function DesignedPosts({
-  title = '', content = '', strategy = '', count = 5, defaultPlatform = 'instagram',
+  title = '', content = '', strategy = '', count = 5, reels = 0, books = [], defaultPlatform = 'instagram',
 }: {
-  title?: string; content?: string; strategy?: string; count?: number; defaultPlatform?: string;
+  title?: string; content?: string; strategy?: string; count?: number; reels?: number; books?: Book[]; defaultPlatform?: string;
 }) {
   const [platform, setPlatform] = useState(defaultPlatform);
   const [phase, setPhase] = useState<'idle' | 'writing' | 'rendering' | 'done'>('idle');
@@ -80,7 +85,7 @@ export default function DesignedPosts({
       const res = await fetch('/api/admin/social/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, content, strategy, count }),
+        body: JSON.stringify({ title, content, strategy, count, reels, books: books.map((b) => ({ title: b.title, url: b.url })) }),
       });
       // Non-stream error responses (401/503/400) still come back as JSON.
       if (!res.ok || !res.body) {
@@ -106,7 +111,17 @@ export default function DesignedPosts({
         }
       }
       if (!result?.length) throw new Error('No posts returned.');
-      setPosts(result); setPhase('rendering');
+      // Prepend a deterministic book-grid card (real covers) when books are featured.
+      const bookCard: Post[] = books.length
+        ? [{
+            theme: 'book-grid', format: 'square', mode: 'catholic', eyebrow: 'Featured Books',
+            statement: 'Good books for great kids.', sub: '', statLabel: '', items: [],
+            caption: 'Featured in this post:\n' + books.map((b) => `• ${b.title} — ${b.url}`).join('\n'),
+            hashtags: ['IgnatiusBookFairs'],
+            books: books.map((b) => ({ title: b.title, image: b.image })),
+          }]
+        : [];
+      setPosts([...bookCard, ...result]); setPhase('rendering');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Generation failed');
       setPhase('idle');

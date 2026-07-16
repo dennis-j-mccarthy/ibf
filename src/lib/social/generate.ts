@@ -6,6 +6,7 @@ import Anthropic from '@anthropic-ai/sdk';
 
 export type SocialPost = {
   theme: 'statement' | 'stat' | 'checklist' | 'steps' | 'quote' | 'photo-hero';
+  format: 'square' | 'reel';
   mode: 'catholic' | 'parish' | 'public' | 'virtual';
   eyebrow: string;
   statement: string;
@@ -27,6 +28,7 @@ const POST_SCHEMA = {
         additionalProperties: false,
         properties: {
           theme: { type: 'string', enum: ['statement', 'stat', 'checklist', 'steps', 'quote', 'photo-hero'] },
+          format: { type: 'string', enum: ['square', 'reel'] },
           mode: { type: 'string', enum: ['catholic', 'parish', 'public', 'virtual'] },
           eyebrow: { type: 'string' },
           statement: { type: 'string' },
@@ -36,7 +38,7 @@ const POST_SCHEMA = {
           caption: { type: 'string' },
           hashtags: { type: 'array', items: { type: 'string' } },
         },
-        required: ['theme', 'mode', 'eyebrow', 'statement', 'sub', 'statLabel', 'items', 'caption', 'hashtags'],
+        required: ['theme', 'format', 'mode', 'eyebrow', 'statement', 'sub', 'statLabel', 'items', 'caption', 'hashtags'],
       },
     },
   },
@@ -59,6 +61,8 @@ You write posts that render into fixed design-system LAYOUT ARCHETYPES. Use the 
 
 MODE sets the color; pick the one that fits the content: catholic (blue), parish (green), public (coral), virtual (sky).
 
+FORMAT: every post has a "format" — "square" (1:1 feed post) or "reel" (9:16 vertical). Reels are read fast on a vertical scroll, so make them the boldest, shortest, most hook-first statements (fewer words than a square).
+
 For EACH post also write a "caption" (the platform caption — warm, a little longer, can drive to a link) and 1–3 "hashtags" (words only, no # symbol).
 
 Fields you don't use for a given theme: set "sub"/"statLabel" to "" and "items" to [] as appropriate. Keep statements SHORT (fit a poster). Make the set varied across archetypes.`;
@@ -68,28 +72,38 @@ export async function generateSocialPosts(
     title?: string;
     content?: string; // plain text of the blog post (optional if strategy given)
     strategy?: string; // overarching campaign angle/direction
-    count?: number;
+    count?: number; // square (1:1) posts
+    reels?: number; // reel (9:16 vertical) posts
+    books?: { title: string; url: string }[]; // featured books to mention
   },
   opts?: { onProgress?: () => void } // called as tokens stream in (keeps the HTTP connection alive)
 ): Promise<SocialPost[]> {
   const client = new Anthropic();
   const count = Math.min(Math.max(input.count ?? 5, 1), 8);
+  const reels = Math.min(Math.max(input.reels ?? 0, 0), 5);
+  const total = count + reels;
   const hasContent = !!input.content?.trim();
+  const books = input.books ?? [];
+
+  const formatLine = `Of the ${total} posts, make exactly ${reels} "format":"reel" (9:16 vertical — the punchiest, shortest, most hook-first statements) and ${count} "format":"square" (1:1).`;
+  const booksLine = books.length
+    ? `\nFEATURE THESE BOOKS — weave the titles into captions naturally where they fit (a book-cover graphic is added separately, so don't describe covers):\n${books.map((b) => `- ${b.title}`).join('\n')}\n`
+    : '';
 
   const user = hasContent
-    ? `Create ${count} on-brand social posts that spin and angle THIS blog content into bold IBF statements. Vary the archetypes.
-
+    ? `Create ${total} on-brand social posts that spin and angle THIS blog content into bold IBF statements. Vary the archetypes. ${formatLine}
+${booksLine}
 ${input.strategy ? `CAMPAIGN STRATEGY / THEME: ${input.strategy}\n` : ''}BLOG TITLE: ${input.title || ''}
 
 BLOG CONTENT:
 ${(input.content || '').slice(0, 6000)}
 
-Return ${count} posts as structured JSON. Each must stand on its own as a scroll-stopping, on-brand graphic + caption.`
-    : `Create ${count} on-brand social posts for THIS CAMPAIGN (there is no blog — work from the strategic direction alone). Invent concrete, on-brand, specific angles that fit the strategy; vary the archetypes.
-
+Return ${total} posts as structured JSON. Each must stand on its own as a scroll-stopping, on-brand graphic + caption.`
+    : `Create ${total} on-brand social posts for THIS CAMPAIGN (there is no blog — work from the strategic direction alone). Invent concrete, on-brand, specific angles that fit the strategy; vary the archetypes. ${formatLine}
+${booksLine}
 CAMPAIGN STRATEGY / DIRECTION: ${input.strategy || ''}
 ${input.title ? `CAMPAIGN NAME: ${input.title}\n` : ''}
-Return ${count} posts as structured JSON. Each must stand on its own as a scroll-stopping, on-brand graphic + caption.`;
+Return ${total} posts as structured JSON. Each must stand on its own as a scroll-stopping, on-brand graphic + caption.`;
 
   const stream = client.messages.stream({
     model: 'claude-opus-4-8',

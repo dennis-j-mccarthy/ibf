@@ -183,6 +183,7 @@ export default function BlogAdmin() {
   const [aiAudience, setAiAudience] = useState('');
   const [aiBullets, setAiBullets] = useState<string[]>(['', '', '']);
   const [aiThumbnail, setAiThumbnail] = useState('');
+  const [aiBooks, setAiBooks] = useState<string[]>(['']);
   const [aiBusy, setAiBusy] = useState(false);
   const [aiError, setAiError] = useState('');
 
@@ -386,6 +387,7 @@ export default function BlogAdmin() {
         audience: aiAudience || null,
         bullets: aiBullets.filter((b) => b.trim()),
         thumbnail: aiThumbnail || null,
+        bookUrls: aiBooks.filter((u) => u.trim()),
       }),
     });
     setAiBusy(false);
@@ -401,6 +403,7 @@ export default function BlogAdmin() {
     setAiAudience('');
     setAiBullets(['', '', '']);
     setAiThumbnail('');
+    setAiBooks(['']);
     await load();
     startEdit(created); // open the new draft for review
   };
@@ -626,6 +629,31 @@ export default function BlogAdmin() {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={aiThumbnail} alt="" className="w-16 h-16 rounded-md object-cover border border-gray-200 shrink-0" />
               )}
+            </div>
+
+            <label className={label}>Feature books (optional, up to 5 — shop.ignatiusbookfairs.com links)</label>
+            <div className="space-y-2 mb-4">
+              {aiBooks.map((url, i) => (
+                <div key={i} className="flex gap-2">
+                  <input
+                    className={input}
+                    value={url}
+                    onChange={(e) => setAiBooks(aiBooks.map((b, idx) => (idx === i ? e.target.value : b)))}
+                    placeholder="https://shop.ignatiusbookfairs.com/book-slug/"
+                  />
+                  {aiBooks.length > 1 && (
+                    <button type="button" onClick={() => setAiBooks(aiBooks.filter((_, idx) => idx !== i))} title="Remove book" className="px-3 text-gray-400 hover:text-red-600">
+                      ✕
+                    </button>
+                  )}
+                </div>
+              ))}
+              {aiBooks.length < 5 && (
+                <button type="button" onClick={() => setAiBooks([...aiBooks, ''])} className="text-sm text-[#0066ff] hover:underline">
+                  + Add book
+                </button>
+              )}
+              <p className="text-xs text-gray-400">The article mentions these and appends a &quot;Featured Books&quot; gallery — covers linking to the shop. The companion social post uses them too.</p>
             </div>
 
             <div className="flex gap-3">

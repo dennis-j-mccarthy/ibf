@@ -23,6 +23,13 @@ export async function POST(request: NextRequest) {
   const content = typeof body.content === 'string' ? body.content.trim() : '';
   const strategy = typeof body.strategy === 'string' ? body.strategy.trim() : undefined;
   const count = typeof body.count === 'number' ? body.count : undefined;
+  const reels = typeof body.reels === 'number' ? body.reels : undefined;
+  const books = Array.isArray(body.books)
+    ? body.books
+        .filter((b: unknown): b is { title: string; url: string } => !!b && typeof (b as { title?: unknown }).title === 'string')
+        .map((b: { title: string; url: string }) => ({ title: b.title, url: b.url }))
+        .slice(0, 5)
+    : undefined;
 
   if (!content && !strategy) {
     return NextResponse.json({ error: 'Provide blog content or a campaign strategy.' }, { status: 400 });
@@ -37,7 +44,7 @@ export async function POST(request: NextRequest) {
       const beat = setInterval(() => send({ type: 'progress' }), 10000);
       try {
         const posts = await generateSocialPosts(
-          { title, content, strategy, count },
+          { title, content, strategy, count, reels, books },
           { onProgress: () => send({ type: 'progress' }) }
         );
         send({ type: 'done', posts });

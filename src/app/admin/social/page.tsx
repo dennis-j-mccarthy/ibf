@@ -23,11 +23,12 @@ export default async function SocialPostsPage({
     .findMany({
       where: { archived: false },
       orderBy: [{ publishedAt: 'desc' }, { createdAt: 'desc' }],
-      select: { id: true, title: true, content: true, summary: true, publishedAt: true },
+      select: { id: true, title: true, content: true, summary: true, featuredBooks: true, publishedAt: true },
       take: 100,
     })
     .catch(() => []);
 
+  type Book = { title: string; url: string; image: string };
   return (
     <SocialStudio
       initialBlogId={initialBlogId}
@@ -36,6 +37,7 @@ export default async function SocialPostsPage({
         title: b.title,
         content: b.content,
         summary: b.summary,
+        featuredBooks: (b.featuredBooks as Book[] | null) ?? null,
         published: b.publishedAt != null,
       }))}
     />

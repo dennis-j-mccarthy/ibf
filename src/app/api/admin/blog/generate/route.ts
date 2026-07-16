@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getAdminEmail } from '@/lib/auth/admin-guard';
 import { uniqueBlogSlug } from '@/lib/blog-admin';
 import { generateArticle } from '@/lib/claude';
+import { fetchBooks } from '@/lib/books';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60; // article generation can take a while
@@ -27,9 +28,15 @@ export async function POST(request: NextRequest) {
     : undefined;
   const thumbnail = typeof body.thumbnail === 'string' && body.thumbnail.trim() ? body.thumbnail.trim() : null;
 
+  // Up to 5 shop.ignatiusbookfairs.com book URLs to feature (title/cover/link from the page).
+  const bookUrls = Array.isArray(body.bookUrls)
+    ? body.bookUrls.filter((u: unknown): u is string => typeof u === 'string' && u.trim() !== '').slice(0, 5)
+    : [];
+  const books = bookUrls.length ? await fetchBooks(bookUrls) : [];
+
   let article;
   try {
-    article = await generateArticle({ topic, category: body.category || undefined, audience, bullets });
+    article = await generateArticle({ topic, category: body.category || undefined, audience, bullets, books });
   } catch (error) {
     console.error('Article generation failed:', error);
     return NextResponse.json(
@@ -47,6 +54,7 @@ export async function POST(request: NextRequest) {
       summary: article.summary,
       category: article.category || body.category || null,
       thumbnail,
+      featuredBooks: books.length ? books : undefined,
       publishedAt: null, // created as a draft for review before publishing
     },
   });

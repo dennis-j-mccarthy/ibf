@@ -17,7 +17,7 @@ const SIZES: Record<string, [number, number]> = {
   x: [1600, 900],
 };
 
-type Theme = 'statement' | 'stat' | 'checklist' | 'steps' | 'quote' | 'photo-hero';
+type Theme = 'statement' | 'stat' | 'checklist' | 'steps' | 'quote' | 'photo-hero' | 'book-grid';
 
 // Small CSS checkmark (Fredoka has no reliable ✓ glyph, so draw one).
 function Check({ color }: { color: string }) {
@@ -45,6 +45,8 @@ export async function GET(req: Request) {
   const eyebrow = (q.get('eyebrow') || '').toUpperCase();
   const statLabel = (q.get('statLabel') || '').toUpperCase();
   const items = (q.get('items') || '').split('|').map((s) => s.trim()).filter(Boolean);
+  let books: { title: string; image: string }[] = [];
+  try { books = JSON.parse(q.get('books') || '[]'); } catch { books = []; }
   const mode = q.get('mode') as keyof typeof modeColors | null;
   const modeColor = mode && modeColors[mode] ? modeColors[mode] : modeColors.catholic;
   const [w, h] = SIZES[q.get('size') || 'instagram'] || SIZES.instagram;
@@ -146,6 +148,28 @@ export async function GET(req: Request) {
           {sub ? <div style={{ display: 'flex', fontSize: 34, fontWeight: 400, lineHeight: 1.3, color: 'rgba(255,255,255,0.92)', marginTop: 22, maxWidth: 820 }}>{sub}</div> : null}
           <div style={{ display: 'flex', marginTop: 30, fontSize: 22, fontWeight: 600, letterSpacing: 2, color: 'rgba(255,255,255,0.85)' }}>IGNATIUSBOOKFAIRS.COM</div>
         </div>
+      </div>
+    );
+  } else if (theme === 'book-grid') {
+    // Book Grid — cream field, a row of real book covers + titles.
+    const n = Math.max(books.length, 1);
+    const coverW = Math.min(240, Math.floor((w - 184 - (n - 1) * 28) / n));
+    node = (
+      <div style={{ ...base, backgroundColor: neutrals.cream, color: neutrals.ink, justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', fontSize: 26, fontWeight: 600, letterSpacing: 5, color: accents.orange }}>{eyebrow || 'FEATURED BOOKS'}</div>
+          <div style={{ display: 'flex', fontSize: 60, fontWeight: 700, lineHeight: 1.02, letterSpacing: -1, color: accents.darkBlue, marginTop: 14, maxWidth: w - 184 }}>{statement || 'Good books for great kids.'}</div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'row', gap: 28, justifyContent: 'center', alignItems: 'flex-start', width: '100%' }}>
+          {books.slice(0, 5).map((b, i) => (
+            <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: coverW }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={b.image} width={coverW} height={Math.round(coverW * 1.4)} style={{ objectFit: 'cover', borderRadius: 10 }} alt="" />
+              <div style={{ display: 'flex', fontSize: 20, fontWeight: 600, textAlign: 'center', color: neutrals.ink, marginTop: 12, lineHeight: 1.2 }}>{b.title.slice(0, 40)}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ display: 'flex' }}><Wordmark color={accents.darkBlue} /></div>
       </div>
     );
   } else {
