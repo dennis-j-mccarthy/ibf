@@ -126,3 +126,28 @@ model AdminUser {
   passwordHash String
   createdAt    DateTime @default(now())
 }
+
+// Brand "training" — a single editable profile that informs the blog + social
+// generators. Compiled into a brand brief injected into both system prompts.
+model TrainingProfile {
+  id           Int      @id @default(1) // singleton row
+  audiences    Json     @default("[]")  // [{ audience, statements: string[], angles: string[] }]
+  colors       Json     @default("[]")  // [{ name, hex }]
+  fonts        Json     @default("[]")  // [{ name, usage }]
+  socialPrefs  String   @default("")    // freeform social-media guidance
+  articlePrefs String   @default("")    // freeform article guidance
+  updatedAt    DateTime @updatedAt
+}
+
+// A tagged brand image (kids, book fairs, parents, teachers, admins, doodads).
+// Feeds the social photo-hero backgrounds + blog thumbnail suggestions.
+model TrainingImage {
+  id        Int      @id @default(autoincrement())
+  url       String
+  alt       String   @default("")
+  category  String   @default("other") // kids|bookfairs|parents|teachers|admins|doodads|other
+  audience  String   @default("")      // optional target audience
+  tags      String[] @default([])
+  source    String   @default("url")   // url|blob
+  createdAt DateTime @default(now())
+}

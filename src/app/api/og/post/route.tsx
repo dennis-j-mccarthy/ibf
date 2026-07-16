@@ -133,7 +133,9 @@ export async function GET(req: Request) {
     );
   } else if (theme === 'photo-hero') {
     // Photo Hero — full-bleed lifestyle photo + dark wash, bold statement at bottom.
-    const imgUrl = `${origin}/brand/photos/${q.get('img') || 'photo-02.jpg'}`;
+    // `img` is either an absolute URL (Training library) or a public/brand filename.
+    const imgParam = q.get('img') || 'photo-02.jpg';
+    const imgUrl = /^https?:\/\//i.test(imgParam) ? imgParam : `${origin}/brand/photos/${imgParam}`;
     const sSize = w >= 1600 ? 84 : statement.length > 42 ? 76 : 100;
     node = (
       <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', fontFamily: 'Fredoka' }}>

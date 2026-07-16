@@ -4,6 +4,7 @@ import { getAdminEmail } from '@/lib/auth/admin-guard';
 import { uniqueBlogSlug } from '@/lib/blog-admin';
 import { generateArticle } from '@/lib/claude';
 import { fetchBooks } from '@/lib/books';
+import { getTrainingProfile, brandBrief } from '@/lib/training';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60; // article generation can take a while
@@ -34,9 +35,11 @@ export async function POST(request: NextRequest) {
     : [];
   const books = bookUrls.length ? await fetchBooks(bookUrls) : [];
 
+  const brief = brandBrief(await getTrainingProfile(), { forAudience: audience });
+
   let article;
   try {
-    article = await generateArticle({ topic, category: body.category || undefined, audience, bullets, books });
+    article = await generateArticle({ topic, category: body.category || undefined, audience, bullets, books, brandBrief: brief });
   } catch (error) {
     console.error('Article generation failed:', error);
     return NextResponse.json(

@@ -32,8 +32,10 @@ export async function generateArticle(input: {
   audience?: string;
   bullets?: string[];
   books?: { title: string; url: string; image: string; sku?: string }[];
+  brandBrief?: string; // compiled Training profile injected into the system prompt
 }): Promise<GeneratedArticle> {
   const client = new Anthropic(); // reads ANTHROPIC_API_KEY
+  const system = SYSTEM + (input.brandBrief ?? '');
 
   const points = (input.bullets ?? []).map((b) => b.trim()).filter(Boolean);
   const books = input.books ?? [];
@@ -53,7 +55,7 @@ Return:
     model: 'claude-opus-4-8',
     max_tokens: 16000,
     thinking: { type: 'adaptive' },
-    system: SYSTEM,
+    system,
     output_config: {
       effort: 'medium',
       format: { type: 'json_schema', schema: ARTICLE_SCHEMA },

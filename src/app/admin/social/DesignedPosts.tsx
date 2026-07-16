@@ -21,6 +21,7 @@ type Post = {
   caption: string;
   hashtags: string[];
   books?: { title: string; image: string }[]; // for the book-grid card
+  img?: string; // photo-hero background from the Training library (absolute URL)
 };
 
 const PLATFORMS = [
@@ -44,7 +45,7 @@ function ogUrl(p: Post, size: string, index = 0) {
     statement: p.statement || '', sub: p.sub || '', eyebrow: p.eyebrow || '',
     statLabel: p.statLabel || '', items: (p.items || []).join('|'),
   });
-  if (p.theme === 'photo-hero') q.set('img', PHOTOS[index % PHOTOS.length]);
+  if (p.theme === 'photo-hero') q.set('img', p.img || PHOTOS[index % PHOTOS.length]);
   if (p.theme === 'book-grid' && p.books?.length) q.set('books', JSON.stringify(p.books));
   return `/api/og/post?${q.toString()}`;
 }

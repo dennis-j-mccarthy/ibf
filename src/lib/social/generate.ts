@@ -76,6 +76,7 @@ export async function generateSocialPosts(
     count?: number; // square (1:1) posts
     reels?: number; // reel (9:16 vertical) posts
     books?: { title: string; url: string }[]; // featured books to mention
+    brandBrief?: string; // compiled Training profile injected into the system prompt
   },
   opts?: { onProgress?: () => void } // called as tokens stream in (keeps the HTTP connection alive)
 ): Promise<SocialPost[]> {
@@ -116,7 +117,7 @@ Return ${total} posts as structured JSON. Each must stand on its own as a scroll
     model: 'claude-opus-4-8',
     max_tokens: 12000,
     thinking: { type: 'adaptive' },
-    system: SYSTEM,
+    system: SYSTEM + (input.brandBrief ?? ''),
     output_config: { effort: 'medium', format: { type: 'json_schema', schema: POST_SCHEMA } },
     messages: [{ role: 'user', content: user }],
   });

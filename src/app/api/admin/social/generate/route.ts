@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminEmail } from '@/lib/auth/admin-guard';
 import { generateSocialPosts } from '@/lib/social/generate';
+import { getTrainingProfile, brandBrief, getTrainingImages, photoBackgrounds } from '@/lib/training';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120; // generating a set of posts can take a while
@@ -35,6 +36,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Provide blog content or a campaign strategy.' }, { status: 400 });
   }
 
+  // Brand training: brief for the prompt + a photo pool for photo-hero backgrounds.
+  const brief = brandBrief(await getTrainingProfile());
+  const photoPool = photoBackgrounds(await getTrainingImages());
+
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
@@ -44,10 +49,16 @@ export async function POST(request: NextRequest) {
       const beat = setInterval(() => send({ type: 'progress' }), 10000);
       try {
         const posts = await generateSocialPosts(
-          { title, content, strategy, count, reels, books },
+          { title, content, strategy, count, reels, books, brandBrief: brief },
           { onProgress: () => send({ type: 'progress' }) }
         );
-        send({ type: 'done', posts });
+        // Assign real brand photos to photo-hero posts from the Training library
+        // (round-robin). Client falls back to the static pool when none exist.
+        let pi = 0;
+        const withPhotos = posts.map((p) =>
+          p.theme === 'photo-hero' && photoPool.length ? { ...p, img: photoPool[pi++ % photoPool.length].url } : p,
+        );
+        send({ type: 'done', posts: withPhotos });
       } catch (error) {
         console.error('Social post generation failed:', error);
         send({ type: 'error', error: error instanceof Error ? error.message : 'Generation failed' });

@@ -94,6 +94,21 @@ export default async function AdminDashboard() {
       ),
     },
     {
+      href: '/admin/training',
+      title: 'Training',
+      desc: 'Brand statements, angles, colors, fonts, prefs + image library that inform the blog & social tools.',
+      stat: 'Brand',
+      statLabel: 'brain',
+      accent: '#7c3aed',
+      icon: (
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M12 6.25a3.25 3.25 0 013.25 3.25c0 1.2-.65 2.25-1.62 2.82.98.4 1.72 1.28 1.9 2.35M12 6.25A3.25 3.25 0 008.75 9.5c0 1.2.65 2.25 1.62 2.82-.98.4-1.72 1.28-1.9 2.35M12 6.25V4m-5.6 12.9a6 6 0 0111.2 0M4.5 9.5a2 2 0 100-4 2 2 0 000 4zm15 0a2 2 0 100-4 2 2 0 000 4z"
+        />
+      ),
+    },
+    {
       href: '/admin/tutorials/record',
       title: 'Record Tutorial',
       desc: 'Record a screen + webcam tutorial video (Loom-style) in your browser.',
