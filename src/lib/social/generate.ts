@@ -5,7 +5,7 @@ import Anthropic from '@anthropic-ai/sdk';
 // Claude Opus 4.8, adaptive thinking, and structured outputs.
 
 export type SocialPost = {
-  theme: 'statement' | 'stat' | 'checklist' | 'steps' | 'quote' | 'photo-hero';
+  theme: 'statement' | 'stat' | 'checklist' | 'steps' | 'quote' | 'photo-hero' | 'book-grid';
   format: 'square' | 'reel';
   mode: 'catholic' | 'parish' | 'public' | 'virtual';
   eyebrow: string;
@@ -27,7 +27,7 @@ const POST_SCHEMA = {
         type: 'object',
         additionalProperties: false,
         properties: {
-          theme: { type: 'string', enum: ['statement', 'stat', 'checklist', 'steps', 'quote', 'photo-hero'] },
+          theme: { type: 'string', enum: ['statement', 'stat', 'checklist', 'steps', 'quote', 'photo-hero', 'book-grid'] },
           format: { type: 'string', enum: ['square', 'reel'] },
           mode: { type: 'string', enum: ['catholic', 'parish', 'public', 'virtual'] },
           eyebrow: { type: 'string' },
@@ -58,6 +58,7 @@ You write posts that render into fixed design-system LAYOUT ARCHETYPES. Use the 
 - "steps": a headline "statement" + 3–4 short ordered "items" describing a process.
 - "quote": a real-sounding testimonial in "statement" + attribution in "sub" (e.g. "Jenna M. · mom of 3").
 - "photo-hero": a bold, aspirational/emotional statement designed to sit over a full-bleed lifestyle photo of a child reading. Great for the strongest emotional hook of the set. A real brand photo is supplied automatically — you only write the statement (+ optional short "sub"). Include 1–2 of these in a set.
+- "book-grid": showcases the featured book covers in a grid. Write a bold, clever "statement" that sells these specific titles (e.g. "Books worth their shelf.", "Start here.") and a "caption" that weaves the book titles in naturally. The real covers are added automatically, so DON'T describe them; leave "items" [], "statLabel" "", "sub" optional. Only usable when featured books are provided; always "format":"square".
 
 MODE sets the color; pick the one that fits the content: catholic (blue), parish (green), public (coral), virtual (sky).
 
@@ -85,9 +86,15 @@ export async function generateSocialPosts(
   const hasContent = !!input.content?.trim();
   const books = input.books ?? [];
 
-  const formatLine = `Of the ${total} posts, make exactly ${reels} "format":"reel" (9:16 vertical — the punchiest, shortest, most hook-first statements) and ${count} "format":"square" (1:1).`;
+  // When books are featured, ~half the set should actually be book posts.
+  const bookPosts = books.length ? Math.min(Math.round(total / 2), count) : 0;
+  const squareOther = count - bookPosts;
+
+  const formatLine = bookPosts
+    ? `Of the ${total} posts: exactly ${bookPosts} must be "theme":"book-grid" with "format":"square" (these showcase the featured books). Of the rest, exactly ${reels} must be "format":"reel" (9:16 vertical — punchiest, shortest, most hook-first statements) and ${squareOther} "format":"square" (1:1) using the OTHER archetypes. Book-grid posts are never reels.`
+    : `Of the ${total} posts, make exactly ${reels} "format":"reel" (9:16 vertical — the punchiest, shortest, most hook-first statements) and ${count} "format":"square" (1:1).`;
   const booksLine = books.length
-    ? `\nFEATURE THESE BOOKS — weave the titles into captions naturally where they fit (a book-cover graphic is added separately, so don't describe covers):\n${books.map((b) => `- ${b.title}`).join('\n')}\n`
+    ? `\nFEATURED BOOKS — build the ${bookPosts} "book-grid" post(s) around these titles (covers are added automatically, so don't describe them), and also weave the titles into other captions naturally where they fit:\n${books.map((b) => `- ${b.title}`).join('\n')}\n`
     : '';
 
   const user = hasContent

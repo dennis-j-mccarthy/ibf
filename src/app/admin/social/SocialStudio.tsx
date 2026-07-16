@@ -93,7 +93,7 @@ export default function SocialStudio({ blogs, initialBlogId }: { blogs: Blog[]; 
                 </div>
               </div>
               {source.books.length > 0 && (
-                <p className="text-xs text-gray-500">Featuring {source.books.length} book{source.books.length > 1 ? 's' : ''} from this post — a book-cover graphic is added automatically.</p>
+                <p className="text-xs text-gray-500">Featuring {source.books.length} book{source.books.length > 1 ? 's' : ''} from this post — about half the posts will be book-cover graphics.</p>
               )}
             </div>
           </div>

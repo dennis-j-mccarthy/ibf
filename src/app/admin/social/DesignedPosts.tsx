@@ -111,14 +111,19 @@ export default function DesignedPosts({
         }
       }
       if (!result?.length) throw new Error('No posts returned.');
-      // Prepend a deterministic book-grid card (real covers) when books are featured.
-      const bookCard: Post[] = books.length
+      // Attach the real covers to every book-grid post the generator produced.
+      const cover = books.map((b) => ({ title: b.title, image: b.image }));
+      if (books.length) result.forEach((p) => { if (p.theme === 'book-grid') p.books = cover; });
+      // Fallback: if books are featured but the model returned no book-grid post,
+      // prepend one deterministic card so the covers still appear.
+      const hasBookPost = result.some((p) => p.theme === 'book-grid');
+      const bookCard: Post[] = books.length && !hasBookPost
         ? [{
             theme: 'book-grid', format: 'square', mode: 'catholic', eyebrow: 'Featured Books',
             statement: 'Good books for great kids.', sub: '', statLabel: '', items: [],
             caption: 'Featured in this post:\n' + books.map((b) => `• ${b.title} — ${b.url}`).join('\n'),
             hashtags: ['IgnatiusBookFairs'],
-            books: books.map((b) => ({ title: b.title, image: b.image })),
+            books: cover,
           }]
         : [];
       setPosts([...bookCard, ...result]); setPhase('rendering');
