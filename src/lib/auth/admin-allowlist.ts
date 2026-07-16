@@ -9,6 +9,7 @@
 
 const BUILTIN_ADMIN_EMAILS = [
   'dennis.mccarthy@avemaria.edu',
+  'jessica.miano@avemaria.edu',
 ];
 
 export function allowedAdminEmails(): Set<string> {
