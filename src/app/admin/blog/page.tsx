@@ -169,6 +169,7 @@ export default function BlogAdmin() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [articlePreview, setArticlePreview] = useState<Draft | null>(null);
   const [nlTitle, setNlTitle] = useState('');
   const [nlTimeframe, setNlTimeframe] = useState('');
   const [nlSubject, setNlSubject] = useState('');
@@ -199,7 +200,11 @@ export default function BlogAdmin() {
   }, [load]);
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setPreviewOpen(false);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      setPreviewOpen(false);
+      setArticlePreview(null);
+    };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
@@ -470,6 +475,9 @@ export default function BlogAdmin() {
       <div className="flex gap-3">
         <button onClick={save} disabled={saving} className="bg-[#02176f] hover:bg-[#021a85] text-white font-semibold px-5 py-2 rounded-md disabled:opacity-60">
           {saving ? 'Saving…' : 'Save'}
+        </button>
+        <button onClick={() => setArticlePreview(draft)} className="px-5 py-2 rounded-md border border-[#02176f] text-[#02176f] font-semibold hover:bg-[#02176f]/5">
+          Preview
         </button>
         <button onClick={cancel} className="px-5 py-2 rounded-md border border-[#dddddd] text-gray-700">
           Cancel
@@ -824,6 +832,47 @@ export default function BlogAdmin() {
 
               {/* Live preview */}
               <div dangerouslySetInnerHTML={{ __html: newsletterHtml() }} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Article preview modal — renders the draft as it appears on the blog */}
+      {articlePreview && (
+        <div
+          className="fixed inset-0 z-50 bg-black/40 flex items-start justify-center p-4 overflow-auto"
+          onClick={() => setArticlePreview(null)}
+        >
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl my-8" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 sticky top-0 bg-white rounded-t-xl">
+              <h3 className="font-brother text-[#02176f] font-semibold">Article preview</h3>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-gray-400">{articlePreview.published !== false ? 'Published' : 'Draft'}</span>
+                <button onClick={() => setArticlePreview(null)} className="text-sm px-3 py-1.5 rounded-md bg-[#02176f] text-white hover:bg-[#021a85]">
+                  Close
+                </button>
+              </div>
+            </div>
+            <div className="max-h-[80vh] overflow-auto">
+              <article className="max-w-2xl mx-auto px-6 py-8">
+                {articlePreview.category && (
+                  <div className="text-[11px] font-bold uppercase tracking-[0.09em] text-[#0088ff] mb-3">{articlePreview.category}</div>
+                )}
+                <h1 className="font-brother text-3xl sm:text-4xl font-bold text-[#02176f] leading-tight mb-4">
+                  {articlePreview.title || 'Untitled'}
+                </h1>
+                {articlePreview.summary && (
+                  <p className="text-lg text-gray-600 leading-relaxed mb-6">{articlePreview.summary}</p>
+                )}
+                {articlePreview.thumbnail && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={articlePreview.thumbnail} alt="" className="w-full rounded-xl mb-8 object-cover max-h-[380px]" />
+                )}
+                <div
+                  className="prose prose-lg max-w-none prose-headings:font-brother prose-headings:text-[#02176f] prose-a:text-[#0066ff] prose-img:rounded-lg"
+                  dangerouslySetInnerHTML={{ __html: articlePreview.content || '<p class="text-gray-400">No content yet.</p>' }}
+                />
+              </article>
             </div>
           </div>
         </div>
