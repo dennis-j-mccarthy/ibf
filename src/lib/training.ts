@@ -60,6 +60,22 @@ export async function getTrainingProfile(): Promise<TrainingProfileData> {
   };
 }
 
+// The stored profile, or null when nobody has saved one yet. Generators use this
+// so an unconfigured Training area injects NOTHING into the prompts (no noise
+// from starter defaults); the admin UI uses getTrainingProfile() which fills
+// helpful defaults for editing.
+export async function getSavedTrainingProfile(): Promise<TrainingProfileData | null> {
+  const row = await prisma.trainingProfile.findUnique({ where: { id: 1 } }).catch(() => null);
+  if (!row) return null;
+  return {
+    audiences: (row.audiences as AudienceTraining[]) ?? [],
+    colors: (row.colors as BrandColor[]) ?? [],
+    fonts: (row.fonts as BrandFont[]) ?? [],
+    socialPrefs: row.socialPrefs ?? '',
+    articlePrefs: row.articlePrefs ?? '',
+  };
+}
+
 export async function saveTrainingProfile(data: TrainingProfileData): Promise<void> {
   await prisma.trainingProfile.upsert({
     where: { id: 1 },

@@ -187,6 +187,16 @@ export default function BlogAdmin() {
   const [aiBooks, setAiBooks] = useState<string[]>(['']);
   const [aiBusy, setAiBusy] = useState(false);
   const [aiError, setAiError] = useState('');
+  const [libOpen, setLibOpen] = useState(false);
+  const [lib, setLib] = useState<{ id: number; url: string; alt: string; category: string }[]>([]);
+
+  const openLibrary = async () => {
+    setLibOpen(true);
+    if (!lib.length) {
+      const r = await fetch('/api/admin/training/images');
+      if (r.ok) setLib(await r.json());
+    }
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -204,6 +214,7 @@ export default function BlogAdmin() {
       if (e.key !== 'Escape') return;
       setPreviewOpen(false);
       setArticlePreview(null);
+      setLibOpen(false);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -631,8 +642,11 @@ export default function BlogAdmin() {
                 className={input}
                 value={aiThumbnail}
                 onChange={(e) => setAiThumbnail(e.target.value)}
-                placeholder="https://…  (upload coming soon)"
+                placeholder="https://…  or choose from the Training library"
               />
+              <button type="button" onClick={openLibrary} className="shrink-0 px-3 py-2 rounded-md border border-[#7c3aed] text-[#7c3aed] text-sm font-semibold hover:bg-[#7c3aed]/5 whitespace-nowrap">
+                Library
+              </button>
               {aiThumbnail && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={aiThumbnail} alt="" className="w-16 h-16 rounded-md object-cover border border-gray-200 shrink-0" />
@@ -873,6 +887,35 @@ export default function BlogAdmin() {
                   dangerouslySetInnerHTML={{ __html: articlePreview.content || '<p class="text-gray-400">No content yet.</p>' }}
                 />
               </article>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Training image library picker (for the AI thumbnail) */}
+      {libOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-start justify-center p-4 overflow-auto" onClick={() => setLibOpen(false)}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl my-8" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+              <h3 className="font-brother text-[#02176f] font-semibold">Choose a title image</h3>
+              <button onClick={() => setLibOpen(false)} className="text-sm px-3 py-1.5 rounded-md bg-[#02176f] text-white hover:bg-[#021a85]">Close</button>
+            </div>
+            <div className="p-5 max-h-[75vh] overflow-auto">
+              {lib.length === 0 ? (
+                <p className="text-sm text-gray-500">
+                  No images in the library yet. Add some in <a href="/admin/training" className="text-[#0066ff] hover:underline">Training</a>.
+                </p>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {lib.map((im) => (
+                    <button key={im.id} onClick={() => { setAiThumbnail(im.url); setLibOpen(false); }} className="group text-left border border-gray-100 rounded-lg overflow-hidden hover:ring-2 hover:ring-[#0066ff]">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={im.url} alt={im.alt} className="w-full h-28 object-cover" />
+                      <span className="block text-[11px] text-gray-500 px-2 py-1 truncate">{im.alt || im.category}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
