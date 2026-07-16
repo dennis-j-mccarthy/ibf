@@ -1,38 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
+import { put } from '@vercel/blob';
 import { getAdminEmail } from '@/lib/auth/admin-guard';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-// Client-upload token handler for the Training image library. The browser uploads
-// the file straight to Vercel Blob (bypassing the serverless body limit) after
-// this route mints a scoped token. Metadata is recorded separately via
-// POST /api/admin/training/images once the upload resolves.
+// Server-side upload to Vercel Blob. The store is connected via OIDC, so put()
+// authenticates automatically from BLOB_STORE_ID + the platform's VERCEL_OIDC_TOKEN
+// — no static BLOB_READ_WRITE_TOKEN required. The browser downscales images before
+// posting so they stay under the serverless request-body limit. Metadata is
+// recorded separately via POST /api/admin/training/images with the returned url.
 export async function POST(request: NextRequest) {
   if (!(await getAdminEmail())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+  if (!process.env.BLOB_STORE_ID && !process.env.BLOB_READ_WRITE_TOKEN) {
     return NextResponse.json(
-      { error: 'Uploads are not configured yet — create a Blob store in Vercel (Storage tab) to enable them. You can add images by URL in the meantime.' },
+      { error: 'Blob storage is not configured on this deployment yet. Add images by URL in the meantime.' },
       { status: 503 },
     );
   }
 
-  const body = (await request.json()) as HandleUploadBody;
+  const form = await request.formData().catch(() => null);
+  const file = form?.get('file');
+  if (!(file instanceof File) || file.size === 0) {
+    return NextResponse.json({ error: 'No file received.' }, { status: 400 });
+  }
+  if (!file.type.startsWith('image/')) {
+    return NextResponse.json({ error: 'Only image files are allowed.' }, { status: 400 });
+  }
+
   try {
-    const json = await handleUpload({
-      request,
-      body,
-      onBeforeGenerateToken: async () => ({
-        allowedContentTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'],
-        maximumSizeInBytes: 20 * 1024 * 1024,
-        addRandomSuffix: true,
-      }),
-      // Metadata is written client-side after the upload resolves; nothing to do.
-      onUploadCompleted: async () => {},
+    const blob = await put(`training/${file.name}`, file, {
+      access: 'public',
+      addRandomSuffix: true,
+      contentType: file.type,
     });
-    return NextResponse.json(json);
+    return NextResponse.json({ url: blob.url });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Upload failed' }, { status: 400 });
+    const msg = error instanceof Error ? error.message : 'Upload failed';
+    return NextResponse.json({ error: msg }, { status: 400 });
   }
 }

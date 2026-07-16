@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { upload } from '@vercel/blob/client';
 
 // Brand "Training" — one editable profile (statements/angles per audience, colors,
 // fonts, social + article prefs) plus a tagged image library. Both feed the blog
@@ -22,6 +21,30 @@ const input = 'w-full px-3 py-2 border border-[#dddddd] rounded-md focus:outline
 const label = 'block text-sm font-medium text-[#02176f] mb-1';
 const lines = (a: string[]) => a.join('\n');
 const toLines = (s: string) => s.split('\n').map((x) => x.trim()).filter(Boolean);
+
+// Downscale an image in the browser (max 2000px longest side, JPEG) so uploads
+// stay well under the serverless request-body limit and the library holds
+// web-optimized assets. Falls back to the original file if anything fails.
+async function downscale(file: File): Promise<Blob> {
+  if (!file.type.startsWith('image/') || file.type === 'image/gif') return file;
+  try {
+    const bmp = await createImageBitmap(file);
+    const max = 2000;
+    const scale = Math.min(1, max / Math.max(bmp.width, bmp.height));
+    const w = Math.round(bmp.width * scale);
+    const h = Math.round(bmp.height * scale);
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return file;
+    ctx.drawImage(bmp, 0, 0, w, h);
+    const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/jpeg', 0.85));
+    return blob && blob.size < file.size ? blob : file;
+  } catch {
+    return file;
+  }
+}
 
 export default function TrainingAdmin() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -85,21 +108,23 @@ export default function TrainingAdmin() {
     setAddMsg('');
     setUploading(true);
     try {
-      const blob = await upload(file.name, file, {
-        access: 'public',
-        handleUploadUrl: '/api/admin/training/upload',
-      });
+      const optimized = await downscale(file);
+      const form = new FormData();
+      const name = file.name.replace(/\.[^.]+$/, '') + (optimized.type === 'image/jpeg' ? '.jpg' : '');
+      form.append('file', optimized, name || file.name);
+      const up = await fetch('/api/admin/training/upload', { method: 'POST', body: form });
+      const upJson = await up.json().catch(() => ({}));
+      if (!up.ok) throw new Error(upJson.error || `Upload failed (${up.status})`);
       await fetch('/api/admin/training/images', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: blob.url, category: cat, alt, audience: aud, tags: toLines(tags.replace(/,/g, '\n')), source: 'blob' }),
+        body: JSON.stringify({ url: upJson.url, category: cat, alt, audience: aud, tags: toLines(tags.replace(/,/g, '\n')), source: 'blob' }),
       });
       setAlt(''); setTags('');
       loadImages();
     } catch (e) {
-      // The upload route returns 503 with a clear hint until a Blob store exists.
       const msg = e instanceof Error ? e.message : 'Upload failed';
-      setAddMsg(/not configured|Blob store/i.test(msg) ? msg : `Upload failed: ${msg}. You can add by URL instead.`);
+      setAddMsg(/not configured|Blob storage/i.test(msg) ? msg : `Upload failed: ${msg}. You can add by URL instead.`);
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = '';
