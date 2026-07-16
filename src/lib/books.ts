@@ -27,6 +27,17 @@ function imageUrl(img: unknown): string {
   return '';
 }
 
+// Pull an OG/meta tag value regardless of attribute order (property/name first
+// or content first).
+function metaTag(html: string, key: string): string | undefined {
+  const re = new RegExp(
+    `<meta[^>]*(?:property|name)=["']${key}["'][^>]*content=["']([^"']+)["']|<meta[^>]*content=["']([^"']+)["'][^>]*(?:property|name)=["']${key}["']`,
+    'i',
+  );
+  const m = html.match(re);
+  return m ? m[1] || m[2] : undefined;
+}
+
 function jsonLdProduct(html: string): { name?: string; image?: string; url?: string; sku?: string } | null {
   const scripts = html.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
   for (const m of scripts) {
@@ -67,9 +78,16 @@ export async function fetchBook(rawUrl: string): Promise<FeaturedBook | null> {
     const h1 = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)?.[1];
     const canonical = html.match(/<link[^>]*rel=["']canonical["'][^>]*href=["']([^"']+)["']/i)?.[1];
 
-    const title = decodeEntities(p?.name || (h1 ? h1.replace(/<[^>]+>/g, '') : '') || '');
-    const image = p?.image || '';
-    const url = p?.url || canonical || u.toString();
+    // This BigCommerce store's JSON-LD Product carries only name/description/
+    // offers — no image/url/sku — so the cover comes from og:image, with
+    // og:title / og:url as further fallbacks.
+    const ogTitle = metaTag(html, 'og:title');
+    const ogImage = metaTag(html, 'og:image');
+    const ogUrl = metaTag(html, 'og:url');
+
+    const title = decodeEntities(p?.name || ogTitle || (h1 ? h1.replace(/<[^>]+>/g, '') : '') || '');
+    const image = p?.image || ogImage || '';
+    const url = p?.url || canonical || ogUrl || u.toString();
     if (!title) return null;
     return { url, title, image, sku: p?.sku };
   } catch {
