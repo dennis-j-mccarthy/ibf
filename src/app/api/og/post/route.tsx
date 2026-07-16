@@ -28,12 +28,17 @@ function Check({ color }: { color: string }) {
   );
 }
 
-function Wordmark({ color }: { color: string }) {
+// The real IBF logo: white lockup on dark/colored backgrounds (color==='#fff'),
+// full-color primary logo on light backgrounds. `origin` is needed so satori can
+// fetch the asset from /public/images.
+function Wordmark({ origin, color }: { origin: string; color: string }) {
+  const onDark = color.toLowerCase() === '#fff' || color.toLowerCase() === '#ffffff';
+  const src = onDark ? `${origin}/images/ibf-logo-white-p-800.png` : `${origin}/images/IBF-Logo-p-800.png`;
+  const ratio = onDark ? 4.6 : 3.9; // intrinsic aspect ratios of those assets
+  const hgt = 56;
   return (
-    <div style={{ display: 'flex', flexDirection: 'column' }}>
-      <div style={{ display: 'flex', fontSize: 20, fontWeight: 600, letterSpacing: 4, color: `${color}b3` }}>IGNATIUS</div>
-      <div style={{ display: 'flex', fontSize: 30, fontWeight: 700, letterSpacing: 1, color }}>BOOK FAIRS</div>
-    </div>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={src} height={hgt} width={Math.round(hgt * ratio)} alt="Ignatius Book Fairs" style={{ display: 'flex' }} />
   );
 }
 
@@ -76,7 +81,7 @@ export async function GET(req: Request) {
           {sub ? <div style={{ display: 'flex', fontSize: 36, fontWeight: 400, lineHeight: 1.3, color: neutrals.ink, marginTop: 30, maxWidth: 840 }}>{sub}</div> : null}
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-          <Wordmark color={accents.darkBlue} />
+          <Wordmark origin={origin} color={accents.darkBlue} />
           <div style={{ display: 'flex', fontSize: 20, color: neutrals.slate }}>ignatiusbookfairs.com</div>
         </div>
       </div>
@@ -97,7 +102,7 @@ export async function GET(req: Request) {
             </div>
           ))}
         </div>
-        <div style={{ display: 'flex' }}><Wordmark color={accents.darkBlue} /></div>
+        <div style={{ display: 'flex' }}><Wordmark origin={origin} color={accents.darkBlue} /></div>
       </div>
     );
   } else if (theme === 'steps') {
@@ -116,7 +121,7 @@ export async function GET(req: Request) {
             </div>
           ))}
         </div>
-        <div style={{ display: 'flex' }}><Wordmark color="#fff" /></div>
+        <div style={{ display: 'flex' }}><Wordmark origin={origin} color="#fff" /></div>
       </div>
     );
   } else if (theme === 'quote') {
@@ -128,7 +133,7 @@ export async function GET(req: Request) {
           <div style={{ display: 'flex', fontSize: 66, fontWeight: 700, lineHeight: 1.08, letterSpacing: -1, maxWidth: 880 }}>{statement}</div>
           {sub ? <div style={{ display: 'flex', fontSize: 32, fontWeight: 600, letterSpacing: 2, color: neutrals.slate, marginTop: 34, textTransform: 'uppercase' }}>{sub}</div> : null}
         </div>
-        <div style={{ display: 'flex' }}><Wordmark color={accents.darkBlue} /></div>
+        <div style={{ display: 'flex' }}><Wordmark origin={origin} color={accents.darkBlue} /></div>
       </div>
     );
   } else if (theme === 'photo-hero') {
@@ -171,7 +176,7 @@ export async function GET(req: Request) {
             </div>
           ))}
         </div>
-        <div style={{ display: 'flex' }}><Wordmark color={accents.darkBlue} /></div>
+        <div style={{ display: 'flex' }}><Wordmark origin={origin} color={accents.darkBlue} /></div>
       </div>
     );
   } else {
@@ -186,7 +191,7 @@ export async function GET(req: Request) {
           {sub ? <div style={{ display: 'flex', fontSize: 36, fontWeight: 400, lineHeight: 1.32, color: 'rgba(255,255,255,0.82)', marginTop: 30, maxWidth: 840 }}>{sub}</div> : null}
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-          <Wordmark color="#fff" />
+          <Wordmark origin={origin} color="#fff" />
           <div style={{ display: 'flex', fontSize: 20, color: 'rgba(255,255,255,0.6)' }}>ignatiusbookfairs.com</div>
         </div>
       </div>
