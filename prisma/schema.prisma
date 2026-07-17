@@ -123,6 +123,7 @@ model BotAnswer {
 model AdminUser {
   id           Int      @id @default(autoincrement())
   username     String   @unique
+  email        String?  @unique // allowlisted admin email the session is signed with
   passwordHash String
   createdAt    DateTime @default(now())
 }

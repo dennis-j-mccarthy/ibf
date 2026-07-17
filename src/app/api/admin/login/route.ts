@@ -23,7 +23,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid username or password' }, { status: 401 });
   }
 
-  const token = await signSession(user.username, secret);
+  // Sign the session with the mapped allowlisted email (falls back to username
+  // for legacy rows) so admin authorization checks pass.
+  const token = await signSession(user.email ?? user.username, secret);
   const response = NextResponse.json({ ok: true });
   response.cookies.set(COOKIE_NAME, token, {
     httpOnly: true,

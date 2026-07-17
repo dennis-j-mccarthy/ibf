@@ -70,7 +70,9 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith('/api/admin/tutorials') ||
     pathname.startsWith('/api/admin/blob-upload') ||
     pathname.startsWith('/admin/training') ||
-    pathname.startsWith('/api/admin/training');
+    pathname.startsWith('/api/admin/training') ||
+    pathname.startsWith('/admin/account') ||
+    pathname.startsWith('/api/admin/set-credentials');
   if (isAdminOnly && !isAllowedAdminEmail(user)) {
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });

@@ -132,6 +132,7 @@ export default async function AdminDashboard() {
           <h1 className="font-brother text-lg sm:text-xl font-semibold">Admin</h1>
           <nav className="flex items-center gap-4 text-sm">
             {email && <span className="hidden sm:inline text-white/70">{email}</span>}
+            <a href="/admin/account" className="bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-md font-medium transition-colors">Account</a>
             <form action="/api/admin/logout" method="POST">
               <button type="submit" className="bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-md font-medium transition-colors">
                 Log out
