@@ -297,16 +297,18 @@ export default function RecordTutorialPage() {
     try {
       const title = saveTitle.trim() || `Tutorial ${new Date().toLocaleDateString('en-US')}`;
       const safe = title.replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'tutorial';
+      // Strip any ";codecs=…" suffix — Vercel Blob matches the base MIME type only.
+      const baseType = (recorded.blob.type || '').split(';')[0] || (recorded.ext === 'mp4' ? 'video/mp4' : 'video/webm');
       const blob = await upload(`tutorials/${safe}.${recorded.ext}`, recorded.blob, {
         access: 'public',
-        contentType: recorded.blob.type || (recorded.ext === 'mp4' ? 'video/mp4' : 'video/webm'),
+        contentType: baseType,
         handleUploadUrl: '/api/admin/blob-upload',
         onUploadProgress: (p) => setSavePct(Math.round(p.percentage)),
       });
       const res = await fetch('/api/admin/tutorials', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, url: blob.url, contentType: recorded.blob.type, size: recorded.blob.size }),
+        body: JSON.stringify({ title, url: blob.url, contentType: baseType, size: recorded.blob.size }),
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
