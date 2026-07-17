@@ -12,9 +12,9 @@ type Font = { name: string; usage: string };
 type Profile = { audiences: Audience[]; colors: Color[]; fonts: Font[]; socialPrefs: string; articlePrefs: string };
 type Img = { id: number; url: string; alt: string; category: string; audience: string; tags: string[]; source: string };
 
-const CATEGORIES = ['kids', 'bookfairs', 'parents', 'teachers', 'admins', 'doodads', 'other'];
+const CATEGORIES = ['kids', 'bookfairs', 'parents', 'teachers', 'admins', 'logos', 'doodads', 'other'];
 const CAT_LABEL: Record<string, string> = {
-  kids: 'Kids', bookfairs: 'Book fairs', parents: 'Parents', teachers: 'Teachers', admins: 'Admins', doodads: 'Doodads', other: 'Other',
+  kids: 'Kids', bookfairs: 'Book fairs', parents: 'Parents', teachers: 'Teachers', admins: 'Admins', logos: 'Logos', doodads: 'Doodads', other: 'Other',
 };
 
 const input = 'w-full px-3 py-2 border border-[#dddddd] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0066ff] text-sm';

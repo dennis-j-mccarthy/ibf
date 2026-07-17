@@ -154,7 +154,7 @@ export async function GET(req: Request) {
           ) : null}
           <div style={{ display: 'flex', fontSize: sSize, fontWeight: 700, lineHeight: 1.0, letterSpacing: -2, color: '#fff', maxWidth: w - 184 }}>{statement}</div>
           {sub ? <div style={{ display: 'flex', fontSize: 34, fontWeight: 400, lineHeight: 1.3, color: 'rgba(255,255,255,0.92)', marginTop: 22, maxWidth: 820 }}>{sub}</div> : null}
-          <div style={{ display: 'flex', marginTop: 30, fontSize: 22, fontWeight: 600, letterSpacing: 2, color: 'rgba(255,255,255,0.85)' }}>IGNATIUSBOOKFAIRS.COM</div>
+          <div style={{ display: 'flex', marginTop: 34 }}><Wordmark origin={origin} color="#fff" /></div>
         </div>
       </div>
     );
