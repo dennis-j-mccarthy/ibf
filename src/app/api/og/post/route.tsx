@@ -33,12 +33,13 @@ function Check({ color }: { color: string }) {
 // fetch the asset from /public/images.
 function Wordmark({ origin, color }: { origin: string; color: string }) {
   const onDark = color.toLowerCase() === '#fff' || color.toLowerCase() === '#ffffff';
-  const src = onDark ? `${origin}/images/ibf-logo-white-p-800.png` : `${origin}/images/IBF-Logo-p-800.png`;
-  const ratio = onDark ? 4.6 : 3.9; // intrinsic aspect ratios of those assets
-  const hgt = 56;
+  // White lockup on dark/colored backgrounds; blue lockup on light ones.
+  const src = onDark ? `${origin}/images/ibf-logo-white-p-800.png` : `${origin}/images/ibf-logo-blue.png`;
+  const ratio = onDark ? 4.6 : 6.34; // intrinsic aspect ratios of those assets
+  const wdt = 236;
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} height={hgt} width={Math.round(hgt * ratio)} alt="Ignatius Book Fairs" style={{ display: 'flex' }} />
+    <img src={src} width={wdt} height={Math.round(wdt / ratio)} alt="Ignatius Book Fairs" style={{ display: 'flex' }} />
   );
 }
 
