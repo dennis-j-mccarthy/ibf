@@ -28,7 +28,8 @@ export async function POST(request: NextRequest) {
         maximumSizeInBytes: 500 * 1024 * 1024, // 500 MB — screen recordings can be large
         addRandomSuffix: true,
       }),
-      onUploadCompleted: async () => {},
+      // No onUploadCompleted — metadata is recorded client-side after upload, and
+      // providing it would require a resolvable webhook callbackUrl.
     });
     return NextResponse.json(json);
   } catch (error) {
