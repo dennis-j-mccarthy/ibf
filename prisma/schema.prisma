@@ -146,6 +146,7 @@ model TrainingProfile {
 model Tutorial {
   id          Int      @id @default(autoincrement())
   title       String
+  description String   @default("")
   url         String // Vercel Blob URL
   contentType String   @default("video/mp4")
   size        Int      @default(0) // bytes

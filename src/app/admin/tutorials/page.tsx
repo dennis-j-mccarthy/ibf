@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 // Tutorials library — saved recordings from /admin/tutorials/record. Reopen,
 // play, copy the link, or delete. Videos live on Vercel Blob.
-type Tutorial = { id: number; title: string; url: string; contentType: string; size: number; createdAt: string };
+type Tutorial = { id: number; title: string; description: string; url: string; contentType: string; size: number; createdAt: string };
 
 const fmtSize = (b: number) => (b > 1e6 ? `${(b / 1e6).toFixed(1)} MB` : `${Math.round(b / 1e3)} KB`);
 const fmtDate = (s: string) => new Date(s).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -57,6 +57,7 @@ export default function TutorialsLibrary() {
                 <video src={t.url} controls preload="metadata" className="w-full bg-black max-h-[300px]" />
                 <div className="p-4">
                   <h2 className="font-brother text-[#02176f] font-semibold truncate">{t.title}</h2>
+                  {t.description && <p className="text-sm text-gray-600 mt-1 line-clamp-2">{t.description}</p>}
                   <p className="text-xs text-gray-400 mt-0.5">
                     {fmtDate(t.createdAt)} · {fmtSize(t.size)} · {t.contentType.replace('video/', '').toUpperCase()}
                   </p>

@@ -16,11 +16,15 @@ export async function POST(request: NextRequest) {
   if (!(await getAdminEmail())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const b = await request.json();
   const url = typeof b.url === 'string' ? b.url.trim() : '';
-  const title = typeof b.title === 'string' && b.title.trim() ? b.title.trim() : 'Untitled tutorial';
+  const title = typeof b.title === 'string' ? b.title.trim() : '';
+  const description = typeof b.description === 'string' ? b.description.trim() : '';
   if (!/^https?:\/\//i.test(url)) return NextResponse.json({ error: 'A valid video URL is required.' }, { status: 400 });
+  if (!title) return NextResponse.json({ error: 'A title is required.' }, { status: 400 });
+  if (!description) return NextResponse.json({ error: 'A description is required.' }, { status: 400 });
   const created = await prisma.tutorial.create({
     data: {
       title,
+      description,
       url,
       contentType: typeof b.contentType === 'string' ? b.contentType : 'video/mp4',
       size: typeof b.size === 'number' ? Math.round(b.size) : 0,

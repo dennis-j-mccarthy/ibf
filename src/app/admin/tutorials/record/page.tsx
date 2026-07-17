@@ -37,6 +37,7 @@ export default function RecordTutorialPage() {
   const [elapsed, setElapsed] = useState(0);
   const [recorded, setRecorded] = useState<{ url: string; blob: Blob; ext: string } | null>(null);
   const [saveTitle, setSaveTitle] = useState('');
+  const [saveDescription, setSaveDescription] = useState('');
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [savePct, setSavePct] = useState(0);
   const [saveError, setSaveError] = useState('');
@@ -274,6 +275,7 @@ export default function RecordTutorialPage() {
     setElapsed(0);
     setPhase('idle');
     setSaveTitle('');
+    setSaveDescription('');
     setSaveState('idle');
     setSavePct(0);
     setSaveError('');
@@ -291,11 +293,15 @@ export default function RecordTutorialPage() {
   // and record it in the Tutorials library.
   const saveToLibrary = useCallback(async () => {
     if (!recorded) return;
+    if (!saveTitle.trim() || !saveDescription.trim()) {
+      setSaveError('A title and a description are both required.');
+      return;
+    }
     setSaveError('');
     setSaveState('saving');
     setSavePct(0);
     try {
-      const title = saveTitle.trim() || `Tutorial ${new Date().toLocaleDateString('en-US')}`;
+      const title = saveTitle.trim();
       const safe = title.replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'tutorial';
       // Strip any ";codecs=…" suffix — Vercel Blob matches the base MIME type only.
       const baseType = (recorded.blob.type || '').split(';')[0] || (recorded.ext === 'mp4' ? 'video/mp4' : 'video/webm');
@@ -308,7 +314,7 @@ export default function RecordTutorialPage() {
       const res = await fetch('/api/admin/tutorials', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, url: blob.url, contentType: baseType, size: recorded.blob.size }),
+        body: JSON.stringify({ title, description: saveDescription.trim(), url: blob.url, contentType: baseType, size: recorded.blob.size }),
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
@@ -320,7 +326,7 @@ export default function RecordTutorialPage() {
       setSaveError(/not configured|BLOB_READ_WRITE_TOKEN/i.test(msg) ? msg : `Save failed: ${msg}`);
       setSaveState('idle');
     }
-  }, [recorded, saveTitle]);
+  }, [recorded, saveTitle, saveDescription]);
 
   useEffect(() => {
     return () => {
@@ -417,13 +423,22 @@ export default function RecordTutorialPage() {
 
           {phase === 'recorded' && recorded && (
             <div className="w-full space-y-3">
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input
                   value={saveTitle}
                   onChange={(e) => setSaveTitle(e.target.value)}
-                  placeholder="Tutorial title"
-                  className="flex-1 min-w-[220px] border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0066ff]"
+                  placeholder="Tutorial title (required)"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0066ff]"
                 />
+                <textarea
+                  value={saveDescription}
+                  onChange={(e) => setSaveDescription(e.target.value)}
+                  placeholder="Description (required) — what this tutorial covers"
+                  rows={2}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0066ff]"
+                />
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
                 {saveState === 'saved' ? (
                   <a href="/admin/tutorials" className="bg-[#00c853] text-white font-medium px-5 py-2.5 rounded-lg hover:bg-[#00a843] transition-colors">
                     Saved — view library
@@ -431,8 +446,9 @@ export default function RecordTutorialPage() {
                 ) : (
                   <button
                     onClick={saveToLibrary}
-                    disabled={saveState === 'saving'}
-                    className="bg-[#7c3aed] text-white font-medium px-5 py-2.5 rounded-lg hover:bg-[#7c3aed]/90 disabled:opacity-60 transition-colors"
+                    disabled={saveState === 'saving' || !saveTitle.trim() || !saveDescription.trim()}
+                    title={!saveTitle.trim() || !saveDescription.trim() ? 'Title and description are required' : undefined}
+                    className="bg-[#7c3aed] text-white font-medium px-5 py-2.5 rounded-lg hover:bg-[#7c3aed]/90 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
                   >
                     {saveState === 'saving' ? `Saving… ${savePct}%` : 'Save to library'}
                   </button>
