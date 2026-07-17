@@ -53,11 +53,13 @@ export async function POST(request: NextRequest) {
           { title, content, strategy, count, reels, books, brandBrief: brief, photos: photoPool.length },
           { onProgress: () => send({ type: 'progress' }) }
         );
-        // Assign real brand photos to photo-hero posts from the Training library
-        // (round-robin). Client falls back to the static pool when none exist.
+        // Assign real brand photos (round-robin) to photo-hero posts AND to any
+        // reel — reels animate into video and always look better over a photo.
         let pi = 0;
         const withPhotos = posts.map((p) =>
-          p.theme === 'photo-hero' && photoPool.length ? { ...p, img: photoPool[pi++ % photoPool.length].url } : p,
+          (p.theme === 'photo-hero' || p.format === 'reel') && photoPool.length
+            ? { ...p, img: photoPool[pi++ % photoPool.length].url }
+            : p,
         );
         send({ type: 'done', posts: withPhotos });
       } catch (error) {

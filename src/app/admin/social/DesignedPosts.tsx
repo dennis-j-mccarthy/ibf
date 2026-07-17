@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { renderReelMp4, reelSupported } from './reel';
 
 // Reusable "generate + render on-brand designed graphics" panel. Used by the
 // standalone /admin/social studio AND the blog Promo kit page. Given a title +
@@ -61,6 +62,37 @@ export default function DesignedPosts({
   const [loaded, setLoaded] = useState(0);
   const [pct, setPct] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [reelBusy, setReelBusy] = useState<number | null>(null);
+  const [reelPct, setReelPct] = useState(0);
+
+  // Animate a reel post into a real H.264 MP4 in the browser and download it.
+  async function downloadReel(p: Post, i: number) {
+    setReelBusy(i);
+    setReelPct(0);
+    try {
+      const blob = await renderReelMp4(
+        {
+          statement: p.statement,
+          sub: p.sub,
+          eyebrow: p.eyebrow,
+          img: p.img,
+          bg: MODE_HEX[p.mode] || '#02176f',
+          origin: window.location.origin,
+        },
+        (frac) => setReelPct(Math.round(frac * 100)),
+      );
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ibf-reel-${i + 1}.mp4`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Could not render the reel.');
+    } finally {
+      setReelBusy(null);
+    }
+  }
 
   // Progress that visibly advances: creep toward ~82% during the generation
   // call, then map the last stretch to image loads.
@@ -177,8 +209,21 @@ export default function DesignedPosts({
                 {p.hashtags?.length > 0 && (
                   <p className="text-sm text-[#0088ff] mt-2">{p.hashtags.map((h) => `#${h.replace(/^#/, '')}`).join(' ')}</p>
                 )}
-                <div className="mt-4 flex gap-3">
-                  <a href={ogUrl(p, platform, i)} download={`ibf-${p.theme}-${i + 1}.png`} className="text-sm bg-[#02176f] text-white px-4 py-2 rounded-lg hover:bg-[#02176f]/90 transition-colors">Download</a>
+                <div className="mt-4 flex flex-wrap gap-3 items-center">
+                  <a href={ogUrl(p, platform, i)} download={`ibf-${p.theme}-${i + 1}.png`} className="text-sm bg-[#02176f] text-white px-4 py-2 rounded-lg hover:bg-[#02176f]/90 transition-colors">Download image</a>
+                  {p.format === 'reel' && (
+                    reelSupported() ? (
+                      <button
+                        onClick={() => downloadReel(p, i)}
+                        disabled={reelBusy !== null}
+                        className="text-sm bg-[#7c3aed] text-white px-4 py-2 rounded-lg hover:bg-[#7c3aed]/90 disabled:opacity-60 transition-colors"
+                      >
+                        {reelBusy === i ? `Rendering… ${reelPct}%` : 'Download reel (MP4)'}
+                      </button>
+                    ) : (
+                      <span className="text-xs text-gray-400">Reel MP4 needs Chrome/Edge</span>
+                    )
+                  )}
                   <button onClick={() => navigator.clipboard?.writeText(`${p.caption}\n\n${(p.hashtags || []).map((h) => `#${h.replace(/^#/, '')}`).join(' ')}`)} className="text-sm border border-gray-300 text-[#02176f] px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors">Copy caption</button>
                 </div>
               </div>
