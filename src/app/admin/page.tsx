@@ -109,11 +109,11 @@ export default async function AdminDashboard() {
       ),
     },
     {
-      href: '/admin/tutorials/record',
-      title: 'Record Tutorial',
-      desc: 'Record a screen + webcam tutorial video (Loom-style) in your browser.',
+      href: '/admin/tutorials',
+      title: 'Tutorials',
+      desc: 'Record screen + webcam tutorials and save them to a reopenable video library.',
       stat: 'Rec',
-      statLabel: 'screen + camera',
+      statLabel: 'record + library',
       accent: '#e11d48',
       icon: (
         <path

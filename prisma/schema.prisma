@@ -139,6 +139,18 @@ model TrainingProfile {
   updatedAt    DateTime @updatedAt
 }
 
+// A saved tutorial video (recorded in /admin/tutorials/record, stored on Vercel
+// Blob). Kept in its own table so sync-resources.ts (which wipes Resource) can't
+// touch it.
+model Tutorial {
+  id          Int      @id @default(autoincrement())
+  title       String
+  url         String // Vercel Blob URL
+  contentType String   @default("video/mp4")
+  size        Int      @default(0) // bytes
+  createdAt   DateTime @default(now())
+}
+
 // A tagged brand image (kids, book fairs, parents, teachers, admins, doodads).
 // Feeds the social photo-hero backgrounds + blog thumbnail suggestions.
 model TrainingImage {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { upload } from '@vercel/blob/client';
 
 // Phase 1 of the in-house tutorial recorder: a Loom-style screen + webcam
 // recorder that composites the webcam into a circular bubble in the bottom-right
@@ -35,6 +36,10 @@ export default function RecordTutorialPage() {
   const [camOn, setCamOn] = useState(true);
   const [elapsed, setElapsed] = useState(0);
   const [recorded, setRecorded] = useState<{ url: string; blob: Blob; ext: string } | null>(null);
+  const [saveTitle, setSaveTitle] = useState('');
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [savePct, setSavePct] = useState(0);
+  const [saveError, setSaveError] = useState('');
 
   const screenVideoRef = useRef<HTMLVideoElement | null>(null);
   const camVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -268,6 +273,10 @@ export default function RecordTutorialPage() {
     setRecorded(null);
     setElapsed(0);
     setPhase('idle');
+    setSaveTitle('');
+    setSaveState('idle');
+    setSavePct(0);
+    setSaveError('');
   }, [recorded]);
 
   const download = useCallback(() => {
@@ -277,6 +286,39 @@ export default function RecordTutorialPage() {
     a.download = `tutorial-${Date.now()}.${recorded.ext}`;
     a.click();
   }, [recorded]);
+
+  // Upload the recording straight to Vercel Blob (client upload — no size limit)
+  // and record it in the Tutorials library.
+  const saveToLibrary = useCallback(async () => {
+    if (!recorded) return;
+    setSaveError('');
+    setSaveState('saving');
+    setSavePct(0);
+    try {
+      const title = saveTitle.trim() || `Tutorial ${new Date().toLocaleDateString('en-US')}`;
+      const safe = title.replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'tutorial';
+      const blob = await upload(`tutorials/${safe}.${recorded.ext}`, recorded.blob, {
+        access: 'public',
+        contentType: recorded.blob.type || (recorded.ext === 'mp4' ? 'video/mp4' : 'video/webm'),
+        handleUploadUrl: '/api/admin/blob-upload',
+        onUploadProgress: (p) => setSavePct(Math.round(p.percentage)),
+      });
+      const res = await fetch('/api/admin/tutorials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, url: blob.url, contentType: recorded.blob.type, size: recorded.blob.size }),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.error || `Save failed (${res.status})`);
+      }
+      setSaveState('saved');
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Save failed';
+      setSaveError(/not configured|BLOB_READ_WRITE_TOKEN/i.test(msg) ? msg : `Save failed: ${msg}`);
+      setSaveState('idle');
+    }
+  }, [recorded, saveTitle]);
 
   useEffect(() => {
     return () => {
@@ -372,17 +414,45 @@ export default function RecordTutorialPage() {
           )}
 
           {phase === 'recorded' && recorded && (
-            <>
-              <button onClick={download} className="bg-[#02176f] text-white font-medium px-5 py-2.5 rounded-lg hover:bg-[#02176f]/90 transition-colors">
-                Download
-              </button>
-              <button onClick={reset} className="bg-white border border-gray-300 text-[#02176f] font-medium px-4 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                Record another
-              </button>
-              <span className="text-sm text-gray-400 ml-auto">
-                Publishing to the Resources library comes next (Phase 2).
-              </span>
-            </>
+            <div className="w-full space-y-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <input
+                  value={saveTitle}
+                  onChange={(e) => setSaveTitle(e.target.value)}
+                  placeholder="Tutorial title"
+                  className="flex-1 min-w-[220px] border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0066ff]"
+                />
+                {saveState === 'saved' ? (
+                  <a href="/admin/tutorials" className="bg-[#00c853] text-white font-medium px-5 py-2.5 rounded-lg hover:bg-[#00a843] transition-colors">
+                    Saved — view library
+                  </a>
+                ) : (
+                  <button
+                    onClick={saveToLibrary}
+                    disabled={saveState === 'saving'}
+                    className="bg-[#7c3aed] text-white font-medium px-5 py-2.5 rounded-lg hover:bg-[#7c3aed]/90 disabled:opacity-60 transition-colors"
+                  >
+                    {saveState === 'saving' ? `Saving… ${savePct}%` : 'Save to library'}
+                  </button>
+                )}
+                <button onClick={download} className="bg-white border border-gray-300 text-[#02176f] font-medium px-4 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                  Download
+                </button>
+                <button onClick={reset} className="bg-white border border-gray-300 text-[#02176f] font-medium px-4 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                  Record another
+                </button>
+                <a href="/admin/tutorials" className="text-sm text-[#0066ff] hover:underline ml-auto">Tutorials library</a>
+              </div>
+              {saveState === 'saving' && (
+                <div className="h-2 bg-gray-100 rounded-full overflow-hidden max-w-md">
+                  <div className="h-full bg-[#7c3aed] transition-all" style={{ width: `${savePct}%` }} />
+                </div>
+              )}
+              {recorded.ext !== 'mp4' && (
+                <p className="text-xs text-amber-700">Heads up: this browser recorded WebM, not MP4 (WebM won&apos;t play on iPhones). Use Safari or a recent Chrome for MP4.</p>
+              )}
+              {saveError && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">{saveError}</p>}
+            </div>
           )}
         </div>
 
