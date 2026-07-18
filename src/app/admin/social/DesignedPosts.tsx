@@ -24,6 +24,11 @@ type Post = {
   books?: { title: string; image: string }[]; // for the book-grid card
   img?: string; // photo-hero background from the Training library (absolute URL)
   video?: string; // motion-clip background for a video reel (url/path)
+  // Tweak-tool color overrides (hex); blank = theme default.
+  bg?: string; // background color
+  hColor?: string; // headline color
+  eColor?: string; // eyebrow color
+  sColor?: string; // sub / blurb color
 };
 
 const PLATFORMS = [
@@ -49,6 +54,10 @@ function ogUrl(p: Post, size: string, index = 0) {
   });
   if (p.theme === 'photo-hero') q.set('img', p.img || PHOTOS[index % PHOTOS.length]);
   if (p.theme === 'book-grid' && p.books?.length) q.set('books', JSON.stringify(p.books));
+  if (p.bg) q.set('bg', p.bg);
+  if (p.hColor) q.set('hColor', p.hColor);
+  if (p.eColor) q.set('eColor', p.eColor);
+  if (p.sColor) q.set('sColor', p.sColor);
   return `/api/og/post?${q.toString()}`;
 }
 
@@ -65,6 +74,17 @@ export default function DesignedPosts({
   const [error, setError] = useState<string | null>(null);
   const [reelBusy, setReelBusy] = useState<number | null>(null);
   const [reelPct, setReelPct] = useState(0);
+  const [tweakOpen, setTweakOpen] = useState<number | null>(null);
+  const [library, setLibrary] = useState<{ url: string; alt: string; category: string }[]>([]);
+
+  useEffect(() => {
+    fetch('/api/admin/training/images').then((r) => (r.ok ? r.json() : [])).then(setLibrary).catch(() => {});
+  }, []);
+
+  const updatePost = (i: number, patch: Partial<Post>) =>
+    setPosts((ps) => ps.map((p, idx) => (idx === i ? { ...p, ...patch } : p)));
+
+  const MOTION_CLIPS = ['/brand/motion/kids-bookfair.mp4'];
 
   // Animate a reel post into a real H.264 MP4 in the browser and download it.
   async function downloadReel(p: Post, i: number) {
@@ -234,7 +254,58 @@ export default function DesignedPosts({
                     )
                   )}
                   <button onClick={() => navigator.clipboard?.writeText(`${p.caption}\n\n${(p.hashtags || []).map((h) => `#${h.replace(/^#/, '')}`).join(' ')}`)} className="text-sm border border-gray-300 text-[#02176f] px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors">Copy caption</button>
+                  <button onClick={() => setTweakOpen(tweakOpen === i ? null : i)} className={`text-sm px-4 py-2 rounded-lg border transition-colors ml-auto ${tweakOpen === i ? 'bg-[#7c3aed] text-white border-[#7c3aed]' : 'border-[#7c3aed] text-[#7c3aed] hover:bg-[#7c3aed]/5'}`}>Tweak</button>
                 </div>
+
+                {tweakOpen === i && (
+                  <div className="mt-4 border-t border-gray-100 pt-4 space-y-3">
+                    {/* Text */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <label className="text-xs text-gray-500">Headline
+                        <input value={p.statement} onChange={(e) => updatePost(i, { statement: e.target.value })} className="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm" />
+                      </label>
+                      <label className="text-xs text-gray-500">Eyebrow
+                        <input value={p.eyebrow} onChange={(e) => updatePost(i, { eyebrow: e.target.value })} className="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm" />
+                      </label>
+                      <label className="text-xs text-gray-500">Tagline / blurb
+                        <input value={p.sub} onChange={(e) => updatePost(i, { sub: e.target.value })} className="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm" />
+                      </label>
+                      <label className="text-xs text-gray-500">Caption
+                        <textarea value={p.caption} onChange={(e) => updatePost(i, { caption: e.target.value })} rows={2} className="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm" />
+                      </label>
+                    </div>
+
+                    {/* Colors */}
+                    <div className="flex flex-wrap gap-4">
+                      {([['bg', 'Background'], ['hColor', 'Headline'], ['eColor', 'Eyebrow'], ['sColor', 'Blurb']] as const).map(([key, label]) => (
+                        <label key={key} className="text-xs text-gray-500 flex items-center gap-1.5">
+                          {label}
+                          <input type="color" value={p[key] || '#02176f'} onChange={(e) => updatePost(i, { [key]: e.target.value })} className="w-7 h-7 rounded border border-gray-200 p-0" />
+                          {p[key] && <button onClick={() => updatePost(i, { [key]: '' })} title="Reset" className="text-gray-400 hover:text-red-600">✕</button>}
+                        </label>
+                      ))}
+                    </div>
+
+                    {/* Background media (photo / motion clip) */}
+                    <div>
+                      <div className="text-xs text-gray-500 mb-1">Background image / video {p.theme !== 'photo-hero' && p.format !== 'reel' && <span className="text-gray-400">(sets a photo background)</span>}</div>
+                      <div className="flex gap-2 overflow-x-auto pb-1">
+                        {MOTION_CLIPS.map((v) => (
+                          <button key={v} onClick={() => updatePost(i, { video: v })} title="Motion clip" className={`shrink-0 w-14 h-14 rounded border-2 grid place-items-center text-[9px] font-semibold bg-[#7c3aed]/10 text-[#7c3aed] ${p.video === v ? 'border-[#7c3aed]' : 'border-transparent'}`}>VIDEO</button>
+                        ))}
+                        {library.map((im) => (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img key={im.url} src={im.url} alt={im.alt} onClick={() => updatePost(i, { img: im.url, video: '', theme: p.format === 'reel' ? p.theme : 'photo-hero' })} className={`shrink-0 w-14 h-14 object-cover rounded border-2 cursor-pointer ${p.img === im.url && !p.video ? 'border-[#7c3aed]' : 'border-transparent'}`} />
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <button onClick={() => updatePost(i, { bg: '', hColor: '', eColor: '', sColor: '', video: '' })} className="text-xs text-gray-500 hover:underline">Reset colors &amp; video</button>
+                      <button onClick={() => setTweakOpen(null)} className="text-xs text-[#02176f] hover:underline ml-auto">Done</button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ))}

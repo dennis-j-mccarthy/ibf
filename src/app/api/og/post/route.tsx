@@ -57,6 +57,14 @@ export async function GET(req: Request) {
   const modeColor = mode && modeColors[mode] ? modeColors[mode] : modeColors.catholic;
   const [w, h] = SIZES[q.get('size') || 'instagram'] || SIZES.instagram;
 
+  // Optional per-post color overrides from the Tweak tool (fall back to theme
+  // defaults when blank): bg = background, hColor = headline, eColor = eyebrow,
+  // sColor = sub/blurb.
+  const bgOv = q.get('bg') || '';
+  const hOv = q.get('hColor') || '';
+  const eOv = q.get('eColor') || '';
+  const sOv = q.get('sColor') || '';
+
   const origin = new URL(req.url).origin;
   const [d700, d600, d400] = await Promise.all(
     [700, 600, 400].map((wt) => fetch(`${origin}/fonts/fredoka-${wt}.ttf`).then((r) => r.arrayBuffer()))
@@ -74,12 +82,12 @@ export async function GET(req: Request) {
   if (theme === 'stat') {
     // Big Stat — cream field, oversized orange number (By the Numbers).
     node = (
-      <div style={{ ...base, backgroundColor: neutrals.cream, color: neutrals.ink, justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', fontSize: 26, fontWeight: 600, letterSpacing: 5, color: accents.orange }}>{eyebrow || 'BY THE NUMBERS'}</div>
+      <div style={{ ...base, backgroundColor: bgOv || neutrals.cream, color: neutrals.ink, justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', fontSize: 26, fontWeight: 600, letterSpacing: 5, color: eOv || accents.orange }}>{eyebrow || 'BY THE NUMBERS'}</div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', fontSize: 240, fontWeight: 700, lineHeight: 1, letterSpacing: -6, color: accents.orange }}>{statement}</div>
+          <div style={{ display: 'flex', fontSize: 240, fontWeight: 700, lineHeight: 1, letterSpacing: -6, color: hOv || accents.orange }}>{statement}</div>
           {statLabel ? <div style={{ display: 'flex', fontSize: 30, fontWeight: 600, letterSpacing: 6, color: neutrals.slate, marginTop: 8 }}>{statLabel}</div> : null}
-          {sub ? <div style={{ display: 'flex', fontSize: 36, fontWeight: 400, lineHeight: 1.3, color: neutrals.ink, marginTop: 30, maxWidth: 840 }}>{sub}</div> : null}
+          {sub ? <div style={{ display: 'flex', fontSize: 36, fontWeight: 400, lineHeight: 1.3, color: sOv || neutrals.ink, marginTop: 30, maxWidth: 840 }}>{sub}</div> : null}
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
           <Wordmark origin={origin} color={accents.darkBlue} />
@@ -90,10 +98,10 @@ export async function GET(req: Request) {
   } else if (theme === 'checklist') {
     // Feature Checklist — white field, headline + checkmark list.
     node = (
-      <div style={{ ...base, backgroundColor: '#ffffff', color: neutrals.ink, justifyContent: 'space-between' }}>
+      <div style={{ ...base, backgroundColor: bgOv || '#ffffff', color: neutrals.ink, justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', fontSize: 26, fontWeight: 600, letterSpacing: 5, color: modeColor }}>{eyebrow || 'WHAT YOU GET'}</div>
-          <div style={{ display: 'flex', fontSize: 74, fontWeight: 700, lineHeight: 1.02, letterSpacing: -2, color: accents.darkBlue, marginTop: 20, maxWidth: 880 }}>{statement}</div>
+          <div style={{ display: 'flex', fontSize: 26, fontWeight: 600, letterSpacing: 5, color: eOv || modeColor }}>{eyebrow || 'WHAT YOU GET'}</div>
+          <div style={{ display: 'flex', fontSize: 74, fontWeight: 700, lineHeight: 1.02, letterSpacing: -2, color: hOv || accents.darkBlue, marginTop: 20, maxWidth: 880 }}>{statement}</div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           {items.slice(0, 5).map((it, i) => (
@@ -109,10 +117,10 @@ export async function GET(req: Request) {
   } else if (theme === 'steps') {
     // Numbered Steps — mode field, numbered circles.
     node = (
-      <div style={{ ...base, backgroundColor: modeColor, color: '#fff', justifyContent: 'space-between' }}>
+      <div style={{ ...base, backgroundColor: bgOv || modeColor, color: '#fff', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', fontSize: 26, fontWeight: 600, letterSpacing: 5, color: accents.yellow }}>{eyebrow || 'HOW IT WORKS'}</div>
-          <div style={{ display: 'flex', fontSize: 78, fontWeight: 700, lineHeight: 1, letterSpacing: -2, marginTop: 18, maxWidth: 860 }}>{statement}</div>
+          <div style={{ display: 'flex', fontSize: 26, fontWeight: 600, letterSpacing: 5, color: eOv || accents.yellow }}>{eyebrow || 'HOW IT WORKS'}</div>
+          <div style={{ display: 'flex', fontSize: 78, fontWeight: 700, lineHeight: 1, letterSpacing: -2, color: hOv || '#fff', marginTop: 18, maxWidth: 860 }}>{statement}</div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           {items.slice(0, 4).map((it, i) => (
@@ -128,11 +136,11 @@ export async function GET(req: Request) {
   } else if (theme === 'quote') {
     // Big Quote — mint field, large quote + attribution.
     node = (
-      <div style={{ ...base, backgroundColor: accents.mint, color: accents.darkBlue, justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', fontSize: 200, fontWeight: 700, lineHeight: 0.7, color: modeColor }}>&ldquo;</div>
+      <div style={{ ...base, backgroundColor: bgOv || accents.mint, color: accents.darkBlue, justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', fontSize: 200, fontWeight: 700, lineHeight: 0.7, color: eOv || modeColor }}>&ldquo;</div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', fontSize: 66, fontWeight: 700, lineHeight: 1.08, letterSpacing: -1, maxWidth: 880 }}>{statement}</div>
-          {sub ? <div style={{ display: 'flex', fontSize: 32, fontWeight: 600, letterSpacing: 2, color: neutrals.slate, marginTop: 34, textTransform: 'uppercase' }}>{sub}</div> : null}
+          <div style={{ display: 'flex', fontSize: 66, fontWeight: 700, lineHeight: 1.08, letterSpacing: -1, color: hOv || accents.darkBlue, maxWidth: 880 }}>{statement}</div>
+          {sub ? <div style={{ display: 'flex', fontSize: 32, fontWeight: 600, letterSpacing: 2, color: sOv || neutrals.slate, marginTop: 34, textTransform: 'uppercase' }}>{sub}</div> : null}
         </div>
         <div style={{ display: 'flex' }}><Wordmark origin={origin} color={accents.darkBlue} /></div>
       </div>
@@ -150,10 +158,10 @@ export async function GET(req: Request) {
         <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', background: 'linear-gradient(to top, rgba(2,23,111,0.95) 4%, rgba(2,23,111,0.45) 42%, rgba(2,23,111,0) 74%)' }} />
         <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', width: '100%', height: '100%', padding: pad }}>
           {eyebrow ? (
-            <div style={{ display: 'flex', alignSelf: 'flex-start', backgroundColor: accents.yellow, color: accents.darkBlue, fontSize: 22, fontWeight: 700, letterSpacing: 3, padding: '10px 20px', borderRadius: 999, marginBottom: 26 }}>{eyebrow}</div>
+            <div style={{ display: 'flex', alignSelf: 'flex-start', backgroundColor: eOv || accents.yellow, color: accents.darkBlue, fontSize: 22, fontWeight: 700, letterSpacing: 3, padding: '10px 20px', borderRadius: 999, marginBottom: 26 }}>{eyebrow}</div>
           ) : null}
-          <div style={{ display: 'flex', fontSize: sSize, fontWeight: 700, lineHeight: 1.0, letterSpacing: -2, color: '#fff', maxWidth: w - 184 }}>{statement}</div>
-          {sub ? <div style={{ display: 'flex', fontSize: 34, fontWeight: 400, lineHeight: 1.3, color: 'rgba(255,255,255,0.92)', marginTop: 22, maxWidth: 820 }}>{sub}</div> : null}
+          <div style={{ display: 'flex', fontSize: sSize, fontWeight: 700, lineHeight: 1.0, letterSpacing: -2, color: hOv || '#fff', maxWidth: w - 184 }}>{statement}</div>
+          {sub ? <div style={{ display: 'flex', fontSize: 34, fontWeight: 400, lineHeight: 1.3, color: sOv || 'rgba(255,255,255,0.92)', marginTop: 22, maxWidth: 820 }}>{sub}</div> : null}
           <div style={{ display: 'flex', marginTop: 34 }}><Wordmark origin={origin} color="#fff" /></div>
         </div>
       </div>
@@ -163,10 +171,10 @@ export async function GET(req: Request) {
     const n = Math.max(books.length, 1);
     const coverW = Math.min(240, Math.floor((w - 184 - (n - 1) * 28) / n));
     node = (
-      <div style={{ ...base, backgroundColor: neutrals.cream, color: neutrals.ink, justifyContent: 'space-between' }}>
+      <div style={{ ...base, backgroundColor: bgOv || neutrals.cream, color: neutrals.ink, justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', fontSize: 26, fontWeight: 600, letterSpacing: 5, color: accents.orange }}>{eyebrow || 'FEATURED BOOKS'}</div>
-          <div style={{ display: 'flex', fontSize: 60, fontWeight: 700, lineHeight: 1.02, letterSpacing: -1, color: accents.darkBlue, marginTop: 14, maxWidth: w - 184 }}>{statement || 'Good books for great kids.'}</div>
+          <div style={{ display: 'flex', fontSize: 26, fontWeight: 600, letterSpacing: 5, color: eOv || accents.orange }}>{eyebrow || 'FEATURED BOOKS'}</div>
+          <div style={{ display: 'flex', fontSize: 60, fontWeight: 700, lineHeight: 1.02, letterSpacing: -1, color: hOv || accents.darkBlue, marginTop: 14, maxWidth: w - 184 }}>{statement || 'Good books for great kids.'}</div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'row', gap: 28, justifyContent: 'center', alignItems: 'flex-start', width: '100%' }}>
           {books.slice(0, 5).map((b, i) => (
@@ -182,14 +190,14 @@ export async function GET(req: Request) {
     );
   } else {
     // Bold Statement (default) — mode/navy field, big statement + subline.
-    const bg = mode && modeColors[mode] ? modeColors[mode] : accents.darkBlue;
+    const bg = bgOv || (mode && modeColors[mode] ? modeColors[mode] : accents.darkBlue);
     const sSize = w >= 1600 ? 108 : statement.length > 40 ? 88 : 120;
     node = (
       <div style={{ ...base, backgroundColor: bg, color: '#fff', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', fontSize: 26, fontWeight: 600, letterSpacing: 5, color: accents.yellow }}>{eyebrow || 'IGNATIUS BOOK FAIRS'}</div>
+        <div style={{ display: 'flex', fontSize: 26, fontWeight: 600, letterSpacing: 5, color: eOv || accents.yellow }}>{eyebrow || 'IGNATIUS BOOK FAIRS'}</div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', fontSize: sSize, fontWeight: 700, lineHeight: 1.0, letterSpacing: -2, maxWidth: w - 184 }}>{statement}</div>
-          {sub ? <div style={{ display: 'flex', fontSize: 36, fontWeight: 400, lineHeight: 1.32, color: 'rgba(255,255,255,0.82)', marginTop: 30, maxWidth: 840 }}>{sub}</div> : null}
+          <div style={{ display: 'flex', fontSize: sSize, fontWeight: 700, lineHeight: 1.0, letterSpacing: -2, color: hOv || '#fff', maxWidth: w - 184 }}>{statement}</div>
+          {sub ? <div style={{ display: 'flex', fontSize: 36, fontWeight: 400, lineHeight: 1.32, color: sOv || 'rgba(255,255,255,0.82)', marginTop: 30, maxWidth: 840 }}>{sub}</div> : null}
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
           <Wordmark origin={origin} color="#fff" />
