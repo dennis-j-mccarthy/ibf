@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { renderReelMp4, reelSupported } from './reel';
+import { renderReelMp4, renderReelFromVideoMp4, reelSupported } from './reel';
 
 // Reusable "generate + render on-brand designed graphics" panel. Used by the
 // standalone /admin/social studio AND the blog Promo kit page. Given a title +
@@ -23,6 +23,7 @@ type Post = {
   hashtags: string[];
   books?: { title: string; image: string }[]; // for the book-grid card
   img?: string; // photo-hero background from the Training library (absolute URL)
+  video?: string; // motion-clip background for a video reel (url/path)
 };
 
 const PLATFORMS = [
@@ -70,17 +71,16 @@ export default function DesignedPosts({
     setReelBusy(i);
     setReelPct(0);
     try {
-      const blob = await renderReelMp4(
-        {
-          statement: p.statement,
-          sub: p.sub,
-          eyebrow: p.eyebrow,
-          img: p.img,
-          bg: MODE_HEX[p.mode] || '#02176f',
-          origin: window.location.origin,
-        },
-        (frac) => setReelPct(Math.round(frac * 100)),
-      );
+      const onP = (frac: number) => setReelPct(Math.round(frac * 100));
+      const blob = p.video
+        ? await renderReelFromVideoMp4(
+            { statement: p.statement, sub: p.sub, eyebrow: p.eyebrow, videoUrl: p.video, origin: window.location.origin },
+            onP,
+          )
+        : await renderReelMp4(
+            { statement: p.statement, sub: p.sub, eyebrow: p.eyebrow, img: p.img, bg: MODE_HEX[p.mode] || '#02176f', origin: window.location.origin },
+            onP,
+          );
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -196,9 +196,16 @@ export default function DesignedPosts({
         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
           {posts.map((p, i) => (
             <div key={i} className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
-              <div className="bg-gray-50 grid place-items-center p-4">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={ogUrl(p, platform, i)} alt={p.statement} onLoad={() => setLoaded((n) => { const nx = n + 1; if (nx >= posts.length) setPhase('done'); return nx; })} className="w-full max-w-[420px] rounded-lg shadow" />
+              <div className="bg-gray-50 grid place-items-center p-4 relative">
+                {p.video ? (
+                  <>
+                    <video src={p.video} muted loop autoPlay playsInline onLoadedData={() => setLoaded((n) => { const nx = n + 1; if (nx >= posts.length) setPhase('done'); return nx; })} className="w-full max-w-[300px] rounded-lg shadow bg-black" />
+                    <span className="absolute top-3 left-3 text-[10px] font-semibold uppercase tracking-wide bg-[#7c3aed] text-white px-2 py-0.5 rounded-full">Motion reel</span>
+                  </>
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={ogUrl(p, platform, i)} alt={p.statement} onLoad={() => setLoaded((n) => { const nx = n + 1; if (nx >= posts.length) setPhase('done'); return nx; })} className="w-full max-w-[420px] rounded-lg shadow" />
+                )}
               </div>
               <div className="p-5">
                 <div className="flex items-center gap-2 mb-2">
@@ -210,7 +217,9 @@ export default function DesignedPosts({
                   <p className="text-sm text-[#0088ff] mt-2">{p.hashtags.map((h) => `#${h.replace(/^#/, '')}`).join(' ')}</p>
                 )}
                 <div className="mt-4 flex flex-wrap gap-3 items-center">
-                  <a href={ogUrl(p, platform, i)} download={`ibf-${p.theme}-${i + 1}.png`} className="text-sm bg-[#02176f] text-white px-4 py-2 rounded-lg hover:bg-[#02176f]/90 transition-colors">Download image</a>
+                  {!p.video && (
+                    <a href={ogUrl(p, platform, i)} download={`ibf-${p.theme}-${i + 1}.png`} className="text-sm bg-[#02176f] text-white px-4 py-2 rounded-lg hover:bg-[#02176f]/90 transition-colors">Download image</a>
+                  )}
                   {p.format === 'reel' && (
                     reelSupported() ? (
                       <button

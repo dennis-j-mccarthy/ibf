@@ -6,6 +6,10 @@ import { getSavedTrainingProfile, brandBrief, getTrainingImages, photoBackground
 export const runtime = 'nodejs';
 export const maxDuration = 120; // generating a set of posts can take a while
 
+// Same-origin motion clips (public/brand/motion) used as real video-reel
+// backgrounds. One reel per set is rendered over one of these.
+const MOTION_CLIPS = ['/brand/motion/kids-bookfair.mp4'];
+
 // Streams NDJSON so the connection stays warm during the long model call — an
 // idle POST would otherwise die with a client-side "Failed to fetch". Lines:
 //   {"type":"progress"}   (heartbeat as tokens arrive)
@@ -61,7 +65,15 @@ export async function POST(request: NextRequest) {
             ? { ...p, img: photoPool[pi++ % photoPool.length].url }
             : p,
         );
-        send({ type: 'done', posts: withPhotos });
+        // Make ONE reel a real motion-clip reel (video background). Round-robin
+        // through the available clips if we add more later.
+        let mi = 0;
+        const withMotion = MOTION_CLIPS.length
+          ? withPhotos.map((p) =>
+              p.format === 'reel' && mi === 0 ? ((mi += 1), { ...p, video: MOTION_CLIPS[0] }) : p,
+            )
+          : withPhotos;
+        send({ type: 'done', posts: withMotion });
       } catch (error) {
         console.error('Social post generation failed:', error);
         send({ type: 'error', error: error instanceof Error ? error.message : 'Generation failed' });
