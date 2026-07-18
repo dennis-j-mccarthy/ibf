@@ -1518,9 +1518,11 @@ const SignUpForm = () => {
                     <input
                       type="number"
                       name="studentsEnrolled"
-                      placeholder="Number of students"
+                      placeholder="Number of students *"
                       value={formData.studentsEnrolled}
                       onChange={handleChange}
+                      required
+                      min={1}
                       className="w-full h-11 px-4 rounded-lg border-0 bg-[#0088ff] text-white placeholder-white tracking-wide"
                       style={{ fontFamily: 'brother-1816, sans-serif' }}
                     />
