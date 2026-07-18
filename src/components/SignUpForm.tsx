@@ -221,12 +221,14 @@ const SignUpForm = () => {
   // Auto-fill form with test data using keyboard shortcuts
   // Works in dev mode OR when ?testmode=true is in the URL
   useEffect(() => {
-    const isTestMode = process.env.NODE_ENV === 'development' || new URLSearchParams(window.location.search).has('testmode');
+    // Enabled in dev, or when `testmode` appears anywhere in the URL (query OR
+    // hash — e.g. ?testmode=true or #signup?testmode=true).
+    const isTestMode = process.env.NODE_ENV === 'development' || /[?&#]testmode\b/.test(window.location.href);
     if (!isTestMode) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       // Option+Ctrl+1: Fill step 1
-      if (e.altKey && e.ctrlKey && e.key === '1') {
+      if (e.altKey && e.ctrlKey && e.code === 'Digit1') {
         e.preventDefault();
         setFormData(prev => ({
           ...prev,
@@ -242,7 +244,7 @@ const SignUpForm = () => {
       }
 
       // Option+Ctrl+2: Fill step 2 (Catholic School - Southern)
-      if (e.altKey && e.ctrlKey && e.key === '2') {
+      if (e.altKey && e.ctrlKey && e.code === 'Digit2') {
         e.preventDefault();
         setFormData(prev => ({
           ...prev,
@@ -270,7 +272,7 @@ const SignUpForm = () => {
       }
 
       // Option+Ctrl+3: Fill step 2 (Public School - routes to Marni)
-      if (e.altKey && e.ctrlKey && e.key === '3') {
+      if (e.altKey && e.ctrlKey && e.code === 'Digit3') {
         e.preventDefault();
         setFormData(prev => ({
           ...prev,
@@ -298,7 +300,7 @@ const SignUpForm = () => {
       }
 
       // Option+Ctrl+4: Fill step 2 (Parish - Northern)
-      if (e.altKey && e.ctrlKey && e.key === '4') {
+      if (e.altKey && e.ctrlKey && e.code === 'Digit4') {
         e.preventDefault();
         setFormData(prev => ({
           ...prev,
@@ -326,7 +328,7 @@ const SignUpForm = () => {
       }
 
       // Option+Ctrl+5: Fill step 2 (Diocese - routes to Kim)
-      if (e.altKey && e.ctrlKey && e.key === '5') {
+      if (e.altKey && e.ctrlKey && e.code === 'Digit5') {
         e.preventDefault();
         setFormData(prev => ({
           ...prev,
