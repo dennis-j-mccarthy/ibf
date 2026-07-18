@@ -86,33 +86,23 @@ type FrameCtx = {
   subLineH: number;
 };
 
-function drawFrame(ctx: CanvasRenderingContext2D, f: FrameCtx) {
-  const { t, photo, logo, lines, subLines, input } = f;
-  ctx.clearRect(0, 0, W, H);
+// Draws the branded overlay (dark wash + kinetic statement + sub + eyebrow +
+// logo) on top of whatever background is already on the canvas. `media` = true
+// when the background is a photo/video (draws the legibility wash).
+function drawOverlay(ctx: CanvasRenderingContext2D, f: FrameCtx, media: boolean) {
+  const { t, logo, lines, subLines, input } = f;
 
-  // Background: Ken Burns push on the photo, else a solid field.
-  if (photo) {
-    const zoom = 1.06 + 0.14 * easeOut(t); // slow push-in
-    const cover = Math.max(W / photo.width, H / photo.height) * zoom;
-    const dw = photo.width * cover;
-    const dh = photo.height * cover;
-    const dx = (W - dw) / 2;
-    const dy = (H - dh) / 2 - t * 60; // gentle upward drift
-    ctx.drawImage(photo, dx, dy, dw, dh);
-    // dark wash for legibility
+  if (media) {
     const g = ctx.createLinearGradient(0, 0, 0, H);
     g.addColorStop(0, 'rgba(2,23,111,0)');
     g.addColorStop(0.45, 'rgba(2,23,111,0.35)');
     g.addColorStop(1, 'rgba(2,23,111,0.95)');
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, W, H);
-  } else {
-    ctx.fillStyle = input.bg || NAVY;
-    ctx.fillRect(0, 0, W, H);
   }
 
   const pad = 96;
-  let y = H - pad - f.subLineH * subLines.length - (subLines.length ? 28 : 0);
+  const y = H - pad - f.subLineH * subLines.length - (subLines.length ? 28 : 0);
 
   // Statement lines, revealed bottom-up, staggered.
   ctx.textAlign = 'left';
@@ -174,6 +164,24 @@ function drawFrame(ctx: CanvasRenderingContext2D, f: FrameCtx) {
   }
 }
 
+// Still-image reel frame: Ken Burns push on the photo (or a solid field) + overlay.
+function drawFrame(ctx: CanvasRenderingContext2D, f: FrameCtx) {
+  const { t, photo, input } = f;
+  ctx.clearRect(0, 0, W, H);
+  if (photo) {
+    const zoom = 1.06 + 0.14 * easeOut(t);
+    const cover = Math.max(W / photo.width, H / photo.height) * zoom;
+    const dw = photo.width * cover;
+    const dh = photo.height * cover;
+    ctx.drawImage(photo, (W - dw) / 2, (H - dh) / 2 - t * 60, dw, dh);
+    drawOverlay(ctx, f, true);
+  } else {
+    ctx.fillStyle = input.bg || NAVY;
+    ctx.fillRect(0, 0, W, H);
+    drawOverlay(ctx, f, false);
+  }
+}
+
 function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
@@ -230,6 +238,94 @@ export async function renderReelMp4(input: ReelInput, onProgress?: (p: number) =
 
   await encoder.flush();
   if (encodeError) throw encodeError instanceof Error ? encodeError : new Error('Video encoding failed.');
+  muxer.finalize();
+  onProgress?.(1);
+  return new Blob([target.buffer], { type: 'video/mp4' });
+}
+
+export type ReelVideoInput = {
+  statement: string;
+  sub?: string;
+  eyebrow?: string;
+  videoUrl: string; // background clip (e.g. an AI-generated Veo clip)
+  origin: string;
+};
+
+const MAX_REEL_SECONDS = 10;
+
+// Renders a reel using a VIDEO clip as the moving background (cover-fit to 9:16),
+// with the branded kinetic text + logo overlaid, encoded to H.264 MP4. Captures
+// each decoded frame of the source clip via requestVideoFrameCallback so the
+// output matches the clip's real motion.
+export async function renderReelFromVideoMp4(input: ReelVideoInput, onProgress?: (p: number) => void): Promise<Blob> {
+  if (!reelSupported()) throw new Error('This browser can’t encode MP4 (needs WebCodecs — use Chrome or Edge).');
+  await loadFonts(input.origin);
+  const logo = await loadImage(`${input.origin}/images/ibf-logo-white-p-800.png`).catch(() => null);
+
+  const video = document.createElement('video');
+  video.crossOrigin = 'anonymous';
+  video.muted = true;
+  video.playsInline = true;
+  video.src = input.videoUrl;
+  await new Promise<void>((res, rej) => {
+    video.onloadedmetadata = () => res();
+    video.onerror = () => rej(new Error('Could not load the background clip.'));
+  });
+  const clipDur = Math.min(video.duration || MAX_REEL_SECONDS, MAX_REEL_SECONDS);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas is unavailable.');
+
+  const stmtFont = '700 96px Fredoka';
+  const subFont = '400 40px Fredoka';
+  const lines = wrap(ctx, input.statement, stmtFont, W - 192);
+  const subLines = input.sub ? wrap(ctx, input.sub, subFont, W - 192) : [];
+
+  const target = new ArrayBufferTarget();
+  const muxer = new Muxer({ target, video: { codec: 'avc', width: W, height: H }, fastStart: 'in-memory' });
+  let encodeError: unknown = null;
+  const encoder = new VideoEncoder({
+    output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+    error: (e) => { encodeError = e; },
+  });
+  encoder.configure({ codec: 'avc1.42002a', width: W, height: H, bitrate: 10_000_000, framerate: FPS });
+
+  const frameCtx: FrameCtx = { t: 0, photo: null, logo, lines, subLines, input: { ...input, bg: NAVY }, stmtFont, subFont, lineH: 108, subLineH: 52 };
+  const cover = Math.max(W / video.videoWidth, H / video.videoHeight);
+  const dw = video.videoWidth * cover;
+  const dh = video.videoHeight * cover;
+  const dx = (W - dw) / 2;
+  const dy = (H - dh) / 2;
+
+  let count = 0;
+  await new Promise<void>((resolve, reject) => {
+    const onFrame = (_now: number, meta: { mediaTime: number }) => {
+      if (encodeError) return reject(encodeError instanceof Error ? encodeError : new Error('Encoding failed.'));
+      const mt = meta.mediaTime;
+      if (mt > clipDur) return finish();
+      ctx.clearRect(0, 0, W, H);
+      ctx.drawImage(video, dx, dy, dw, dh);
+      frameCtx.t = clamp01(mt / clipDur);
+      drawOverlay(ctx, frameCtx, true);
+      const frame = new VideoFrame(canvas, { timestamp: Math.round(mt * 1e6), duration: Math.round(1e6 / FPS) });
+      encoder.encode(frame, { keyFrame: count % FPS === 0 });
+      frame.close();
+      count++;
+      onProgress?.(clamp01(mt / clipDur) * 0.95);
+      video.requestVideoFrameCallback(onFrame);
+    };
+    const finish = () => { video.pause(); resolve(); };
+    video.onended = finish;
+    video.requestVideoFrameCallback(onFrame);
+    video.play().catch(reject);
+  });
+
+  await encoder.flush();
+  if (encodeError) throw encodeError instanceof Error ? encodeError : new Error('Video encoding failed.');
+  if (count === 0) throw new Error('No frames were captured from the clip.');
   muxer.finalize();
   onProgress?.(1);
   return new Blob([target.buffer], { type: 'video/mp4' });
