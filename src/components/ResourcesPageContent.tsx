@@ -172,6 +172,12 @@ export default function ResourcesPageContent({ resources }: ResourcesPageContent
         r.slug === 'bookfair-sneak-peek' || r.slug === 'lent-flyer-2026'
       );
     }
+    // Back-to-School Flyer: relate to Sneak Peek, Summer Catalog, Sacramental Gifts
+    else if (resource.slug === 'back-to-school-flyer-2026') {
+      related = resources.filter(r =>
+        r.slug === 'sneak-peek-2026-2027' || r.slug === 'summer-catalog-2026' || r.slug === 'sacramental-gifts-2026'
+      );
+    }
     // Coloring sheets: only relate to other coloring sheets
     else if (resource.slug.startsWith('coloring-sheet')) {
       related = resources.filter(r =>
@@ -257,6 +263,7 @@ export default function ResourcesPageContent({ resources }: ResourcesPageContent
   }).sort((a, b) => {
     // Sort order: Guides, FAQs, Checklists, Parent Letters, other docs, videos
     const typeOrder = (r: Resource) => {
+      if (activeFilter === 'Advertising' && r.slug === 'back-to-school-flyer-2026') return -1; // Pin to position one within Advertising
       if (r.slug.endsWith('operational-guide')) return 0; // Guides
       if (r.slug.startsWith('faqs-') || r.slug === 'faqs-virtual-coordinators') return 1; // FAQs
       if (r.slug.includes('planning-checklist') || r.slug.includes('book-fair-checklist')) return 2; // Checklists
