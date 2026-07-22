@@ -6,6 +6,7 @@ export default function UploadTaxDocumentPage() {
   const [website, setWebsite] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
+  const [dragActive, setDragActive] = useState(false);
   const [companyName, setCompanyName] = useState('');
   const [error, setError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -99,15 +100,53 @@ export default function UploadTaxDocumentPage() {
                 <label htmlFor="file" className="block font-semibold text-[#02176f] mb-2">
                   Tax-Exempt Certificate
                 </label>
-                <input
-                  id="file"
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,.doc,.docx"
-                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                  className="w-full px-4 py-3 rounded-lg border-2 border-dashed border-gray-300 file:mr-4 file:rounded-full file:border-0 file:bg-[var(--accent)] file:px-4 file:py-2 file:text-white file:font-semibold file:cursor-pointer cursor-pointer"
-                  disabled={status === 'submitting'}
-                />
+                <div
+                  onClick={() => status !== 'submitting' && fileInputRef.current?.click()}
+                  onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+                  onDragEnter={(e) => { e.preventDefault(); setDragActive(true); }}
+                  onDragLeave={(e) => { e.preventDefault(); if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragActive(false); }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setDragActive(false);
+                    if (status === 'submitting') return;
+                    const dropped = e.dataTransfer.files?.[0];
+                    if (dropped) setFile(dropped);
+                  }}
+                  className={`w-full min-h-[220px] rounded-2xl border-[3px] border-dashed flex flex-col items-center justify-center gap-3 px-6 py-10 text-center cursor-pointer transition-colors ${
+                    dragActive
+                      ? 'border-[var(--accent)] bg-blue-50'
+                      : file
+                        ? 'border-[#00c853] bg-green-50/50'
+                        : 'border-gray-300 bg-gray-50 hover:border-[var(--accent)] hover:bg-blue-50/40'
+                  }`}
+                >
+                  <input
+                    id="file"
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,.doc,.docx"
+                    onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                    className="hidden"
+                    disabled={status === 'submitting'}
+                  />
+                  {file ? (
+                    <>
+                      <svg className="w-12 h-12 text-[#00c853]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <p className="font-semibold text-[#02176f] break-all">{file.name}</p>
+                      <p className="text-sm text-gray-500">{(file.size / 1024 / 1024).toFixed(2)} MB — click or drop to replace</p>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                      </svg>
+                      <p className="font-semibold text-[#02176f] text-lg">Drag &amp; drop your document here</p>
+                      <p className="text-sm text-gray-500">or click to browse</p>
+                    </>
+                  )}
+                </div>
                 <p className="text-sm text-gray-500 mt-2">PDF, image, or Word document. 10 MB max.</p>
               </div>
 
