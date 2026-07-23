@@ -106,6 +106,34 @@ export default function TrainingAdmin() {
 
   const aiHasResults = aiResults.length > 0 || aiPersona.trim().length > 0;
 
+  // Click-to-prefill: focusing an empty Statements/Angles box crafts 5+ entries
+  // from that audience's persona + pain points.
+  const [prefilling, setPrefilling] = useState<{ i: number; field: 'statements' | 'angles' } | null>(null);
+
+  const prefillField = async (i: number, field: 'statements' | 'angles') => {
+    if (!profile || prefilling) return;
+    const a = profile.audiences[i];
+    if ((field === 'statements' ? a.statements : a.angles).length) return; // only fill empty boxes
+    if (!a.persona.trim() && !a.painPoints.length) return; // nothing to craft from
+    setPrefilling({ i, field });
+    try {
+      const r = await fetch('/api/admin/training/craft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kind: field === 'angles' ? 'angles' : 'statements', audience: a.audience, persona: a.persona, painPoints: a.painPoints, bullets: [] }),
+      });
+      const d = await r.json();
+      if (r.ok) {
+        const items: string[] = (field === 'angles' ? d.angles : d.statements) ?? [];
+        if (items.length) {
+          patch({ audiences: profile.audiences.map((x, idx) => (idx === i ? { ...x, [field]: items } : x)) });
+        }
+      }
+    } finally {
+      setPrefilling(null);
+    }
+  };
+
   const acceptAi = () => {
     if (aiFor === null || !profile || !aiHasResults) return;
     patch({
@@ -297,7 +325,8 @@ export default function TrainingAdmin() {
                           className={input}
                           rows={4}
                           value={lines(a.statements)}
-                          placeholder={'We start with no.\nEvery title earns its place.'}
+                          placeholder={prefilling?.i === i && prefilling.field === 'statements' ? 'Crafting from persona & pain points…' : 'We start with no.\nEvery title earns its place.'}
+                          onFocus={() => prefillField(i, 'statements')}
                           onChange={(e) => patch({ audiences: profile.audiences.map((x, idx) => (idx === i ? { ...x, statements: toLines(e.target.value) } : x)) })}
                         />
                       </div>
@@ -307,7 +336,8 @@ export default function TrainingAdmin() {
                           className={input}
                           rows={4}
                           value={lines(a.angles)}
-                          placeholder={'Trust & curation over volume\nFaith-friendly without preachy'}
+                          placeholder={prefilling?.i === i && prefilling.field === 'angles' ? 'Crafting from persona & pain points…' : 'Trust & curation over volume\nFaith-friendly without preachy'}
+                          onFocus={() => prefillField(i, 'angles')}
                           onChange={(e) => patch({ audiences: profile.audiences.map((x, idx) => (idx === i ? { ...x, angles: toLines(e.target.value) } : x)) })}
                         />
                       </div>
