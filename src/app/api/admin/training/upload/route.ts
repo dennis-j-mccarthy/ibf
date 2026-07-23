@@ -24,7 +24,25 @@ export async function POST(request: NextRequest) {
   if (!(file instanceof File) || file.size === 0) {
     return NextResponse.json({ error: 'No file received.' }, { status: 400 });
   }
-  if (!file.type.startsWith('image/')) {
+  // mode=document (the Document library) accepts brand docs; default stays image-only.
+  const DOC_TYPES = new Set([
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'text/plain',
+    'text/markdown',
+  ]);
+  const isDocMode = form?.get('mode') === 'document';
+  if (isDocMode) {
+    if (!DOC_TYPES.has(file.type) && !file.type.startsWith('image/')) {
+      return NextResponse.json({ error: 'Only PDF, Word, PowerPoint, text, or image files are allowed.' }, { status: 400 });
+    }
+    if (file.size > 25 * 1024 * 1024) {
+      return NextResponse.json({ error: 'File is too large (25 MB max).' }, { status: 400 });
+    }
+  } else if (!file.type.startsWith('image/')) {
     return NextResponse.json({ error: 'Only image files are allowed.' }, { status: 400 });
   }
 

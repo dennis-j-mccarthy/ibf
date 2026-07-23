@@ -165,3 +165,16 @@ model TrainingImage {
   source    String   @default("url")   // url|blob
   createdAt DateTime @default(now())
 }
+
+// Brand documents (design-language guides, angle decks, style references) for
+// the Training library.
+model TrainingDocument {
+  id          Int      @id @default(autoincrement())
+  title       String
+  url         String
+  kind        String   @default("other") // design-language|angles|other
+  contentType String   @default("")
+  size        Int      @default(0) // bytes
+  source      String   @default("url") // url|blob
+  createdAt   DateTime @default(now())
+}

@@ -51,6 +51,7 @@ export async function POST(request: NextRequest) {
     const bullets: string[] = Array.isArray(b.bullets) ? b.bullets.map(String).map((s: string) => s.trim()).filter(Boolean) : [];
 
     const kind: string = b.kind === 'persona' ? 'persona' : b.kind === 'angles' ? 'angles' : 'statements';
+    const count: number = Math.min(50, Math.max(3, Number.isFinite(Number(b.count)) && Number(b.count) > 0 ? Math.round(Number(b.count)) : 0)) || 0;
     const audience: string = typeof b.audience === 'string' ? b.audience.trim() : '';
     const persona: string = typeof b.persona === 'string' ? b.persona.trim() : '';
     const painPoints: string[] = Array.isArray(b.painPoints) ? b.painPoints.map(String).filter(Boolean) : [];
@@ -76,19 +77,19 @@ Return:
 - persona: a vivid 2–3 sentence description of who this person is — their world, what they value, how they decide (written plainly, no marketing fluff).
 - painPoints: 4–6 concrete pain points (short phrases, one idea each) our book fairs can speak to.`
         : kind === 'angles'
-          ? `Craft 5–7 marketing angles to pursue in our social posts, ${source}
+          ? `Craft ${count ? `exactly ${count}` : '5–7'} marketing angles to pursue in our social posts, ${source}
 ${context}
 
-Each angle is a short thematic direction (3–7 words, no period), e.g. "Trust & curation over volume", "Faith-friendly without preachy". Distinct from each other; no emoji. Return only the angles.`
-          : `Craft 5–8 approved brand statements ${source}
+Each angle is a short thematic direction (3–7 words, no period), e.g. "Trust & curation over volume", "Faith-friendly without preachy". All distinct from each other — no near-duplicates; no emoji. Return only the angles.`
+          : `Craft ${count ? `exactly ${count}` : '5–8'} approved brand statements ${source}
 ${context}
 
-Each statement: short (2–8 words ideal), declarative, clever, on-voice, ends in a period. No emoji, no hashtags, no exclamation marks. Return only the statements.`;
+Each statement: short (2–8 words ideal), declarative, clever, on-voice, ends in a period. All distinct from each other — no near-duplicates. No emoji, no hashtags, no exclamation marks. Return only the statements.`;
 
     const client = new Anthropic(); // reads ANTHROPIC_API_KEY
     const stream = client.messages.stream({
       model: 'claude-opus-4-8',
-      max_tokens: 2000,
+      max_tokens: 4000,
       system: SYSTEM,
       output_config: { format: { type: 'json_schema', schema: kind === 'persona' ? PERSONA_SCHEMA : kind === 'angles' ? ANGLES_SCHEMA : STATEMENTS_SCHEMA } },
       messages: [{ role: 'user', content: user }],

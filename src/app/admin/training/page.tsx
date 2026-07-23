@@ -11,6 +11,11 @@ type Color = { name: string; hex: string };
 type Font = { name: string; usage: string };
 type Profile = { audiences: Audience[]; colors: Color[]; fonts: Font[]; socialPrefs: string; articlePrefs: string };
 type Img = { id: number; url: string; alt: string; category: string; audience: string; tags: string[]; source: string };
+type Doc = { id: number; title: string; url: string; kind: string; contentType: string; size: number; source: string };
+
+const DOC_KINDS = ['design-language', 'angles', 'other'];
+const DOC_KIND_LABEL: Record<string, string> = { 'design-language': 'Design language', angles: 'Angles', other: 'Other' };
+const prettySize = (b: number) => (b >= 1024 * 1024 ? `${(b / 1024 / 1024).toFixed(1)} MB` : b > 0 ? `${Math.round(b / 1024)} KB` : '');
 
 const CATEGORIES = ['kids', 'bookfairs', 'parents', 'teachers', 'admins', 'logos', 'doodads', 'other'];
 const CAT_LABEL: Record<string, string> = {
@@ -65,15 +70,17 @@ export default function TrainingAdmin() {
 
   // AI helper popup (crafts statements, or persona + pain points)
   const [aiFor, setAiFor] = useState<number | null>(null); // audience index
-  const [aiKind, setAiKind] = useState<'statements' | 'persona'>('statements');
+  const [aiKind, setAiKind] = useState<'statements' | 'persona' | 'angles'>('statements');
   const [aiBullets, setAiBullets] = useState('');
-  const [aiResults, setAiResults] = useState<string[]>([]); // statements OR pain points
+  const [aiResults, setAiResults] = useState<string[]>([]); // statements, angles, OR pain points
   const [aiPersona, setAiPersona] = useState('');
+  const [aiCount, setAiCount] = useState(8);
   const [aiBusy, setAiBusy] = useState(false);
   const [aiErr, setAiErr] = useState('');
 
-  const openAi = (i: number, kind: 'statements' | 'persona') => {
+  const openAi = (i: number, kind: 'statements' | 'persona' | 'angles') => {
     setAiFor(i); setAiKind(kind); setAiBullets(''); setAiResults([]); setAiPersona(''); setAiErr('');
+    setAiCount(kind === 'angles' ? 7 : 8);
   };
 
   const runAi = async () => {
@@ -87,13 +94,15 @@ export default function TrainingAdmin() {
       const r = await fetch('/api/admin/training/craft', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ kind: aiKind, audience: a.audience, persona: a.persona, painPoints: a.painPoints, bullets: toLines(aiBullets) }),
+        body: JSON.stringify({ kind: aiKind, audience: a.audience, persona: a.persona, painPoints: a.painPoints, bullets: toLines(aiBullets), count: aiKind === 'persona' ? undefined : aiCount }),
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || 'Generation failed.');
       if (aiKind === 'persona') {
         setAiPersona(d.persona ?? '');
         setAiResults(d.painPoints ?? []);
+      } else if (aiKind === 'angles') {
+        setAiResults(d.angles ?? []);
       } else {
         setAiResults(d.statements ?? []);
       }
@@ -142,21 +151,96 @@ export default function TrainingAdmin() {
         if (aiKind === 'persona') {
           return { ...x, persona: aiPersona.trim() || x.persona, painPoints: [...x.painPoints, ...aiResults] };
         }
+        if (aiKind === 'angles') {
+          return { ...x, angles: [...x.angles, ...aiResults] };
+        }
         return { ...x, statements: [...x.statements, ...aiResults] };
       }),
     });
     setAiFor(null);
   };
 
+  // Document library
+  const [docs, setDocs] = useState<Doc[]>([]);
+  const [docKind, setDocKind] = useState('design-language');
+  const [docTitle, setDocTitle] = useState('');
+  const [docUrl, setDocUrl] = useState('');
+  const [docMsg, setDocMsg] = useState('');
+  const [docUploading, setDocUploading] = useState(false);
+  const docFileRef = useRef<HTMLInputElement>(null);
+
   const loadImages = useCallback(async () => {
     const r = await fetch('/api/admin/training/images');
     if (r.ok) setImages(await r.json());
   }, []);
 
+  const loadDocs = useCallback(async () => {
+    const r = await fetch('/api/admin/training/documents');
+    if (r.ok) setDocs(await r.json());
+  }, []);
+
   useEffect(() => {
     fetch('/api/admin/training/profile').then((r) => r.json()).then(setProfile);
     loadImages();
-  }, [loadImages]);
+    loadDocs();
+  }, [loadImages, loadDocs]);
+
+  const addDocByUrl = async () => {
+    setDocMsg('');
+    const r = await fetch('/api/admin/training/documents', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: docUrl, title: docTitle, kind: docKind, source: 'url' }),
+    });
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}));
+      setDocMsg(d.error || 'Could not add document.');
+      return;
+    }
+    setDocUrl(''); setDocTitle('');
+    loadDocs();
+  };
+
+  const onPickDoc = async (file: File) => {
+    setDocMsg('');
+    setDocUploading(true);
+    try {
+      const form = new FormData();
+      form.append('file', file, file.name);
+      form.append('mode', 'document');
+      const up = await fetch('/api/admin/training/upload', { method: 'POST', body: form });
+      const upJson = await up.json().catch(() => ({}));
+      if (!up.ok) throw new Error(upJson.error || `Upload failed (${up.status})`);
+      await fetch('/api/admin/training/documents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: upJson.url, title: docTitle || file.name.replace(/\.[^.]+$/, ''), kind: docKind, contentType: file.type, size: file.size, source: 'blob' }),
+      });
+      setDocTitle('');
+      loadDocs();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Upload failed';
+      setDocMsg(/not configured|Blob storage/i.test(msg) ? msg : `Upload failed: ${msg}. You can add by URL instead.`);
+    } finally {
+      setDocUploading(false);
+      if (docFileRef.current) docFileRef.current.value = '';
+    }
+  };
+
+  const updateDoc = async (id: number, data: Partial<Doc>) => {
+    setDocs((cur) => cur.map((d) => (d.id === id ? { ...d, ...data } : d)));
+    await fetch('/api/admin/training/documents', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, ...data }),
+    });
+  };
+
+  const removeDoc = async (id: number) => {
+    if (!confirm('Remove this document from the library?')) return;
+    await fetch(`/api/admin/training/documents?id=${id}`, { method: 'DELETE' });
+    loadDocs();
+  };
 
   const saveProfile = async () => {
     if (!profile) return;
@@ -214,6 +298,14 @@ export default function TrainingAdmin() {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = '';
     }
+  };
+
+  const onPickFiles = async (files: File[]) => {
+    for (const f of files) await onPickFile(f);
+  };
+
+  const onPickDocs = async (files: File[]) => {
+    for (const f of files) await onPickDoc(f);
   };
 
   const updateImage = async (id: number, data: Partial<Img>) => {
@@ -331,7 +423,10 @@ export default function TrainingAdmin() {
                         />
                       </div>
                       <div>
-                        <label className={label}>Angles to pursue (one per line)</label>
+                        <div className="flex items-center justify-between">
+                          <label className={label}>Angles to pursue (one per line)</label>
+                          <button onClick={() => openAi(i, 'angles')} className="text-xs text-[#7c3aed] hover:underline mb-1">✨ Generate with AI</button>
+                        </div>
                         <textarea
                           className={input}
                           rows={4}
@@ -439,8 +534,9 @@ export default function TrainingAdmin() {
                   ref={fileRef}
                   type="file"
                   accept="image/*"
+                  multiple
                   disabled={uploading}
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) onPickFile(f); }}
+                  onChange={(e) => { const fs = Array.from(e.target.files ?? []); if (fs.length) onPickFiles(fs); }}
                   className="block text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-[#7c3aed] file:text-white file:font-semibold file:cursor-pointer disabled:opacity-50"
                 />
               </div>
@@ -481,6 +577,80 @@ export default function TrainingAdmin() {
             </div>
           )}
         </section>
+
+        {/* Document library */}
+        <section className="bg-white rounded-xl shadow-sm p-6">
+          <h2 className="font-brother text-[#02176f] text-lg font-semibold mb-1">Document library</h2>
+          <p className="text-sm text-gray-500 mb-4">Documents that capture our design language and angles — brand guides, style references, angle decks.</p>
+
+          {/* Add controls */}
+          <div className="border border-gray-200 rounded-lg p-4 mb-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+              <div>
+                <label className={label}>Kind</label>
+                <select className={input} value={docKind} onChange={(e) => setDocKind(e.target.value)}>
+                  {DOC_KINDS.map((k) => <option key={k} value={k}>{DOC_KIND_LABEL[k]}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className={label}>Title</label>
+                <input className={input} value={docTitle} onChange={(e) => setDocTitle(e.target.value)} placeholder="IBF Brand Guide 2026" />
+              </div>
+            </div>
+            <div className="flex flex-wrap items-end gap-3">
+              <div className="flex-1 min-w-[240px]">
+                <label className={label}>Add by URL</label>
+                <div className="flex gap-2">
+                  <input className={input} value={docUrl} onChange={(e) => setDocUrl(e.target.value)} placeholder="https://…" />
+                  <button onClick={addDocByUrl} disabled={!docUrl.trim()} className="bg-[#02176f] hover:bg-[#021a85] text-white font-semibold text-sm px-4 py-2 rounded-md disabled:opacity-50 whitespace-nowrap">Add</button>
+                </div>
+              </div>
+              <span className="text-sm text-gray-400 pb-2">or</span>
+              <div>
+                <label className={label}>Upload file</label>
+                <input
+                  ref={docFileRef}
+                  type="file"
+                  accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.md,image/*"
+                  multiple
+                  disabled={docUploading}
+                  onChange={(e) => { const fs = Array.from(e.target.files ?? []); if (fs.length) onPickDocs(fs); }}
+                  className="block text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-[#7c3aed] file:text-white file:font-semibold file:cursor-pointer disabled:opacity-50"
+                />
+              </div>
+            </div>
+            {docUploading && <p className="text-xs text-gray-500 mt-2">Uploading…</p>}
+            {docMsg && <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 mt-2">{docMsg}</p>}
+          </div>
+
+          {docs.length === 0 ? (
+            <p className="text-sm text-gray-400">No documents yet.</p>
+          ) : (
+            <div className="divide-y divide-gray-100 border border-gray-100 rounded-lg">
+              {docs.map((d) => (
+                <div key={d.id} className="flex items-center gap-3 px-4 py-3">
+                  <svg className="w-8 h-8 text-[#02176f] shrink-0" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <div className="flex-1 min-w-0">
+                    <input
+                      value={d.title}
+                      onChange={(e) => setDocs((cur) => cur.map((x) => (x.id === d.id ? { ...x, title: e.target.value } : x)))}
+                      onBlur={(e) => updateDoc(d.id, { title: e.target.value })}
+                      className="w-full text-sm font-medium text-[#02176f] bg-transparent border-0 focus:outline-none focus:ring-1 focus:ring-[#0066ff] rounded px-1 -mx-1"
+                    />
+                    <p className="text-[11px] text-gray-400 truncate">{prettySize(d.size)}{d.size ? ' · ' : ''}{d.url}</p>
+                  </div>
+                  <select value={d.kind} onChange={(e) => updateDoc(d.id, { kind: e.target.value })} className="text-xs border border-gray-200 rounded px-1.5 py-1">
+                    {DOC_KINDS.map((k) => <option key={k} value={k}>{DOC_KIND_LABEL[k]}</option>)}
+                  </select>
+                  <a href={d.url} target="_blank" rel="noopener noreferrer" className="text-xs text-[#0066ff] hover:underline whitespace-nowrap">Open</a>
+                  <button onClick={() => removeDoc(d.id)} className="text-[11px] text-gray-400 hover:text-red-600">Delete</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       </main>
 
       {/* AI statement helper popup */}
@@ -489,14 +659,16 @@ export default function TrainingAdmin() {
           <div className="w-full max-w-lg bg-white rounded-xl shadow-2xl p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-1">
               <h3 className="font-brother text-[#02176f] text-lg font-semibold">
-                ✨ {aiKind === 'persona' ? 'Define persona & pain points' : 'Generate statements'}{profile.audiences[aiFor]?.audience ? ` — ${profile.audiences[aiFor].audience}` : ''}
+                ✨ {aiKind === 'persona' ? 'Define persona & pain points' : aiKind === 'angles' ? 'Generate angles' : 'Generate statements'}{profile.audiences[aiFor]?.audience ? ` — ${profile.audiences[aiFor].audience}` : ''}
               </h3>
               <button onClick={() => setAiFor(null)} disabled={aiBusy} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
             </div>
             <p className="text-sm text-gray-500 mb-3">
               {aiKind === 'persona'
                 ? 'Give it a couple of bullet points about who this audience is — it crafts the persona and pain points.'
-                : 'Give it a couple of bullet points — it crafts on-brand statements using this audience’s persona and pain points.'}
+                : aiKind === 'angles'
+                  ? 'Optional bullet points to steer it — otherwise it works from this audience’s persona and pain points.'
+                  : 'Optional bullet points to steer it — otherwise it crafts on-brand statements from this audience’s persona and pain points.'}
             </p>
             <textarea
               className={input}
@@ -505,10 +677,27 @@ export default function TrainingAdmin() {
               value={aiBullets}
               placeholder={aiKind === 'persona'
                 ? 'homeschool mom, 4 kids\nshops at the parish fair\nworries about screen time'
-                : 'every book is hand-picked\nparents can trust the table\nno junk toys'}
+                : aiKind === 'angles'
+                  ? 'seasonal tie-ins\nteacher word-of-mouth\nwhy curation beats volume'
+                  : 'every book is hand-picked\nparents can trust the table\nno junk toys'}
               onChange={(e) => setAiBullets(e.target.value)}
               disabled={aiBusy}
             />
+            {aiKind !== 'persona' && (
+              <div className="flex items-center gap-3 mt-3">
+                <label className="text-sm font-medium text-[#02176f] whitespace-nowrap">How many?</label>
+                <input
+                  type="range"
+                  min={5}
+                  max={50}
+                  value={aiCount}
+                  onChange={(e) => setAiCount(Number(e.target.value))}
+                  disabled={aiBusy}
+                  className="flex-1 accent-[#7c3aed]"
+                />
+                <span className="text-sm font-semibold text-[#7c3aed] w-8 text-right">{aiCount}</span>
+              </div>
+            )}
             {aiErr && <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2 mt-2">{aiErr}</p>}
             {aiPersona.trim() && (
               <div className="mt-3 border border-gray-200 rounded-lg p-3 bg-gray-50">
@@ -528,12 +717,16 @@ export default function TrainingAdmin() {
               </div>
             )}
             <div className="flex items-center justify-end gap-3 mt-4">
-              <button onClick={runAi} disabled={aiBusy || !aiBullets.trim()} className="text-sm text-[#7c3aed] font-semibold hover:underline disabled:opacity-50">
+              <button
+                onClick={runAi}
+                disabled={aiBusy || (aiKind === 'persona' ? !aiBullets.trim() : !aiBullets.trim() && !profile.audiences[aiFor]?.persona.trim() && !profile.audiences[aiFor]?.painPoints.length)}
+                className="text-sm text-[#7c3aed] font-semibold hover:underline disabled:opacity-50"
+              >
                 {aiBusy ? 'Crafting…' : aiHasResults ? 'Regenerate' : 'Generate'}
               </button>
               {aiHasResults && (
                 <button onClick={acceptAi} className="bg-[#02176f] hover:bg-[#021a85] text-white font-semibold text-sm px-5 py-2 rounded-md">
-                  {aiKind === 'persona' ? 'Use persona & pain points' : 'Add to statements'}
+                  {aiKind === 'persona' ? 'Use persona & pain points' : aiKind === 'angles' ? 'Add to angles' : 'Add to statements'}
                 </button>
               )}
             </div>
