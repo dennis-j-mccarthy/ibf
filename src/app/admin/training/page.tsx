@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 // fonts, social + article prefs) plus a tagged image library. Both feed the blog
 // and social generators. Admin-only (middleware-guarded).
 
-type Audience = { audience: string; statements: string[]; angles: string[] };
+type Audience = { audience: string; persona: string; painPoints: string[]; statements: string[]; angles: string[] };
 type Color = { name: string; hex: string };
 type Font = { name: string; usage: string };
 type Profile = { audiences: Audience[]; colors: Color[]; fonts: Font[]; socialPrefs: string; articlePrefs: string };
@@ -62,6 +62,43 @@ export default function TrainingAdmin() {
   const [addMsg, setAddMsg] = useState('');
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // AI statement helper popup
+  const [aiFor, setAiFor] = useState<number | null>(null); // audience index
+  const [aiBullets, setAiBullets] = useState('');
+  const [aiResults, setAiResults] = useState<string[]>([]);
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiErr, setAiErr] = useState('');
+
+  const openAi = (i: number) => { setAiFor(i); setAiBullets(''); setAiResults([]); setAiErr(''); };
+
+  const runAi = async () => {
+    if (aiFor === null || !profile) return;
+    const a = profile.audiences[aiFor];
+    setAiBusy(true);
+    setAiErr('');
+    setAiResults([]);
+    try {
+      const r = await fetch('/api/admin/training/craft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ audience: a.audience, persona: a.persona, painPoints: a.painPoints, bullets: toLines(aiBullets) }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Generation failed.');
+      setAiResults(d.statements ?? []);
+    } catch (e) {
+      setAiErr(e instanceof Error ? e.message : 'Generation failed.');
+    } finally {
+      setAiBusy(false);
+    }
+  };
+
+  const acceptAi = () => {
+    if (aiFor === null || !profile || !aiResults.length) return;
+    patch({ audiences: profile.audiences.map((x, idx) => (idx === aiFor ? { ...x, statements: [...x.statements, ...aiResults] } : x)) });
+    setAiFor(null);
+  };
 
   const loadImages = useCallback(async () => {
     const r = await fetch('/api/admin/training/images');
@@ -180,9 +217,9 @@ export default function TrainingAdmin() {
             {/* Audiences */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-semibold text-[#02176f]">Audiences — statements &amp; angles</h3>
+                <h3 className="text-sm font-semibold text-[#02176f]">Audiences — persona, pain points, statements &amp; angles</h3>
                 <button
-                  onClick={() => patch({ audiences: [...profile.audiences, { audience: '', statements: [], angles: [] }] })}
+                  onClick={() => patch({ audiences: [...profile.audiences, { audience: '', persona: '', painPoints: [], statements: [], angles: [] }] })}
                   className="text-sm text-[#0066ff] hover:underline"
                 >
                   + Add audience
@@ -205,9 +242,34 @@ export default function TrainingAdmin() {
                         Remove
                       </button>
                     </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                      <div>
+                        <label className={label}>Persona (who they are)</label>
+                        <textarea
+                          className={input}
+                          rows={3}
+                          value={a.persona}
+                          placeholder={'Busy mom of three who wants books she can hand her kids without pre-reading every page.'}
+                          onChange={(e) => patch({ audiences: profile.audiences.map((x, idx) => (idx === i ? { ...x, persona: e.target.value } : x)) })}
+                        />
+                      </div>
+                      <div>
+                        <label className={label}>Pain points (one per line)</label>
+                        <textarea
+                          className={input}
+                          rows={3}
+                          value={lines(a.painPoints)}
+                          placeholder={'No time to vet every book\nBurned by junky fair titles before'}
+                          onChange={(e) => patch({ audiences: profile.audiences.map((x, idx) => (idx === i ? { ...x, painPoints: toLines(e.target.value) } : x)) })}
+                        />
+                      </div>
+                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className={label}>Approved statements (one per line)</label>
+                        <div className="flex items-center justify-between">
+                          <label className={label}>Approved statements (one per line)</label>
+                          <button onClick={() => openAi(i)} className="text-xs text-[#7c3aed] hover:underline mb-1">✨ Generate with AI</button>
+                        </div>
                         <textarea
                           className={input}
                           rows={4}
@@ -367,6 +429,51 @@ export default function TrainingAdmin() {
           )}
         </section>
       </main>
+
+      {/* AI statement helper popup */}
+      {aiFor !== null && profile && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => !aiBusy && setAiFor(null)}>
+          <div className="w-full max-w-lg bg-white rounded-xl shadow-2xl p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="font-brother text-[#02176f] text-lg font-semibold">
+                ✨ Generate statements{profile.audiences[aiFor]?.audience ? ` — ${profile.audiences[aiFor].audience}` : ''}
+              </h3>
+              <button onClick={() => setAiFor(null)} disabled={aiBusy} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
+            </div>
+            <p className="text-sm text-gray-500 mb-3">Give it a couple of bullet points — it crafts on-brand statements using this audience&apos;s persona and pain points.</p>
+            <textarea
+              className={input}
+              rows={4}
+              autoFocus
+              value={aiBullets}
+              placeholder={'every book is hand-picked\nparents can trust the table\nno junk toys'}
+              onChange={(e) => setAiBullets(e.target.value)}
+              disabled={aiBusy}
+            />
+            {aiErr && <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2 mt-2">{aiErr}</p>}
+            {aiResults.length > 0 && (
+              <div className="mt-3 border border-gray-200 rounded-lg p-3 bg-gray-50 space-y-1">
+                {aiResults.map((s, i) => (
+                  <div key={i} className="flex items-start gap-2 text-sm text-[#02176f]">
+                    <span className="flex-1">{s}</span>
+                    <button onClick={() => setAiResults((cur) => cur.filter((_, idx) => idx !== i))} className="text-gray-300 hover:text-red-500 text-xs mt-0.5">✕</button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="flex items-center justify-end gap-3 mt-4">
+              <button onClick={runAi} disabled={aiBusy || !aiBullets.trim()} className="text-sm text-[#7c3aed] font-semibold hover:underline disabled:opacity-50">
+                {aiBusy ? 'Crafting…' : aiResults.length ? 'Regenerate' : 'Generate'}
+              </button>
+              {aiResults.length > 0 && (
+                <button onClick={acceptAi} className="bg-[#02176f] hover:bg-[#021a85] text-white font-semibold text-sm px-5 py-2 rounded-md">
+                  Add to statements
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

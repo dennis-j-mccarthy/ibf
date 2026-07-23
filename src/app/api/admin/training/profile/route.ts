@@ -19,8 +19,10 @@ export async function PUT(request: NextRequest) {
     audiences: Array.isArray(b.audiences)
       ? b.audiences
           .filter((a: unknown) => a && typeof (a as { audience?: unknown }).audience === 'string')
-          .map((a: { audience: string; statements?: unknown; angles?: unknown }) => ({
+          .map((a: { audience: string; persona?: unknown; painPoints?: unknown; statements?: unknown; angles?: unknown }) => ({
             audience: a.audience.trim(),
+            persona: typeof a.persona === 'string' ? a.persona.trim() : '',
+            painPoints: asStrings(a.painPoints),
             statements: asStrings(a.statements),
             angles: asStrings(a.angles),
           }))

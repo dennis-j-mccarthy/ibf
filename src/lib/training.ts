@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 // The brand "training" profile + image library that inform the blog and social
 // generators. One editable profile row (singleton) plus a tagged image table.
 
-export type AudienceTraining = { audience: string; statements: string[]; angles: string[] };
+export type AudienceTraining = { audience: string; persona: string; painPoints: string[]; statements: string[]; angles: string[] };
 export type BrandColor = { name: string; hex: string };
 export type BrandFont = { name: string; usage: string };
 
@@ -30,9 +30,9 @@ export const IMAGE_CATEGORIES = ['kids', 'bookfairs', 'parents', 'teachers', 'ad
 // Sensible starter profile so the tools have brand context before anyone edits.
 const DEFAULT_PROFILE: TrainingProfileData = {
   audiences: [
-    { audience: 'Parents', statements: [], angles: [] },
-    { audience: 'Teachers', statements: [], angles: [] },
-    { audience: 'Administrators', statements: [], angles: [] },
+    { audience: 'Parents', persona: '', painPoints: [], statements: [], angles: [] },
+    { audience: 'Teachers', persona: '', painPoints: [], statements: [], angles: [] },
+    { audience: 'Administrators', persona: '', painPoints: [], statements: [], angles: [] },
   ],
   colors: [
     { name: 'Ignatius Blue', hex: '#02176f' },
@@ -46,13 +46,23 @@ const DEFAULT_PROFILE: TrainingProfileData = {
   articlePrefs: '',
 };
 
+// Rows saved before persona/painPoints existed lack those keys — fill them in.
+const normalizeAudiences = (v: unknown): AudienceTraining[] =>
+  ((v as Partial<AudienceTraining>[]) ?? []).map((a) => ({
+    audience: a.audience ?? '',
+    persona: a.persona ?? '',
+    painPoints: a.painPoints ?? [],
+    statements: a.statements ?? [],
+    angles: a.angles ?? [],
+  }));
+
 // Read the singleton profile, falling back to defaults when the row is absent
 // (so the generators always get usable context).
 export async function getTrainingProfile(): Promise<TrainingProfileData> {
   const row = await prisma.trainingProfile.findUnique({ where: { id: 1 } }).catch(() => null);
   if (!row) return DEFAULT_PROFILE;
   return {
-    audiences: (row.audiences as AudienceTraining[]) ?? [],
+    audiences: normalizeAudiences(row.audiences),
     colors: (row.colors as BrandColor[]) ?? [],
     fonts: (row.fonts as BrandFont[]) ?? [],
     socialPrefs: row.socialPrefs ?? '',
@@ -68,7 +78,7 @@ export async function getSavedTrainingProfile(): Promise<TrainingProfileData | n
   const row = await prisma.trainingProfile.findUnique({ where: { id: 1 } }).catch(() => null);
   if (!row) return null;
   return {
-    audiences: (row.audiences as AudienceTraining[]) ?? [],
+    audiences: normalizeAudiences(row.audiences),
     colors: (row.colors as BrandColor[]) ?? [],
     fonts: (row.fonts as BrandFont[]) ?? [],
     socialPrefs: row.socialPrefs ?? '',
@@ -103,7 +113,7 @@ export async function getTrainingImages(): Promise<TrainingImageData[]> {
 export function brandBrief(p: TrainingProfileData, opts?: { forAudience?: string }): string {
   const parts: string[] = [];
 
-  const audiences = p.audiences.filter((a) => a.statements.length || a.angles.length);
+  const audiences = p.audiences.filter((a) => a.statements.length || a.angles.length || a.persona.trim() || a.painPoints.length);
   const focus = opts?.forAudience?.trim().toLowerCase();
   const ordered = focus
     ? [...audiences].sort((a, b) => (b.audience.toLowerCase() === focus ? 1 : 0) - (a.audience.toLowerCase() === focus ? 1 : 0))
@@ -113,9 +123,11 @@ export function brandBrief(p: TrainingProfileData, opts?: { forAudience?: string
       'AUDIENCES — tailor voice and pull from these approved lines:\n' +
         ordered
           .map((a) => {
+            const p2 = a.persona.trim() ? `\n    persona: ${a.persona.trim()}` : '';
+            const pain = a.painPoints.length ? `\n    pain points to speak to: ${a.painPoints.join(' · ')}` : '';
             const s = a.statements.length ? `\n    approved statements: ${a.statements.map((x) => `"${x}"`).join(' · ')}` : '';
             const g = a.angles.length ? `\n    angles to pursue: ${a.angles.join(' · ')}` : '';
-            return `  - ${a.audience}:${g}${s}`;
+            return `  - ${a.audience}:${p2}${pain}${g}${s}`;
           })
           .join('\n'),
     );
