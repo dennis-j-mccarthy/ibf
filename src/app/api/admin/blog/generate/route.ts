@@ -4,7 +4,7 @@ import { getAdminEmail } from '@/lib/auth/admin-guard';
 import { uniqueBlogSlug } from '@/lib/blog-admin';
 import { generateArticle } from '@/lib/claude';
 import { fetchBooks } from '@/lib/books';
-import { getSavedTrainingProfile, brandBrief } from '@/lib/training';
+import { getSavedTrainingProfile, brandBrief, getTrainingDocuments } from '@/lib/training';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60; // article generation can take a while
@@ -36,7 +36,8 @@ export async function POST(request: NextRequest) {
   const books = bookUrls.length ? await fetchBooks(bookUrls) : [];
 
   const savedProfile = await getSavedTrainingProfile();
-  const brief = savedProfile ? brandBrief(savedProfile, { forAudience: audience }) : '';
+  const docs = await getTrainingDocuments();
+  const brief = savedProfile ? brandBrief(savedProfile, { forAudience: audience, docs }) : '';
 
   let article;
   try {

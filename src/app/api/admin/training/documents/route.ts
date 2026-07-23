@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAdminEmail } from '@/lib/auth/admin-guard';
+import { extractDocText } from '@/lib/training';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -22,14 +23,18 @@ export async function POST(request: NextRequest) {
   const url = typeof b?.url === 'string' ? b.url.trim() : '';
   const title = typeof b?.title === 'string' && b.title.trim() ? b.title.trim() : url.split('/').pop()?.split('?')[0] || 'Untitled';
   if (!url) return NextResponse.json({ error: 'URL required.' }, { status: 400 });
+  const contentType = typeof b?.contentType === 'string' ? b.contentType : '';
+  // Pull the text out now so the generators can use it without re-fetching.
+  const text = await extractDocText(url, contentType);
   const doc = await prisma.trainingDocument.create({
     data: {
       title,
       url,
       kind: KINDS.has(b?.kind) ? b.kind : 'other',
-      contentType: typeof b?.contentType === 'string' ? b.contentType : '',
+      contentType,
       size: Number.isFinite(b?.size) ? Math.max(0, Math.round(b.size)) : 0,
       source: b?.source === 'blob' ? 'blob' : 'url',
+      text,
     },
   });
   return NextResponse.json(doc);

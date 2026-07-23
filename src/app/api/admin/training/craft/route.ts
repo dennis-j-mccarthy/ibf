@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { getAdminEmail } from '@/lib/auth/admin-guard';
+import { getTrainingDocuments } from '@/lib/training';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -63,7 +64,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Give me at least one bullet point.' }, { status: 400 });
     }
 
-    const context = `${audience ? `\nAudience: ${audience}.` : ''}${persona ? `\nAudience persona: ${persona}.` : ''}${painPoints.length ? `\nTheir pain points: ${painPoints.join(' · ')}.` : ''}${favorites.length ? `\nThe team starred these as favorites — capture this exact vibe and quality (do not repeat them verbatim): ${favorites.map((f) => `"${f}"`).join(' · ')}.` : ''}`;
+    // Uploaded brand docs (messaging + design language) steer the craft too.
+    const docText = (await getTrainingDocuments())
+      .filter((d) => d.text.trim() && (d.kind === 'angles' || d.kind === 'design-language'))
+      .map((d) => `--- ${d.title} ---\n${d.text.slice(0, 1500)}`)
+      .join('\n')
+      .slice(0, 4500);
+
+    const context = `${audience ? `\nAudience: ${audience}.` : ''}${persona ? `\nAudience persona: ${persona}.` : ''}${painPoints.length ? `\nTheir pain points: ${painPoints.join(' · ')}.` : ''}${favorites.length ? `\nThe team starred these as favorites — capture this exact vibe and quality (do not repeat them verbatim): ${favorites.map((f) => `"${f}"`).join(' · ')}.` : ''}${docText ? `\n\nBRAND REFERENCE DOCS (messaging & design language — stay consistent with these):\n${docText}` : ''}`;
     const source = bullets.length
       ? `from these rough bullet points:\n${bullets.map((x) => `- ${x}`).join('\n')}`
       : `grounded in the audience persona and pain points below — speak straight at what they worry about`;
@@ -82,10 +90,10 @@ Return:
 ${context}
 
 An angle is a content DIRECTION — a theme, territory, or storyline to explore in posts (e.g. "Behind the scenes of our curation process", "Why teachers spread the word", "Seasonal faith tie-ins", "Cost vs. big-box fairs"). An angle is NOT a tagline, slogan, or brand statement — punchy declaratives like "Trust the shelf." belong in approved statements, never here. Short phrases (3–8 words, no period), each a genuinely different direction — no near-duplicates; no emoji. Return only the angles.`
-          : `Craft ${count ? `exactly ${count}` : '5–8'} approved brand statements ${source}
+          : `Craft ${count ? `exactly ${count}` : '5–8'} approved brand statements & angles — a mix of punchy declaratives (e.g. "We start with no.") and content directions (e.g. "Behind the scenes of our curation") — ${source}
 ${context}
 
-Each statement: short (2–8 words ideal), declarative, clever, on-voice, ends in a period. All distinct from each other — no near-duplicates. No emoji, no hashtags, no exclamation marks. Return only the statements.`;
+Each line: short (2–8 words ideal), clever, on-voice. All distinct from each other — no near-duplicates. No emoji, no hashtags, no exclamation marks. Return only the lines as statements.`;
 
     const client = new Anthropic(); // reads ANTHROPIC_API_KEY
     const stream = client.messages.stream({

@@ -7,10 +7,11 @@ export type AudienceTraining = {
   audience: string;
   persona: string;
   painPoints: string[];
+  // One bucket for statements & angles (the old separate `angles` list is merged
+  // into `statements` on read; the angles fields are kept for backward compat).
   statements: string[];
   angles: string[];
-  // Starred favorites ("I like this") — subsets of statements/angles, weighted
-  // heavily by the generators.
+  // Starred favorites ("I like this") — weighted heavily by the generators.
   starredStatements: string[];
   starredAngles: string[];
 };
@@ -58,15 +59,20 @@ const DEFAULT_PROFILE: TrainingProfileData = {
 
 // Rows saved before persona/painPoints existed lack those keys — fill them in.
 const normalizeAudiences = (v: unknown): AudienceTraining[] =>
-  ((v as Partial<AudienceTraining>[]) ?? []).map((a) => ({
-    audience: a.audience ?? '',
-    persona: a.persona ?? '',
-    painPoints: a.painPoints ?? [],
-    statements: a.statements ?? [],
-    angles: a.angles ?? [],
-    starredStatements: a.starredStatements ?? [],
-    starredAngles: a.starredAngles ?? [],
-  }));
+  ((v as Partial<AudienceTraining>[]) ?? []).map((a) => {
+    // Fold legacy angles into the single statements & angles bucket.
+    const statements = [...(a.statements ?? []), ...(a.angles ?? []).filter((x) => !(a.statements ?? []).includes(x))];
+    const starredStatements = [...(a.starredStatements ?? []), ...(a.starredAngles ?? []).filter((x) => !(a.starredStatements ?? []).includes(x))];
+    return {
+      audience: a.audience ?? '',
+      persona: a.persona ?? '',
+      painPoints: a.painPoints ?? [],
+      statements,
+      angles: [],
+      starredStatements,
+      starredAngles: [],
+    };
+  });
 
 // Read the singleton profile, falling back to defaults when the row is absent
 // (so the generators always get usable context).
@@ -106,6 +112,42 @@ export async function saveTrainingProfile(data: TrainingProfileData): Promise<vo
   });
 }
 
+export type TrainingDocumentData = {
+  id: number;
+  title: string;
+  url: string;
+  kind: string; // design-language | angles | other
+  text: string;
+};
+
+export async function getTrainingDocuments(): Promise<TrainingDocumentData[]> {
+  const rows = await prisma.trainingDocument.findMany({ orderBy: { createdAt: 'desc' } }).catch(() => []);
+  return rows.map((r) => ({ id: r.id, title: r.title, url: r.url, kind: r.kind, text: r.text }));
+}
+
+// Best-effort text extraction so uploaded docs can inform the generators.
+// PDFs via unpdf; plain text/markdown directly; everything else stays empty.
+const MAX_DOC_TEXT = 20000;
+export async function extractDocText(url: string, contentType: string): Promise<string> {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return '';
+    const type = contentType || res.headers.get('content-type') || '';
+    if (type.includes('pdf') || /\.pdf(\?|$)/i.test(url)) {
+      const { extractText, getDocumentProxy } = await import('unpdf');
+      const pdf = await getDocumentProxy(new Uint8Array(await res.arrayBuffer()));
+      const { text } = await extractText(pdf, { mergePages: true });
+      return String(text).replace(/\s+/g, ' ').trim().slice(0, MAX_DOC_TEXT);
+    }
+    if (type.startsWith('text/') || /\.(txt|md)(\?|$)/i.test(url)) {
+      return (await res.text()).trim().slice(0, MAX_DOC_TEXT);
+    }
+    return '';
+  } catch {
+    return '';
+  }
+}
+
 export async function getTrainingImages(): Promise<TrainingImageData[]> {
   const rows = await prisma.trainingImage.findMany({ orderBy: { createdAt: 'desc' } }).catch(() => []);
   return rows.map((r) => ({
@@ -122,7 +164,7 @@ export async function getTrainingImages(): Promise<TrainingImageData[]> {
 // Compile the profile into a brand brief injected into both generators' system
 // prompts. Only non-empty sections are included so an unfilled profile adds
 // nothing noisy.
-export function brandBrief(p: TrainingProfileData, opts?: { forAudience?: string }): string {
+export function brandBrief(p: TrainingProfileData, opts?: { forAudience?: string; docs?: TrainingDocumentData[] }): string {
   const parts: string[] = [];
 
   const audiences = p.audiences.filter((a) => a.statements.length || a.angles.length || a.persona.trim() || a.painPoints.length);
@@ -140,18 +182,26 @@ export function brandBrief(p: TrainingProfileData, opts?: { forAudience?: string
             const favS = a.starredStatements.filter((x) => a.statements.includes(x));
             const restS = a.statements.filter((x) => !favS.includes(x));
             const s = a.statements.length
-              ? `\n    approved statements${favS.length ? ' (★ = team favorites — weight these heavily, lead with them, emulate their style)' : ''}: ${[...favS.map((x) => `★ "${x}"`), ...restS.map((x) => `"${x}"`)].join(' · ')}`
+              ? `\n    approved statements & angles${favS.length ? ' (★ = team favorites — weight these heavily, lead with them, emulate their style)' : ''}: ${[...favS.map((x) => `★ "${x}"`), ...restS.map((x) => `"${x}"`)].join(' · ')}`
               : '';
-            const favA = a.starredAngles.filter((x) => a.angles.includes(x));
-            const restA = a.angles.filter((x) => !favA.includes(x));
-            const g = a.angles.length
-              ? `\n    angles to pursue${favA.length ? ' (★ = team favorites — prefer these)' : ''}: ${[...favA.map((x) => `★ ${x}`), ...restA].join(' · ')}`
-              : '';
-            return `  - ${a.audience}:${p2}${pain}${g}${s}`;
+            return `  - ${a.audience}:${p2}${pain}${s}`;
           })
           .join('\n'),
     );
   }
+
+  // Uploaded reference docs, grouped by kind: design-language docs steer visual/
+  // verbal identity; angle docs steer messaging. Capped so the prompt stays sane.
+  const docsWithText = (opts?.docs ?? []).filter((d) => d.text.trim());
+  const PER_DOC = 2500;
+  const docBlock = (label: string, docs: TrainingDocumentData[]) =>
+    docs.length
+      ? `${label}\n${docs.map((d) => `--- ${d.title} ---\n${d.text.slice(0, PER_DOC)}`).join('\n')}`
+      : '';
+  const design = docBlock('DESIGN LANGUAGE REFERENCE (from uploaded brand docs — follow this visual & verbal identity):', docsWithText.filter((d) => d.kind === 'design-language'));
+  const messaging = docBlock('MESSAGING & ANGLE REFERENCE (from uploaded brand docs — draw angles, phrasing, and emphasis from this):', docsWithText.filter((d) => d.kind === 'angles'));
+  const otherDocs = docBlock('OTHER BRAND REFERENCE DOCS:', docsWithText.filter((d) => d.kind !== 'design-language' && d.kind !== 'angles'));
+  for (const block of [design, messaging, otherDocs]) if (block) parts.push(block);
 
   if (p.colors.length) parts.push('BRAND COLORS: ' + p.colors.map((c) => `${c.name} ${c.hex}`).join(', '));
   if (p.fonts.length) parts.push('BRAND FONTS: ' + p.fonts.map((f) => `${f.name} (${f.usage})`).join(', '));

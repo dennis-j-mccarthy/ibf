@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminEmail } from '@/lib/auth/admin-guard';
 import { generateSocialPosts } from '@/lib/social/generate';
-import { getSavedTrainingProfile, brandBrief, getTrainingImages, photoBackgrounds } from '@/lib/training';
+import { getSavedTrainingProfile, brandBrief, getTrainingImages, getTrainingDocuments, photoBackgrounds } from '@/lib/training';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120; // generating a set of posts can take a while
@@ -42,7 +42,8 @@ export async function POST(request: NextRequest) {
 
   // Brand training: brief for the prompt + a photo pool for photo-hero backgrounds.
   const savedProfile = await getSavedTrainingProfile();
-  const brief = savedProfile ? brandBrief(savedProfile) : '';
+  const docs = await getTrainingDocuments();
+  const brief = savedProfile ? brandBrief(savedProfile, { docs }) : '';
   const photoPool = photoBackgrounds(await getTrainingImages());
 
   const encoder = new TextEncoder();

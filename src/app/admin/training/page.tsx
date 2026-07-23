@@ -138,6 +138,27 @@ export default function TrainingAdmin() {
   // Draft text for each pill list's inline add box, keyed by `${audienceIdx}:${field}`
   const [drafts, setDrafts] = useState<Record<string, string>>({});
 
+  // Inline pill editing: click a pill's text to edit it in place.
+  const [editing, setEditing] = useState<{ i: number; field: 'statements' | 'angles'; line: string; value: string } | null>(null);
+
+  const commitEdit = () => {
+    if (!editing || !profile) return;
+    const { i, field, line } = editing;
+    const starField = field === 'statements' ? 'starredStatements' : 'starredAngles';
+    const nv = editing.value.trim();
+    patch({
+      audiences: profile.audiences.map((x, idx) => {
+        if (idx !== i) return x;
+        if (!nv || (x[field].includes(nv) && nv !== line)) {
+          // emptied, or edited into a duplicate of another pill — drop the original
+          return { ...x, [field]: x[field].filter((l) => l !== line), [starField]: x[starField].filter((l) => l !== line) };
+        }
+        return { ...x, [field]: x[field].map((l) => (l === line ? nv : l)), [starField]: x[starField].map((l) => (l === line ? nv : l)) };
+      }),
+    });
+    setEditing(null);
+  };
+
   const removeLine = (i: number, field: 'statements' | 'angles', starField: 'starredStatements' | 'starredAngles', line: string) => {
     if (!profile) return;
     patch({
@@ -181,7 +202,22 @@ export default function TrainingAdmin() {
               >
                 {isStarred ? '★' : '☆'}
               </button>
-              <span className="truncate">{line}</span>
+              {editing && editing.i === i && editing.field === field && editing.line === line ? (
+                <input
+                  autoFocus
+                  value={editing.value}
+                  onChange={(e) => setEditing((cur) => (cur ? { ...cur, value: e.target.value } : cur))}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') { e.preventDefault(); commitEdit(); }
+                    if (e.key === 'Escape') setEditing(null);
+                  }}
+                  onBlur={commitEdit}
+                  style={{ width: `${Math.max(10, editing.value.length + 2)}ch` }}
+                  className="bg-transparent text-[11px] focus:outline-none border-b border-dashed border-current"
+                />
+              ) : (
+                <span className="truncate cursor-text" title="Click to edit" onClick={() => setEditing({ i, field, line, value: line })}>{line}</span>
+              )}
               <button onClick={() => removeLine(i, field, starField, line)} title="Remove" className="text-gray-300 hover:text-red-500 px-0.5 transition-colors">✕</button>
             </span>
           );
@@ -504,19 +540,12 @@ export default function TrainingAdmin() {
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
+                      <div className="sm:col-span-2">
                         <div className="flex items-center justify-between">
-                          <label className={label}>Approved statements</label>
+                          <label className={label}>Statements &amp; angles</label>
                           <button onClick={() => openAi(i, 'statements')} className="text-xs text-[#7c3aed] hover:underline mb-1">✨ Generate with AI</button>
                         </div>
-                        {renderPills(i, 'statements', 'starredStatements', 'Add a statement… ↵')}
-                      </div>
-                      <div>
-                        <div className="flex items-center justify-between">
-                          <label className={label}>Angles to pursue</label>
-                          <button onClick={() => openAi(i, 'angles')} className="text-xs text-[#7c3aed] hover:underline mb-1">✨ Generate with AI</button>
-                        </div>
-                        {renderPills(i, 'angles', 'starredAngles', 'Add an angle… ↵')}
+                        {renderPills(i, 'statements', 'starredStatements', 'Add a statement or angle… ↵')}
                       </div>
                     </div>
                   </div>
@@ -741,7 +770,7 @@ export default function TrainingAdmin() {
           <div className="w-full max-w-lg bg-white rounded-xl shadow-2xl p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-1">
               <h3 className="font-brother text-[#02176f] text-lg font-semibold">
-                ✨ {aiKind === 'persona' ? 'Define persona & pain points' : aiKind === 'angles' ? 'Generate angles' : 'Generate statements'}{profile.audiences[aiFor]?.audience ? ` — ${profile.audiences[aiFor].audience}` : ''}
+                ✨ {aiKind === 'persona' ? 'Define persona & pain points' : 'Generate statements & angles'}{profile.audiences[aiFor]?.audience ? ` — ${profile.audiences[aiFor].audience}` : ''}
               </h3>
               <button onClick={() => setAiFor(null)} disabled={aiBusy} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
             </div>
@@ -808,7 +837,7 @@ export default function TrainingAdmin() {
               </button>
               {aiHasResults && (
                 <button onClick={acceptAi} className="bg-[#02176f] hover:bg-[#021a85] text-white font-semibold text-sm px-5 py-2 rounded-md">
-                  {aiKind === 'persona' ? 'Use persona & pain points' : aiKind === 'angles' ? 'Add to angles' : 'Add to statements'}
+                  {aiKind === 'persona' ? 'Use persona & pain points' : 'Add to list'}
                 </button>
               )}
             </div>

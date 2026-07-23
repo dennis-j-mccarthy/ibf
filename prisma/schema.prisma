@@ -176,5 +176,6 @@ model TrainingDocument {
   contentType String   @default("")
   size        Int      @default(0) // bytes
   source      String   @default("url") // url|blob
+  text        String   @default("") // extracted text — injected into the generators' brand brief
   createdAt   DateTime @default(now())
 }
