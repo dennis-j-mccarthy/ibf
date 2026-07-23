@@ -129,6 +129,11 @@ function getAppointmentRedirect(orgType: string, schoolType: string, state: stri
     return APPOINTMENT_URLS['marni'];
   }
 
+  // Home school org type -> Marni
+  if (orgLower === 'home school') {
+    return APPOINTMENT_URLS['marni'];
+  }
+
   // Diocese, Business, Other org types -> Kim
   if (orgLower === 'diocese' || orgLower === 'business' || orgLower === 'other') {
     return APPOINTMENT_URLS['kim'] || null;
@@ -1465,6 +1470,7 @@ const SignUpForm = () => {
                 >
                   <option value="">Select one...</option>
                   <option value="School">School</option>
+                  <option value="Home school">Home school</option>
                   <option value="Parish">Parish</option>
                   <option value="Diocese">Diocese</option>
                   <option value="Other">Other</option>
