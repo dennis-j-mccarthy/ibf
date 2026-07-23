@@ -19,13 +19,20 @@ export async function PUT(request: NextRequest) {
     audiences: Array.isArray(b.audiences)
       ? b.audiences
           .filter((a: unknown) => a && typeof (a as { audience?: unknown }).audience === 'string')
-          .map((a: { audience: string; persona?: unknown; painPoints?: unknown; statements?: unknown; angles?: unknown }) => ({
-            audience: a.audience.trim(),
-            persona: typeof a.persona === 'string' ? a.persona.trim() : '',
-            painPoints: asStrings(a.painPoints),
-            statements: asStrings(a.statements),
-            angles: asStrings(a.angles),
-          }))
+          .map((a: { audience: string; persona?: unknown; painPoints?: unknown; statements?: unknown; angles?: unknown; starredStatements?: unknown; starredAngles?: unknown }) => {
+            const statements = asStrings(a.statements);
+            const angles = asStrings(a.angles);
+            return {
+              audience: a.audience.trim(),
+              persona: typeof a.persona === 'string' ? a.persona.trim() : '',
+              painPoints: asStrings(a.painPoints),
+              statements,
+              angles,
+              // stars only make sense for lines that still exist
+              starredStatements: asStrings(a.starredStatements).filter((s) => statements.includes(s)),
+              starredAngles: asStrings(a.starredAngles).filter((s) => angles.includes(s)),
+            };
+          })
           .filter((a: { audience: string }) => a.audience)
       : [],
     colors: Array.isArray(b.colors)

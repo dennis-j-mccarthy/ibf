@@ -55,6 +55,7 @@ export async function POST(request: NextRequest) {
     const audience: string = typeof b.audience === 'string' ? b.audience.trim() : '';
     const persona: string = typeof b.persona === 'string' ? b.persona.trim() : '';
     const painPoints: string[] = Array.isArray(b.painPoints) ? b.painPoints.map(String).filter(Boolean) : [];
+    const favorites: string[] = Array.isArray(b.favorites) ? b.favorites.map(String).filter(Boolean).slice(0, 25) : [];
 
     // Persona always needs bullets; statements/angles can work from just the
     // saved persona + pain points (the click-to-prefill path).
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Give me at least one bullet point.' }, { status: 400 });
     }
 
-    const context = `${audience ? `\nAudience: ${audience}.` : ''}${persona ? `\nAudience persona: ${persona}.` : ''}${painPoints.length ? `\nTheir pain points: ${painPoints.join(' · ')}.` : ''}`;
+    const context = `${audience ? `\nAudience: ${audience}.` : ''}${persona ? `\nAudience persona: ${persona}.` : ''}${painPoints.length ? `\nTheir pain points: ${painPoints.join(' · ')}.` : ''}${favorites.length ? `\nThe team starred these as favorites — capture this exact vibe and quality (do not repeat them verbatim): ${favorites.map((f) => `"${f}"`).join(' · ')}.` : ''}`;
     const source = bullets.length
       ? `from these rough bullet points:\n${bullets.map((x) => `- ${x}`).join('\n')}`
       : `grounded in the audience persona and pain points below — speak straight at what they worry about`;
@@ -77,10 +78,10 @@ Return:
 - persona: a vivid 2–3 sentence description of who this person is — their world, what they value, how they decide (written plainly, no marketing fluff).
 - painPoints: 4–6 concrete pain points (short phrases, one idea each) our book fairs can speak to.`
         : kind === 'angles'
-          ? `Craft ${count ? `exactly ${count}` : '5–7'} marketing angles to pursue in our social posts, ${source}
+          ? `Craft ${count ? `exactly ${count}` : '5–7'} marketing ANGLES to pursue in our social posts, ${source}
 ${context}
 
-Each angle is a short thematic direction (3–7 words, no period), e.g. "Trust & curation over volume", "Faith-friendly without preachy". All distinct from each other — no near-duplicates; no emoji. Return only the angles.`
+An angle is a content DIRECTION — a theme, territory, or storyline to explore in posts (e.g. "Behind the scenes of our curation process", "Why teachers spread the word", "Seasonal faith tie-ins", "Cost vs. big-box fairs"). An angle is NOT a tagline, slogan, or brand statement — punchy declaratives like "Trust the shelf." belong in approved statements, never here. Short phrases (3–8 words, no period), each a genuinely different direction — no near-duplicates; no emoji. Return only the angles.`
           : `Craft ${count ? `exactly ${count}` : '5–8'} approved brand statements ${source}
 ${context}
 

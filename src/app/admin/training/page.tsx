@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 // fonts, social + article prefs) plus a tagged image library. Both feed the blog
 // and social generators. Admin-only (middleware-guarded).
 
-type Audience = { audience: string; persona: string; painPoints: string[]; statements: string[]; angles: string[] };
+type Audience = { audience: string; persona: string; painPoints: string[]; statements: string[]; angles: string[]; starredStatements: string[]; starredAngles: string[] };
 type Color = { name: string; hex: string };
 type Font = { name: string; usage: string };
 type Profile = { audiences: Audience[]; colors: Color[]; fonts: Font[]; socialPrefs: string; articlePrefs: string };
@@ -94,7 +94,15 @@ export default function TrainingAdmin() {
       const r = await fetch('/api/admin/training/craft', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ kind: aiKind, audience: a.audience, persona: a.persona, painPoints: a.painPoints, bullets: toLines(aiBullets), count: aiKind === 'persona' ? undefined : aiCount }),
+        body: JSON.stringify({
+          kind: aiKind,
+          audience: a.audience,
+          persona: a.persona,
+          painPoints: a.painPoints,
+          bullets: toLines(aiBullets),
+          count: aiKind === 'persona' ? undefined : aiCount,
+          favorites: aiKind === 'angles' ? a.starredAngles : aiKind === 'statements' ? a.starredStatements : undefined,
+        }),
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || 'Generation failed.');
@@ -115,6 +123,40 @@ export default function TrainingAdmin() {
 
   const aiHasResults = aiResults.length > 0 || aiPersona.trim().length > 0;
 
+  // Star ("I like this") — starred lines are weighted heavily by the generators.
+  const toggleStar = (i: number, field: 'starredStatements' | 'starredAngles', line: string) => {
+    if (!profile) return;
+    patch({
+      audiences: profile.audiences.map((x, idx) => {
+        if (idx !== i) return x;
+        const cur = x[field];
+        return { ...x, [field]: cur.includes(line) ? cur.filter((s) => s !== line) : [...cur, line] };
+      }),
+    });
+  };
+
+  const StarChips = ({ i, lines, starred, field }: { i: number; lines: string[]; starred: string[]; field: 'starredStatements' | 'starredAngles' }) =>
+    lines.length === 0 ? null : (
+      <div className="flex flex-wrap gap-1.5 mt-2">
+        {lines.map((line) => {
+          const isStarred = starred.includes(line);
+          return (
+            <button
+              key={line}
+              onClick={() => toggleStar(i, field, line)}
+              title={isStarred ? 'Unstar' : 'Star it — “I like this” gets weighted in creative'}
+              className={`inline-flex items-center gap-1 max-w-full text-[11px] px-2 py-1 rounded-full border transition-colors ${
+                isStarred ? 'bg-amber-50 border-amber-300 text-amber-800' : 'bg-white border-gray-200 text-gray-500 hover:border-amber-300 hover:text-amber-700'
+              }`}
+            >
+              <span className={isStarred ? 'text-amber-500' : 'text-gray-300'}>{isStarred ? '★' : '☆'}</span>
+              <span className="truncate">{line}</span>
+            </button>
+          );
+        })}
+      </div>
+    );
+
   // Click-to-prefill: focusing an empty Statements/Angles box crafts 5+ entries
   // from that audience's persona + pain points.
   const [prefilling, setPrefilling] = useState<{ i: number; field: 'statements' | 'angles' } | null>(null);
@@ -129,7 +171,14 @@ export default function TrainingAdmin() {
       const r = await fetch('/api/admin/training/craft', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ kind: field === 'angles' ? 'angles' : 'statements', audience: a.audience, persona: a.persona, painPoints: a.painPoints, bullets: [] }),
+        body: JSON.stringify({
+          kind: field === 'angles' ? 'angles' : 'statements',
+          audience: a.audience,
+          persona: a.persona,
+          painPoints: a.painPoints,
+          bullets: [],
+          favorites: field === 'angles' ? a.starredAngles : a.starredStatements,
+        }),
       });
       const d = await r.json();
       if (r.ok) {
@@ -359,7 +408,7 @@ export default function TrainingAdmin() {
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-semibold text-[#02176f]">Audiences — persona, pain points, statements &amp; angles</h3>
                 <button
-                  onClick={() => patch({ audiences: [...profile.audiences, { audience: '', persona: '', painPoints: [], statements: [], angles: [] }] })}
+                  onClick={() => patch({ audiences: [...profile.audiences, { audience: '', persona: '', painPoints: [], statements: [], angles: [], starredStatements: [], starredAngles: [] }] })}
                   className="text-sm text-[#0066ff] hover:underline"
                 >
                   + Add audience
@@ -421,6 +470,7 @@ export default function TrainingAdmin() {
                           onFocus={() => prefillField(i, 'statements')}
                           onChange={(e) => patch({ audiences: profile.audiences.map((x, idx) => (idx === i ? { ...x, statements: toLines(e.target.value) } : x)) })}
                         />
+                        <StarChips i={i} lines={a.statements} starred={a.starredStatements} field="starredStatements" />
                       </div>
                       <div>
                         <div className="flex items-center justify-between">
@@ -435,6 +485,7 @@ export default function TrainingAdmin() {
                           onFocus={() => prefillField(i, 'angles')}
                           onChange={(e) => patch({ audiences: profile.audiences.map((x, idx) => (idx === i ? { ...x, angles: toLines(e.target.value) } : x)) })}
                         />
+                        <StarChips i={i} lines={a.angles} starred={a.starredAngles} field="starredAngles" />
                       </div>
                     </div>
                   </div>

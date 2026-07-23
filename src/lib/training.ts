@@ -3,7 +3,17 @@ import { prisma } from '@/lib/prisma';
 // The brand "training" profile + image library that inform the blog and social
 // generators. One editable profile row (singleton) plus a tagged image table.
 
-export type AudienceTraining = { audience: string; persona: string; painPoints: string[]; statements: string[]; angles: string[] };
+export type AudienceTraining = {
+  audience: string;
+  persona: string;
+  painPoints: string[];
+  statements: string[];
+  angles: string[];
+  // Starred favorites ("I like this") — subsets of statements/angles, weighted
+  // heavily by the generators.
+  starredStatements: string[];
+  starredAngles: string[];
+};
 export type BrandColor = { name: string; hex: string };
 export type BrandFont = { name: string; usage: string };
 
@@ -30,9 +40,9 @@ export const IMAGE_CATEGORIES = ['kids', 'bookfairs', 'parents', 'teachers', 'ad
 // Sensible starter profile so the tools have brand context before anyone edits.
 const DEFAULT_PROFILE: TrainingProfileData = {
   audiences: [
-    { audience: 'Parents', persona: '', painPoints: [], statements: [], angles: [] },
-    { audience: 'Teachers', persona: '', painPoints: [], statements: [], angles: [] },
-    { audience: 'Administrators', persona: '', painPoints: [], statements: [], angles: [] },
+    { audience: 'Parents', persona: '', painPoints: [], statements: [], angles: [], starredStatements: [], starredAngles: [] },
+    { audience: 'Teachers', persona: '', painPoints: [], statements: [], angles: [], starredStatements: [], starredAngles: [] },
+    { audience: 'Administrators', persona: '', painPoints: [], statements: [], angles: [], starredStatements: [], starredAngles: [] },
   ],
   colors: [
     { name: 'Ignatius Blue', hex: '#02176f' },
@@ -54,6 +64,8 @@ const normalizeAudiences = (v: unknown): AudienceTraining[] =>
     painPoints: a.painPoints ?? [],
     statements: a.statements ?? [],
     angles: a.angles ?? [],
+    starredStatements: a.starredStatements ?? [],
+    starredAngles: a.starredAngles ?? [],
   }));
 
 // Read the singleton profile, falling back to defaults when the row is absent
@@ -125,8 +137,16 @@ export function brandBrief(p: TrainingProfileData, opts?: { forAudience?: string
           .map((a) => {
             const p2 = a.persona.trim() ? `\n    persona: ${a.persona.trim()}` : '';
             const pain = a.painPoints.length ? `\n    pain points to speak to: ${a.painPoints.join(' · ')}` : '';
-            const s = a.statements.length ? `\n    approved statements: ${a.statements.map((x) => `"${x}"`).join(' · ')}` : '';
-            const g = a.angles.length ? `\n    angles to pursue: ${a.angles.join(' · ')}` : '';
+            const favS = a.starredStatements.filter((x) => a.statements.includes(x));
+            const restS = a.statements.filter((x) => !favS.includes(x));
+            const s = a.statements.length
+              ? `\n    approved statements${favS.length ? ' (★ = team favorites — weight these heavily, lead with them, emulate their style)' : ''}: ${[...favS.map((x) => `★ "${x}"`), ...restS.map((x) => `"${x}"`)].join(' · ')}`
+              : '';
+            const favA = a.starredAngles.filter((x) => a.angles.includes(x));
+            const restA = a.angles.filter((x) => !favA.includes(x));
+            const g = a.angles.length
+              ? `\n    angles to pursue${favA.length ? ' (★ = team favorites — prefer these)' : ''}: ${[...favA.map((x) => `★ ${x}`), ...restA].join(' · ')}`
+              : '';
             return `  - ${a.audience}:${p2}${pain}${g}${s}`;
           })
           .join('\n'),
