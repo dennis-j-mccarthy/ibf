@@ -135,27 +135,74 @@ export default function TrainingAdmin() {
     });
   };
 
-  const StarChips = ({ i, lines, starred, field }: { i: number; lines: string[]; starred: string[]; field: 'starredStatements' | 'starredAngles' }) =>
-    lines.length === 0 ? null : (
-      <div className="flex flex-wrap gap-1.5 mt-2">
-        {lines.map((line) => {
-          const isStarred = starred.includes(line);
+  // Draft text for each pill list's inline add box, keyed by `${audienceIdx}:${field}`
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+
+  const removeLine = (i: number, field: 'statements' | 'angles', starField: 'starredStatements' | 'starredAngles', line: string) => {
+    if (!profile) return;
+    patch({
+      audiences: profile.audiences.map((x, idx) =>
+        idx === i ? { ...x, [field]: x[field].filter((l) => l !== line), [starField]: x[starField].filter((l) => l !== line) } : x,
+      ),
+    });
+  };
+
+  const addLine = (i: number, field: 'statements' | 'angles', line: string) => {
+    if (!profile || !line.trim()) return;
+    patch({
+      audiences: profile.audiences.map((x, idx) =>
+        idx === i && !x[field].includes(line.trim()) ? { ...x, [field]: [...x[field], line.trim()] } : x,
+      ),
+    });
+  };
+
+  // The pill list IS the editor: ★ to weight it in creative, ✕ to remove, type in
+  // the dashed pill to add. Focusing the add box on an empty list triggers prefill.
+  const renderPills = (i: number, field: 'statements' | 'angles', starField: 'starredStatements' | 'starredAngles', addPlaceholder: string) => {
+    if (!profile) return null;
+    const a = profile.audiences[i];
+    const key = `${i}:${field}`;
+    const isPrefilling = prefilling?.i === i && prefilling.field === field;
+    return (
+      <div className="flex flex-wrap items-center gap-1.5 mt-1">
+        {a[field].map((line) => {
+          const isStarred = a[starField].includes(line);
           return (
-            <button
+            <span
               key={line}
-              onClick={() => toggleStar(i, field, line)}
-              title={isStarred ? 'Unstar' : 'Star it — “I like this” gets weighted in creative'}
-              className={`inline-flex items-center gap-1 max-w-full text-[11px] px-2 py-1 rounded-full border transition-colors ${
-                isStarred ? 'bg-amber-50 border-amber-300 text-amber-800' : 'bg-white border-gray-200 text-gray-500 hover:border-amber-300 hover:text-amber-700'
+              className={`inline-flex items-center gap-1 max-w-full text-[11px] pl-2 pr-1 py-1 rounded-full border transition-colors ${
+                isStarred ? 'bg-amber-50 border-amber-300 text-amber-800' : 'bg-white border-gray-200 text-gray-600'
               }`}
             >
-              <span className={isStarred ? 'text-amber-500' : 'text-gray-300'}>{isStarred ? '★' : '☆'}</span>
+              <button
+                onClick={() => toggleStar(i, starField, line)}
+                title={isStarred ? 'Unstar' : 'Star it — “I like this” gets weighted in creative'}
+                className={`${isStarred ? 'text-amber-500' : 'text-gray-300 hover:text-amber-500'} transition-colors`}
+              >
+                {isStarred ? '★' : '☆'}
+              </button>
               <span className="truncate">{line}</span>
-            </button>
+              <button onClick={() => removeLine(i, field, starField, line)} title="Remove" className="text-gray-300 hover:text-red-500 px-0.5 transition-colors">✕</button>
+            </span>
           );
         })}
+        <input
+          value={drafts[key] ?? ''}
+          placeholder={isPrefilling ? 'Crafting from persona & pain points…' : addPlaceholder}
+          onFocus={() => prefillField(i, field)}
+          onChange={(e) => setDrafts((cur) => ({ ...cur, [key]: e.target.value }))}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              addLine(i, field, drafts[key] ?? '');
+              setDrafts((cur) => ({ ...cur, [key]: '' }));
+            }
+          }}
+          className="flex-1 min-w-[160px] text-[11px] px-3 py-1 rounded-full border border-dashed border-gray-300 focus:outline-none focus:border-[#0066ff] placeholder-gray-400"
+        />
       </div>
     );
+  };
 
   // Click-to-prefill: focusing an empty Statements/Angles box crafts 5+ entries
   // from that audience's persona + pain points.
@@ -439,7 +486,7 @@ export default function TrainingAdmin() {
                         </div>
                         <textarea
                           className={input}
-                          rows={3}
+                          rows={6}
                           value={a.persona}
                           placeholder={'Busy mom of three who wants books she can hand her kids without pre-reading every page.'}
                           onChange={(e) => patch({ audiences: profile.audiences.map((x, idx) => (idx === i ? { ...x, persona: e.target.value } : x)) })}
@@ -449,7 +496,7 @@ export default function TrainingAdmin() {
                         <label className={label}>Pain points (one per line)</label>
                         <textarea
                           className={input}
-                          rows={3}
+                          rows={6}
                           value={lines(a.painPoints)}
                           placeholder={'No time to vet every book\nBurned by junky fair titles before'}
                           onChange={(e) => patch({ audiences: profile.audiences.map((x, idx) => (idx === i ? { ...x, painPoints: toLines(e.target.value) } : x)) })}
@@ -459,33 +506,17 @@ export default function TrainingAdmin() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <div className="flex items-center justify-between">
-                          <label className={label}>Approved statements (one per line)</label>
+                          <label className={label}>Approved statements</label>
                           <button onClick={() => openAi(i, 'statements')} className="text-xs text-[#7c3aed] hover:underline mb-1">✨ Generate with AI</button>
                         </div>
-                        <textarea
-                          className={input}
-                          rows={4}
-                          value={lines(a.statements)}
-                          placeholder={prefilling?.i === i && prefilling.field === 'statements' ? 'Crafting from persona & pain points…' : 'We start with no.\nEvery title earns its place.'}
-                          onFocus={() => prefillField(i, 'statements')}
-                          onChange={(e) => patch({ audiences: profile.audiences.map((x, idx) => (idx === i ? { ...x, statements: toLines(e.target.value) } : x)) })}
-                        />
-                        <StarChips i={i} lines={a.statements} starred={a.starredStatements} field="starredStatements" />
+                        {renderPills(i, 'statements', 'starredStatements', 'Add a statement… ↵')}
                       </div>
                       <div>
                         <div className="flex items-center justify-between">
-                          <label className={label}>Angles to pursue (one per line)</label>
+                          <label className={label}>Angles to pursue</label>
                           <button onClick={() => openAi(i, 'angles')} className="text-xs text-[#7c3aed] hover:underline mb-1">✨ Generate with AI</button>
                         </div>
-                        <textarea
-                          className={input}
-                          rows={4}
-                          value={lines(a.angles)}
-                          placeholder={prefilling?.i === i && prefilling.field === 'angles' ? 'Crafting from persona & pain points…' : 'Trust & curation over volume\nFaith-friendly without preachy'}
-                          onFocus={() => prefillField(i, 'angles')}
-                          onChange={(e) => patch({ audiences: profile.audiences.map((x, idx) => (idx === i ? { ...x, angles: toLines(e.target.value) } : x)) })}
-                        />
-                        <StarChips i={i} lines={a.angles} starred={a.starredAngles} field="starredAngles" />
+                        {renderPills(i, 'angles', 'starredAngles', 'Add an angle… ↵')}
                       </div>
                     </div>
                   </div>
