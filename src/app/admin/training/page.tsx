@@ -63,14 +63,18 @@ export default function TrainingAdmin() {
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // AI statement helper popup
+  // AI helper popup (crafts statements, or persona + pain points)
   const [aiFor, setAiFor] = useState<number | null>(null); // audience index
+  const [aiKind, setAiKind] = useState<'statements' | 'persona'>('statements');
   const [aiBullets, setAiBullets] = useState('');
-  const [aiResults, setAiResults] = useState<string[]>([]);
+  const [aiResults, setAiResults] = useState<string[]>([]); // statements OR pain points
+  const [aiPersona, setAiPersona] = useState('');
   const [aiBusy, setAiBusy] = useState(false);
   const [aiErr, setAiErr] = useState('');
 
-  const openAi = (i: number) => { setAiFor(i); setAiBullets(''); setAiResults([]); setAiErr(''); };
+  const openAi = (i: number, kind: 'statements' | 'persona') => {
+    setAiFor(i); setAiKind(kind); setAiBullets(''); setAiResults([]); setAiPersona(''); setAiErr('');
+  };
 
   const runAi = async () => {
     if (aiFor === null || !profile) return;
@@ -78,15 +82,21 @@ export default function TrainingAdmin() {
     setAiBusy(true);
     setAiErr('');
     setAiResults([]);
+    setAiPersona('');
     try {
       const r = await fetch('/api/admin/training/craft', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ audience: a.audience, persona: a.persona, painPoints: a.painPoints, bullets: toLines(aiBullets) }),
+        body: JSON.stringify({ kind: aiKind, audience: a.audience, persona: a.persona, painPoints: a.painPoints, bullets: toLines(aiBullets) }),
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || 'Generation failed.');
-      setAiResults(d.statements ?? []);
+      if (aiKind === 'persona') {
+        setAiPersona(d.persona ?? '');
+        setAiResults(d.painPoints ?? []);
+      } else {
+        setAiResults(d.statements ?? []);
+      }
     } catch (e) {
       setAiErr(e instanceof Error ? e.message : 'Generation failed.');
     } finally {
@@ -94,9 +104,19 @@ export default function TrainingAdmin() {
     }
   };
 
+  const aiHasResults = aiResults.length > 0 || aiPersona.trim().length > 0;
+
   const acceptAi = () => {
-    if (aiFor === null || !profile || !aiResults.length) return;
-    patch({ audiences: profile.audiences.map((x, idx) => (idx === aiFor ? { ...x, statements: [...x.statements, ...aiResults] } : x)) });
+    if (aiFor === null || !profile || !aiHasResults) return;
+    patch({
+      audiences: profile.audiences.map((x, idx) => {
+        if (idx !== aiFor) return x;
+        if (aiKind === 'persona') {
+          return { ...x, persona: aiPersona.trim() || x.persona, painPoints: [...x.painPoints, ...aiResults] };
+        }
+        return { ...x, statements: [...x.statements, ...aiResults] };
+      }),
+    });
     setAiFor(null);
   };
 
@@ -244,7 +264,10 @@ export default function TrainingAdmin() {
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                       <div>
-                        <label className={label}>Persona (who they are)</label>
+                        <div className="flex items-center justify-between">
+                          <label className={label}>Persona (who they are)</label>
+                          <button onClick={() => openAi(i, 'persona')} className="text-xs text-[#7c3aed] hover:underline mb-1">✨ Generate with AI</button>
+                        </div>
                         <textarea
                           className={input}
                           rows={3}
@@ -268,7 +291,7 @@ export default function TrainingAdmin() {
                       <div>
                         <div className="flex items-center justify-between">
                           <label className={label}>Approved statements (one per line)</label>
-                          <button onClick={() => openAi(i)} className="text-xs text-[#7c3aed] hover:underline mb-1">✨ Generate with AI</button>
+                          <button onClick={() => openAi(i, 'statements')} className="text-xs text-[#7c3aed] hover:underline mb-1">✨ Generate with AI</button>
                         </div>
                         <textarea
                           className={input}
@@ -436,23 +459,36 @@ export default function TrainingAdmin() {
           <div className="w-full max-w-lg bg-white rounded-xl shadow-2xl p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-1">
               <h3 className="font-brother text-[#02176f] text-lg font-semibold">
-                ✨ Generate statements{profile.audiences[aiFor]?.audience ? ` — ${profile.audiences[aiFor].audience}` : ''}
+                ✨ {aiKind === 'persona' ? 'Define persona & pain points' : 'Generate statements'}{profile.audiences[aiFor]?.audience ? ` — ${profile.audiences[aiFor].audience}` : ''}
               </h3>
               <button onClick={() => setAiFor(null)} disabled={aiBusy} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
             </div>
-            <p className="text-sm text-gray-500 mb-3">Give it a couple of bullet points — it crafts on-brand statements using this audience&apos;s persona and pain points.</p>
+            <p className="text-sm text-gray-500 mb-3">
+              {aiKind === 'persona'
+                ? 'Give it a couple of bullet points about who this audience is — it crafts the persona and pain points.'
+                : 'Give it a couple of bullet points — it crafts on-brand statements using this audience’s persona and pain points.'}
+            </p>
             <textarea
               className={input}
               rows={4}
               autoFocus
               value={aiBullets}
-              placeholder={'every book is hand-picked\nparents can trust the table\nno junk toys'}
+              placeholder={aiKind === 'persona'
+                ? 'homeschool mom, 4 kids\nshops at the parish fair\nworries about screen time'
+                : 'every book is hand-picked\nparents can trust the table\nno junk toys'}
               onChange={(e) => setAiBullets(e.target.value)}
               disabled={aiBusy}
             />
             {aiErr && <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2 mt-2">{aiErr}</p>}
+            {aiPersona.trim() && (
+              <div className="mt-3 border border-gray-200 rounded-lg p-3 bg-gray-50">
+                <p className="text-[10px] uppercase tracking-wide text-gray-400 mb-1">Persona</p>
+                <p className="text-sm text-[#02176f]">{aiPersona}</p>
+              </div>
+            )}
             {aiResults.length > 0 && (
               <div className="mt-3 border border-gray-200 rounded-lg p-3 bg-gray-50 space-y-1">
+                {aiKind === 'persona' && <p className="text-[10px] uppercase tracking-wide text-gray-400 mb-1">Pain points</p>}
                 {aiResults.map((s, i) => (
                   <div key={i} className="flex items-start gap-2 text-sm text-[#02176f]">
                     <span className="flex-1">{s}</span>
@@ -463,11 +499,11 @@ export default function TrainingAdmin() {
             )}
             <div className="flex items-center justify-end gap-3 mt-4">
               <button onClick={runAi} disabled={aiBusy || !aiBullets.trim()} className="text-sm text-[#7c3aed] font-semibold hover:underline disabled:opacity-50">
-                {aiBusy ? 'Crafting…' : aiResults.length ? 'Regenerate' : 'Generate'}
+                {aiBusy ? 'Crafting…' : aiHasResults ? 'Regenerate' : 'Generate'}
               </button>
-              {aiResults.length > 0 && (
+              {aiHasResults && (
                 <button onClick={acceptAi} className="bg-[#02176f] hover:bg-[#021a85] text-white font-semibold text-sm px-5 py-2 rounded-md">
-                  Add to statements
+                  {aiKind === 'persona' ? 'Use persona & pain points' : 'Add to statements'}
                 </button>
               )}
             </div>
