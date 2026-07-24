@@ -61,6 +61,25 @@ function ogUrl(p: Post, size: string, index = 0) {
   return `/api/og/post?${q.toString()}`;
 }
 
+// A book-carousel post renders as N vertical slides: a hook slide, then one
+// "book-slide" per featured book (items[k] is that book's selling line).
+function carouselUrls(p: Post) {
+  const hook = ogUrl({ ...p, theme: 'statement', format: 'reel', sub: p.sub || 'Swipe →' }, 'tiktok');
+  const slides = (p.books || []).map((b, k) => {
+    const q = new URLSearchParams({
+      theme: 'book-slide', mode: p.mode, size: 'tiktok',
+      statement: (p.items || [])[k] || '', sub: '', eyebrow: p.eyebrow || '', statLabel: '', items: '',
+    });
+    q.set('books', JSON.stringify([b]));
+    if (p.bg) q.set('bg', p.bg);
+    if (p.hColor) q.set('hColor', p.hColor);
+    if (p.eColor) q.set('eColor', p.eColor);
+    if (p.sColor) q.set('sColor', p.sColor);
+    return `/api/og/post?${q.toString()}`;
+  });
+  return [hook, ...slides];
+}
+
 export default function DesignedPosts({
   title = '', content = '', strategy = '', count = 5, reels = 0, books = [], defaultPlatform = 'instagram',
 }: {
@@ -166,7 +185,7 @@ export default function DesignedPosts({
       if (!result?.length) throw new Error('No posts returned.');
       // Attach the real covers to every book-grid post the generator produced.
       const cover = books.map((b) => ({ title: b.title, image: b.image }));
-      if (books.length) result.forEach((p) => { if (p.theme === 'book-grid') p.books = cover; });
+      if (books.length) result.forEach((p) => { if (p.theme === 'book-grid' || p.theme === 'book-carousel') p.books = cover; });
       // Fallback: if books are featured but the model returned no book-grid post,
       // prepend one deterministic card so the covers still appear.
       const hasBookPost = result.some((p) => p.theme === 'book-grid');
@@ -222,6 +241,16 @@ export default function DesignedPosts({
                     <video src={p.video} muted loop autoPlay playsInline onLoadedData={() => setLoaded((n) => { const nx = n + 1; if (nx >= posts.length) setPhase('done'); return nx; })} className="w-full max-w-[300px] rounded-lg shadow bg-black" />
                     <span className="absolute top-3 left-3 text-[10px] font-semibold uppercase tracking-wide bg-[#7c3aed] text-white px-2 py-0.5 rounded-full">Motion reel</span>
                   </>
+                ) : p.theme === 'book-carousel' ? (
+                  <>
+                    <div className="w-full flex gap-3 overflow-x-auto pb-2">
+                      {carouselUrls(p).map((u, k) => (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img key={k} src={u} alt={`${p.statement} — slide ${k + 1}`} onLoad={() => { if (k === 0) setLoaded((n) => { const nx = n + 1; if (nx >= posts.length) setPhase('done'); return nx; }); }} className="h-[380px] rounded-lg shadow shrink-0" />
+                      ))}
+                    </div>
+                    <span className="absolute top-3 left-3 text-[10px] font-semibold uppercase tracking-wide bg-[#0088ff] text-white px-2 py-0.5 rounded-full">Carousel · {carouselUrls(p).length} slides</span>
+                  </>
                 ) : (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={ogUrl(p, platform, i)} alt={p.statement} onLoad={() => setLoaded((n) => { const nx = n + 1; if (nx >= posts.length) setPhase('done'); return nx; })} className="w-full max-w-[420px] rounded-lg shadow" />
@@ -237,10 +266,14 @@ export default function DesignedPosts({
                   <p className="text-sm text-[#0088ff] mt-2">{p.hashtags.map((h) => `#${h.replace(/^#/, '')}`).join(' ')}</p>
                 )}
                 <div className="mt-4 flex flex-wrap gap-3 items-center">
-                  {!p.video && (
+                  {!p.video && p.theme === 'book-carousel' ? (
+                    carouselUrls(p).map((u, k) => (
+                      <a key={k} href={u} download={`ibf-carousel-${i + 1}-slide-${k + 1}.png`} className="text-sm bg-[#02176f] text-white px-3 py-2 rounded-lg hover:bg-[#02176f]/90 transition-colors">Slide {k + 1}</a>
+                    ))
+                  ) : !p.video && (
                     <a href={ogUrl(p, platform, i)} download={`ibf-${p.theme}-${i + 1}.png`} className="text-sm bg-[#02176f] text-white px-4 py-2 rounded-lg hover:bg-[#02176f]/90 transition-colors">Download image</a>
                   )}
-                  {p.format === 'reel' && (
+                  {p.format === 'reel' && p.theme !== 'book-carousel' && (
                     reelSupported() ? (
                       <button
                         onClick={() => downloadReel(p, i)}

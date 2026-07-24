@@ -5,7 +5,7 @@ import Anthropic from '@anthropic-ai/sdk';
 // Claude Opus 4.8, adaptive thinking, and structured outputs.
 
 export type SocialPost = {
-  theme: 'statement' | 'stat' | 'checklist' | 'steps' | 'quote' | 'photo-hero' | 'book-grid';
+  theme: 'statement' | 'stat' | 'checklist' | 'steps' | 'quote' | 'photo-hero' | 'book-grid' | 'book-carousel';
   format: 'square' | 'reel';
   mode: 'catholic' | 'parish' | 'public' | 'virtual';
   eyebrow: string;
@@ -27,7 +27,7 @@ const POST_SCHEMA = {
         type: 'object',
         additionalProperties: false,
         properties: {
-          theme: { type: 'string', enum: ['statement', 'stat', 'checklist', 'steps', 'quote', 'photo-hero', 'book-grid'] },
+          theme: { type: 'string', enum: ['statement', 'stat', 'checklist', 'steps', 'quote', 'photo-hero', 'book-grid', 'book-carousel'] },
           format: { type: 'string', enum: ['square', 'reel'] },
           mode: { type: 'string', enum: ['catholic', 'parish', 'public', 'virtual'] },
           eyebrow: { type: 'string' },
@@ -58,6 +58,7 @@ You write posts that render into fixed design-system LAYOUT ARCHETYPES. Use the 
 - "steps": a headline "statement" + 3–4 short ordered "items" describing a process.
 - "quote": a real-sounding testimonial in "statement" + attribution in "sub" (e.g. "Jenna M. · mom of 3").
 - "photo-hero": a bold, aspirational/emotional statement designed to sit over a full-bleed lifestyle photo of a child reading. Great for the strongest emotional hook of the set. A real brand photo is supplied automatically — you only write the statement (+ optional short "sub"). Include 1–2 of these in a set.
+- "book-carousel": a swipeable, vertical (9:16) carousel of the featured books — slide 1 is a bold hook "statement" (+ optional "sub"), then one slide per book. Write "items" as one short, selling line per book IN THE SAME ORDER as the featured books list (one item per book, 4-12 words each; the real covers are added automatically). "caption" weaves the titles in naturally. Only usable when featured books are provided; always "format":"reel".
 - "book-grid": showcases the featured book covers in a grid. Write a bold, clever "statement" that sells these specific titles (e.g. "Books worth their shelf.", "Start here.") and a "caption" that weaves the book titles in naturally. The real covers are added automatically, so DON'T describe them; leave "items" [], "statLabel" "", "sub" optional. Only usable when featured books are provided; always "format":"square".
 
 MODE sets the color; pick the one that fits the content: catholic (blue), parish (green), public (coral), virtual (sky).
@@ -88,12 +89,15 @@ export async function generateSocialPosts(
   const hasContent = !!input.content?.trim();
   const books = input.books ?? [];
 
-  // When books are featured, ~half the set should actually be book posts.
+  // When books are featured, ~half the set should actually be book posts —
+  // and when there are 2+ books, one of those is a swipeable book carousel.
   const bookPosts = books.length ? Math.min(Math.round(total / 2), count) : 0;
+  const carouselPosts = books.length >= 2 && bookPosts > 0 ? 1 : 0;
+  const gridPosts = bookPosts - carouselPosts;
   const squareOther = count - bookPosts;
 
   const formatLine = bookPosts
-    ? `Of the ${total} posts: exactly ${bookPosts} must be "theme":"book-grid" with "format":"square" (these showcase the featured books). Of the rest, exactly ${reels} must be "format":"reel" (9:16 vertical — punchiest, shortest, most hook-first statements) and ${squareOther} "format":"square" (1:1) using the OTHER archetypes. Book-grid posts are never reels.`
+    ? `Of the ${total} posts: ${carouselPosts ? `exactly ${carouselPosts} must be "theme":"book-carousel" with "format":"reel" (one "items" line per featured book, in order), and ` : ''}exactly ${gridPosts} must be "theme":"book-grid" with "format":"square" (these showcase the featured books). Of the rest, exactly ${reels} must be "format":"reel" (9:16 vertical — punchiest, shortest, most hook-first statements) and ${squareOther} "format":"square" (1:1) using the OTHER archetypes. Book-grid posts are never reels.`
     : `Of the ${total} posts, make exactly ${reels} "format":"reel" (9:16 vertical — the punchiest, shortest, most hook-first statements) and ${count} "format":"square" (1:1).`;
   const booksLine = books.length
     ? `\nFEATURED BOOKS — build the ${bookPosts} "book-grid" post(s) around these titles (covers are added automatically, so don't describe them), and also weave the titles into other captions naturally where they fit:\n${books.map((b) => `- ${b.title}`).join('\n')}\n`

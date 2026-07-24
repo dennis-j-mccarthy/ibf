@@ -17,7 +17,7 @@ const SIZES: Record<string, [number, number]> = {
   x: [1600, 900],
 };
 
-type Theme = 'statement' | 'stat' | 'checklist' | 'steps' | 'quote' | 'photo-hero' | 'book-grid';
+type Theme = 'statement' | 'stat' | 'checklist' | 'steps' | 'quote' | 'photo-hero' | 'book-grid' | 'book-slide';
 
 // Small CSS checkmark (Fredoka has no reliable ✓ glyph, so draw one).
 function Check({ color }: { color: string }) {
@@ -164,6 +164,27 @@ export async function GET(req: Request) {
           {sub ? <div style={{ display: 'flex', fontSize: 34, fontWeight: 400, lineHeight: 1.3, color: sOv || 'rgba(255,255,255,0.92)', marginTop: 22, maxWidth: 820 }}>{sub}</div> : null}
           <div style={{ display: 'flex', marginTop: 34 }}><Wordmark origin={origin} color="#fff" /></div>
         </div>
+      </div>
+    );
+  } else if (theme === 'book-slide') {
+    // Book Slide — one carousel slide: a single big cover + its line. Sized for
+    // vertical (9:16) but works on any canvas.
+    const b = books[0];
+    const coverW = Math.min(560, w - 280);
+    node = (
+      <div style={{ ...base, backgroundColor: bgOv || neutrals.cream, color: neutrals.ink, justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ display: 'flex', fontSize: 26, fontWeight: 600, letterSpacing: 5, color: eOv || accents.orange }}>{eyebrow || 'FEATURED BOOKS'}</div>
+        </div>
+        {b ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={b.image} width={coverW} height={Math.round(coverW * 1.42)} style={{ objectFit: 'cover', borderRadius: 18, boxShadow: '0 24px 60px rgba(2,23,111,0.25)' }} alt="" />
+            <div style={{ display: 'flex', fontSize: 40, fontWeight: 700, textAlign: 'center', color: accents.darkBlue, marginTop: 40, lineHeight: 1.15, maxWidth: w - 160 }}>{b.title.slice(0, 70)}</div>
+            {statement ? <div style={{ display: 'flex', fontSize: 30, fontWeight: 400, textAlign: 'center', color: neutrals.slate, marginTop: 18, lineHeight: 1.3, maxWidth: w - 200 }}>{statement}</div> : null}
+          </div>
+        ) : null}
+        <div style={{ display: 'flex' }}><Wordmark origin={origin} color={accents.darkBlue} /></div>
       </div>
     );
   } else if (theme === 'book-grid') {
