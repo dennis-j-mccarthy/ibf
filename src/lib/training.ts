@@ -193,11 +193,20 @@ export function brandBrief(p: TrainingProfileData, opts?: { forAudience?: string
   // Uploaded reference docs, grouped by kind: design-language docs steer visual/
   // verbal identity; angle docs steer messaging. Capped so the prompt stays sane.
   const docsWithText = (opts?.docs ?? []).filter((d) => d.text.trim());
-  const PER_DOC = 2500;
-  const docBlock = (label: string, docs: TrainingDocumentData[]) =>
-    docs.length
-      ? `${label}\n${docs.map((d) => `--- ${d.title} ---\n${d.text.slice(0, PER_DOC)}`).join('\n')}`
-      : '';
+  const PER_DOC = 2000;
+  const TOTAL_DOC_BUDGET = 8000; // across all docs, so many uploads can't bloat the prompt
+  let docBudget = TOTAL_DOC_BUDGET;
+  const docBlock = (label: string, docs: TrainingDocumentData[]) => {
+    if (!docs.length || docBudget <= 0) return '';
+    const parts2: string[] = [];
+    for (const d of docs) {
+      if (docBudget <= 0) break;
+      const excerpt = d.text.slice(0, Math.min(PER_DOC, docBudget));
+      docBudget -= excerpt.length;
+      parts2.push(`--- ${d.title} ---\n${excerpt}`);
+    }
+    return `${label}\n${parts2.join('\n')}`;
+  };
   const design = docBlock('DESIGN LANGUAGE REFERENCE (from uploaded brand docs — follow this visual & verbal identity):', docsWithText.filter((d) => d.kind === 'design-language'));
   const messaging = docBlock('MESSAGING & ANGLE REFERENCE (from uploaded brand docs — draw angles, phrasing, and emphasis from this):', docsWithText.filter((d) => d.kind === 'angles'));
   const otherDocs = docBlock('OTHER BRAND REFERENCE DOCS:', docsWithText.filter((d) => d.kind !== 'design-language' && d.kind !== 'angles'));

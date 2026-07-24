@@ -4,7 +4,7 @@ import { generateSocialPosts } from '@/lib/social/generate';
 import { getSavedTrainingProfile, brandBrief, getTrainingImages, getTrainingDocuments, photoBackgrounds } from '@/lib/training';
 
 export const runtime = 'nodejs';
-export const maxDuration = 120; // generating a set of posts can take a while
+export const maxDuration = 300; // generating a big set of posts can take a while
 
 // Same-origin motion clips (public/brand/motion) used as real video-reel
 // backgrounds. One reel per set is rendered over one of these.
