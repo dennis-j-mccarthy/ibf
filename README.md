@@ -194,6 +194,11 @@ Python scripts (run with `python3`):
 | `scripts/generate_catalog.py` | V1 IDML generator (legacy) |
 | `scripts/swap_book.py` | Per-slot IDML book swap (testing) |
 
+**Full process guide:** [`IDML-FROM-BIGCOMMERCE.md`](IDML-FROM-BIGCOMMERCE.md) — how we
+repopulate a designer-built flyer's sections (covers, prices, titles, AR badges, and
+store hyperlinks) from a BigCommerce category export. Includes the SKU-join rule, the
+center-fit cover math, AR-field detection, and the string-edit/repack gotchas.
+
 ## Difficulties Encountered & Solutions
 
 ### IDML Catalog: Apple Preview hyperlinks didn't work
