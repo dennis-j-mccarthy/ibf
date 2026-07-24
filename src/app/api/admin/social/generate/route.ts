@@ -60,9 +60,11 @@ export async function POST(request: NextRequest) {
         );
         // Assign real brand photos (round-robin) to photo-hero posts AND to any
         // reel — reels animate into video and always look better over a photo.
+        // Book carousels are slide decks, not animated reels — never give them a
+        // photo or video background.
         let pi = 0;
         const withPhotos = posts.map((p) =>
-          (p.theme === 'photo-hero' || p.format === 'reel') && photoPool.length
+          (p.theme === 'photo-hero' || (p.format === 'reel' && p.theme !== 'book-carousel')) && photoPool.length
             ? { ...p, img: photoPool[pi++ % photoPool.length].url }
             : p,
         );
@@ -71,7 +73,7 @@ export async function POST(request: NextRequest) {
         let mi = 0;
         const withMotion = MOTION_CLIPS.length
           ? withPhotos.map((p) =>
-              p.format === 'reel' && mi === 0 ? ((mi += 1), { ...p, video: MOTION_CLIPS[0] }) : p,
+              p.format === 'reel' && p.theme !== 'book-carousel' && mi === 0 ? ((mi += 1), { ...p, video: MOTION_CLIPS[0] }) : p,
             )
           : withPhotos;
         send({ type: 'done', posts: withMotion });
