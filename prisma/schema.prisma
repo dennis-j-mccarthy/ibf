@@ -166,6 +166,16 @@ model TrainingImage {
   createdAt DateTime @default(now())
 }
 
+// A saved social post from the Social Studio, attached to its parent concept
+// (the blog title or campaign it was generated from).
+model SavedSocialPost {
+  id          Int      @id @default(autoincrement())
+  concept     String // human-readable parent concept (blog title / campaign name)
+  conceptSlug String   @default("") // stable grouping key for lookups
+  post        Json // the full studio Post object (theme, copy, colors, books, img…)
+  createdAt   DateTime @default(now())
+}
+
 // Brand documents (design-language guides, angle decks, style references) for
 // the Training library.
 model TrainingDocument {

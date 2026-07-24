@@ -96,6 +96,44 @@ export default function DesignedPosts({
   const [tweakOpen, setTweakOpen] = useState<number | null>(null);
   const [library, setLibrary] = useState<{ url: string; alt: string; category: string }[]>([]);
 
+  // Saved posts, attached to this parent concept (blog title or campaign name).
+  const concept = (title || strategy || '').trim();
+  const [savedPosts, setSavedPosts] = useState<{ id: number; post: Post }[]>([]);
+  const [savedIdx, setSavedIdx] = useState<Set<number>>(new Set());
+  const [savingIdx, setSavingIdx] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!concept) return;
+    fetch(`/api/admin/social/saved?concept=${encodeURIComponent(concept)}`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((rows) => setSavedPosts(rows.map((r: { id: number; post: Post }) => ({ id: r.id, post: r.post }))))
+      .catch(() => {});
+  }, [concept]);
+
+  const savePost = async (p: Post, i: number) => {
+    if (!concept || savedIdx.has(i)) return;
+    setSavingIdx(i);
+    try {
+      const r = await fetch('/api/admin/social/saved', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ concept, post: p }),
+      });
+      if (r.ok) {
+        const row = await r.json();
+        setSavedIdx((cur) => new Set(cur).add(i));
+        setSavedPosts((cur) => [{ id: row.id, post: p }, ...cur]);
+      }
+    } finally {
+      setSavingIdx(null);
+    }
+  };
+
+  const deleteSaved = async (id: number) => {
+    setSavedPosts((cur) => cur.filter((s) => s.id !== id));
+    await fetch(`/api/admin/social/saved?id=${id}`, { method: 'DELETE' });
+  };
+
   useEffect(() => {
     fetch('/api/admin/training/images').then((r) => (r.ok ? r.json() : [])).then(setLibrary).catch(() => {});
   }, []);
@@ -291,6 +329,15 @@ export default function DesignedPosts({
                   ) : !p.video && (
                     <a href={ogUrl(p, platform, i)} download={`ibf-${p.theme}-${i + 1}.png`} className="text-sm bg-[#02176f] text-white px-4 py-2 rounded-lg hover:bg-[#02176f]/90 transition-colors">Download image</a>
                   )}
+                  {concept && (
+                    <button
+                      onClick={() => savePost(p, i)}
+                      disabled={savingIdx === i || savedIdx.has(i)}
+                      className={`text-sm px-4 py-2 rounded-lg transition-colors ${savedIdx.has(i) ? 'bg-[#00c853]/10 text-[#00a843]' : 'bg-[#00c853] text-white hover:bg-[#00a843]'} disabled:opacity-80`}
+                    >
+                      {savedIdx.has(i) ? 'Saved ✓' : savingIdx === i ? 'Saving…' : 'Save'}
+                    </button>
+                  )}
                   {p.format === 'reel' && p.theme !== 'book-carousel' && (
                     reelSupported() ? (
                       <button
@@ -360,6 +407,40 @@ export default function DesignedPosts({
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Saved posts for this concept */}
+      {savedPosts.length > 0 && (
+        <div className="mt-10">
+          <h3 className="font-brother text-[#02176f] text-sm font-semibold mb-1">Saved posts{concept ? ` — ${concept}` : ''}</h3>
+          <p className="text-xs text-gray-500 mb-3">These stay attached to this concept and will be here next time.</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {savedPosts.map((s) => (
+              <div key={s.id} className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
+                {s.post.theme === 'book-carousel' ? (
+                  <div className="flex gap-1.5 overflow-x-auto p-2 bg-gray-50">
+                    {carouselUrls(s.post).map((u, k) => (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img key={k} src={u} alt="" className="h-[140px] rounded shrink-0" />
+                    ))}
+                  </div>
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={ogUrl(s.post, platform)} alt={s.post.statement} className="w-full" />
+                )}
+                <div className="p-2.5 flex items-center justify-between gap-2">
+                  <span className="text-[10px] uppercase tracking-wide text-gray-400 truncate">{s.post.theme}</span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {s.post.theme !== 'book-carousel' && (
+                      <a href={ogUrl(s.post, platform)} download={`ibf-saved-${s.id}.png`} className="text-[11px] text-[#0066ff] hover:underline">PNG</a>
+                    )}
+                    <button onClick={() => deleteSaved(s.id)} className="text-[11px] text-gray-400 hover:text-red-600">Delete</button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
