@@ -198,6 +198,24 @@ export default function DesignedPosts({
             books: cover,
           }]
         : [];
+      // Guarantee a book carousel whenever there are 2+ books: if the model didn't
+      // return one, convert a book-grid post into a carousel (or prepend one).
+      if (books.length >= 2 && !result.some((p) => p.theme === 'book-carousel')) {
+        const grid = result.find((p) => p.theme === 'book-grid');
+        if (grid) {
+          grid.theme = 'book-carousel';
+          grid.format = 'reel';
+          if (!grid.items || grid.items.length !== books.length) grid.items = books.map(() => '');
+        } else {
+          result.unshift({
+            theme: 'book-carousel', format: 'reel', mode: 'catholic', eyebrow: 'Featured Books',
+            statement: 'Good books for great kids.', sub: 'Swipe →', statLabel: '', items: books.map(() => ''),
+            caption: 'Featured in this post:\n' + books.map((b) => `• ${b.title} — ${b.url}`).join('\n'),
+            hashtags: ['IgnatiusBookFairs'],
+            books: cover,
+          });
+        }
+      }
       setPosts([...bookCard, ...result]); setPhase('rendering');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Generation failed');
