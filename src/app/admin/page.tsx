@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import type { ReactNode } from 'react';
 import { cookies } from 'next/headers';
 import { verifySession, COOKIE_NAME } from '@/lib/auth/session';
 import { prisma } from '@/lib/prisma';
@@ -32,7 +33,16 @@ export default async function AdminDashboard() {
 
   const num = (n: number | null) => (n === null ? '—' : n.toLocaleString('en-US'));
 
-  const cards = [
+  const cards: {
+    href: string;
+    title: string;
+    desc: string;
+    stat: string;
+    statLabel: string;
+    accent: string;
+    icon: ReactNode;
+    external?: boolean;
+  }[] = [
     {
       href: '/admin/fairs',
       title: 'Upcoming Fairs',
@@ -109,6 +119,36 @@ export default async function AdminDashboard() {
       ),
     },
     {
+      href: '/admin/header-maker',
+      title: 'Header Maker',
+      desc: 'Craft email headers — headline, brand color, curved bottom edge + doodads.',
+      stat: 'Email',
+      statLabel: 'headers',
+      accent: '#ffd41d',
+      icon: (
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M3.75 5.25h16.5v9c-2.75 2.2-5.5-2.2-8.25 0s-5.5 2.2-8.25 0v-9zM7.5 9h9"
+        />
+      ),
+    },
+    {
+      href: '/admin/sign-maker',
+      title: 'Sign Maker',
+      desc: 'Printable 8.5x11 signs — headline, brand color, curved edge + doodads.',
+      stat: 'PDF',
+      statLabel: 'print-ready',
+      accent: '#50db92',
+      icon: (
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M6.75 3.75h10.5v16.5l-2.62-1.5-2.63 1.5-2.63-1.5-2.62 1.5V3.75zM9.75 8h4.5m-4.5 3.5h4.5"
+        />
+      ),
+    },
+    {
       href: '/admin/tutorials',
       title: 'Tutorials',
       desc: 'Record screen + webcam tutorials and save them to a reopenable video library.',
@@ -120,6 +160,22 @@ export default async function AdminDashboard() {
           strokeLinecap="round"
           strokeLinejoin="round"
           d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z"
+        />
+      ),
+    },
+    {
+      href: 'https://ibf-project-manager-real.vercel.app/',
+      external: true,
+      title: 'New ClickUp',
+      desc: 'Open the IBF project manager in a new window.',
+      stat: 'PM',
+      statLabel: 'project manager',
+      accent: '#fd71af',
+      icon: (
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
         />
       ),
     },
@@ -153,6 +209,8 @@ export default async function AdminDashboard() {
             <a
               key={c.href}
               href={c.href}
+              target={c.external ? '_blank' : undefined}
+              rel={c.external ? 'noopener noreferrer' : undefined}
               className="group bg-white rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all p-6 flex flex-col"
             >
               <div className="flex items-center justify-between">
