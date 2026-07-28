@@ -99,9 +99,30 @@ export async function GET(req: Request) {
     );
   });
 
-  const curve = (
-    <div style={{ position: 'absolute', bottom: -170, left: -240, width: W + 480, height: 220, borderRadius: '50%', backgroundColor: '#ffffff', display: 'flex' }} />
-  );
+  // Bottom edge: arc (default), wave, wave2 (flipped), or flat.
+  const curveStyle = q.get('curve') || 'arc';
+  const curve =
+    curveStyle === 'flat' ? (
+      <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 64, backgroundColor: '#ffffff', display: 'flex' }} />
+    ) : curveStyle === 'wave' ? (
+      <svg width={W} height={120} viewBox={`0 0 ${W} 120`} style={{ position: 'absolute', bottom: 0, left: 0 }}>
+        <path d={`M0,52 C300,118 900,-8 ${W},58 L${W},120 L0,120 Z`} fill="#ffffff" />
+      </svg>
+    ) : curveStyle === 'wave2' ? (
+      <svg width={W} height={120} viewBox={`0 0 ${W} 120`} style={{ position: 'absolute', bottom: 0, left: 0 }}>
+        <path d={`M0,58 C300,-8 900,118 ${W},52 L${W},120 L0,120 Z`} fill="#ffffff" />
+      </svg>
+    ) : (
+      <div style={{ position: 'absolute', bottom: -170, left: -240, width: W + 480, height: 220, borderRadius: '50%', backgroundColor: '#ffffff', display: 'flex' }} />
+    );
+
+  // Logo always rides top-center, in both layouts.
+  const logoBand = showLogo ? (
+    <div style={{ position: 'absolute', top: 20, left: 0, width: '100%', display: 'flex', justifyContent: 'center' }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={`${origin}/images/ibf-logo-white-p-800.png`} width={books.length ? 128 : 150} height={books.length ? 28 : 33} alt="" style={{ display: 'flex' }} />
+    </div>
+  ) : null;
 
   const tilts = [-6, 4, -4, 6, -5];
   const coverW = books.length > 3 ? 96 : 112;
@@ -109,11 +130,8 @@ export async function GET(req: Request) {
   const node = layout === 'split' ? (
     <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: bg, fontFamily: 'Fredoka', overflow: 'hidden' }}>
       {doodadImgs}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', flex: 1, padding: '0 40px 30px 90px' }}>
-        {showLogo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={`${origin}/images/ibf-logo-white-p-800.png`} width={150} height={33} alt="" style={{ display: 'flex', marginBottom: 20 }} />
-        ) : null}
+      {logoBand}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', flex: 1, padding: '30px 40px 30px 90px' }}>
         {eyebrow ? <div style={{ display: 'flex', fontFamily: 'Caveat', fontSize: 52, fontWeight: 700, color: hColor, marginBottom: 2 }}>{eyebrow}</div> : null}
         {headlineNode('flex-start')}
         {sub ? <div style={{ display: 'flex', fontSize: 28, fontWeight: 500, lineHeight: 1.3, color: sColor, marginTop: 14, maxWidth: 560 }}>{sub}</div> : null}
@@ -132,11 +150,8 @@ export async function GET(req: Request) {
   ) : (
     <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: bg, fontFamily: 'Fredoka', overflow: 'hidden' }}>
       {doodadImgs}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 110px', marginTop: books.length ? -26 : showLogo ? 6 : -20 }}>
-        {showLogo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={`${origin}/images/ibf-logo-white-p-800.png`} width={books.length ? 128 : 170} height={books.length ? 28 : 37} alt="" style={{ display: 'flex', marginBottom: books.length ? 10 : 20 }} />
-        ) : null}
+      {logoBand}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 110px', marginTop: books.length ? 14 : showLogo ? 26 : -20 }}>
         {eyebrow ? <div style={{ display: 'flex', fontFamily: 'Caveat', fontSize: books.length ? 48 : 58, fontWeight: 700, color: hColor, marginBottom: 2 }}>{eyebrow}</div> : null}
         {headlineNode('center')}
         {sub ? <div style={{ display: 'flex', fontSize: books.length ? 24 : 32, fontWeight: 500, lineHeight: 1.25, color: sColor, marginTop: books.length ? 10 : 16, textAlign: 'center', maxWidth: 880 }}>{sub}</div> : null}

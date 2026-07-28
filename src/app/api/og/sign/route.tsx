@@ -31,6 +31,7 @@ export async function GET(req: Request) {
   const sColor = q.get('sColor') || 'rgba(255,255,255,0.88)';
   const showLogo = q.get('logo') !== '0';
   const qrUrl = q.get('qr') || '';
+  const curveStyle = q.get('curve') || 'arc';
   let doodads: string[] = [];
   try { doodads = JSON.parse(q.get('doodads') || '[]').slice(0, 8); } catch { doodads = []; }
   let books: { title: string; image: string }[] = [];
@@ -118,8 +119,21 @@ export async function GET(req: Request) {
         </div>
       ) : null}
 
-      {/* Curved white bottom with logo + footer note */}
-      <div style={{ position: 'absolute', bottom: -300, left: -260, width: W + 520, height: 560, borderRadius: '50%', backgroundColor: '#ffffff', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 84 }}>
+      {/* White bottom band (arc/wave/wave2/flat) with logo + footer note */}
+      {curveStyle === 'flat' ? (
+        <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 190, backgroundColor: '#ffffff', display: 'flex' }} />
+      ) : curveStyle === 'wave' ? (
+        <svg width={W} height={250} viewBox={`0 0 ${W} 250`} style={{ position: 'absolute', bottom: 0, left: 0 }}>
+          <path d={`M0,108 C330,236 950,-16 ${W},118 L${W},250 L0,250 Z`} fill="#ffffff" />
+        </svg>
+      ) : curveStyle === 'wave2' ? (
+        <svg width={W} height={250} viewBox={`0 0 ${W} 250`} style={{ position: 'absolute', bottom: 0, left: 0 }}>
+          <path d={`M0,118 C330,-16 950,236 ${W},108 L${W},250 L0,250 Z`} fill="#ffffff" />
+        </svg>
+      ) : (
+        <div style={{ position: 'absolute', bottom: -300, left: -260, width: W + 520, height: 560, borderRadius: '50%', backgroundColor: '#ffffff', display: 'flex' }} />
+      )}
+      <div style={{ position: 'absolute', bottom: 40, left: 0, width: '100%', display: 'flex', justifyContent: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 60, maxWidth: 1050 }}>
           {showLogo ? (
             // eslint-disable-next-line @next/next/no-img-element

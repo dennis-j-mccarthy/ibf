@@ -26,6 +26,7 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
   const [layout, setLayout] = useState<'center' | 'split'>('center');
   const [img, setImg] = useState('');
   const [imgMode, setImgMode] = useState<'card' | 'png'>('card');
+  const [curve, setCurve] = useState<'arc' | 'wave' | 'wave2' | 'flat'>('arc');
   const [uploading, setUploading] = useState(false);
   const [uploadMsg, setUploadMsg] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
@@ -110,9 +111,10 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
       if (qrUrl.trim()) q.set('qr', qrUrl.trim());
       if (footer.trim()) q.set('footer', footer.trim());
     }
+    if (curve !== 'arc') q.set('curve', curve);
     if (refreshNonce) q.set('v', String(refreshNonce));
     return `/api/og/${isHeader ? 'header' : 'sign'}?${q.toString()}`;
-  }, [headline, sub, bg, picked, showLogo, hColor, sColor, layout, img, isHeader, books, eyebrow, qrUrl, footer, h2Color, refreshNonce]);
+  }, [headline, sub, bg, picked, showLogo, hColor, sColor, layout, img, imgMode, isHeader, books, eyebrow, qrUrl, footer, h2Color, curve, refreshNonce]);
 
   const fetchCovers = async () => {
     const urls = bookUrls.split('\n').map((s) => s.trim()).filter(Boolean).slice(0, 6);
@@ -332,6 +334,21 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
               )}
             </div>
           )}
+
+          <div>
+            <label className={label}>Bottom edge</label>
+            <div className="flex flex-wrap gap-2">
+              {([['arc', 'Arc'], ['wave', 'Wave'], ['wave2', 'Wave flipped'], ['flat', 'Flat']] as ['arc' | 'wave' | 'wave2' | 'flat', string][]).map(([key, lbl]) => (
+                <button
+                  key={key}
+                  onClick={() => setCurve(key)}
+                  className={`text-sm px-4 py-2 rounded-lg border ${curve === key ? 'bg-[#02176f] text-white border-[#02176f]' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+                >
+                  {lbl}
+                </button>
+              ))}
+            </div>
+          </div>
 
           <div>
             <button onClick={() => setTweakOpen((v) => !v)} className="text-sm text-[#7c3aed] hover:underline">
