@@ -32,7 +32,7 @@ export async function GET(req: Request) {
   const showLogo = q.get('logo') !== '0';
   const qrUrl = q.get('qr') || '';
   let doodads: string[] = [];
-  try { doodads = JSON.parse(q.get('doodads') || '[]').slice(0, 3); } catch { doodads = []; }
+  try { doodads = JSON.parse(q.get('doodads') || '[]').slice(0, 8); } catch { doodads = []; }
   let books: { title: string; image: string }[] = [];
   try { books = JSON.parse(q.get('books') || '[]').slice(0, 6); } catch { books = []; }
 
@@ -57,11 +57,19 @@ export async function GET(req: Request) {
   const words = headline.trim().split(/\s+/);
   const lastWord = h2Color && words.length > 1 ? words.pop() : null;
 
+  // Scatter slots around the edges, like the printed category signs — the
+  // doodads stay subtle (low opacity) and out of the content column.
   const slots = [
-    { top: 80, right: 80, size: 190, rotate: 12 },
-    { top: 560, left: 56, size: 150, rotate: -10 },
-    { top: 96, left: 100, size: 120, rotate: -18 },
+    { top: 70, left: 70, size: 130, rotate: -15 },
+    { top: 56, right: 200, size: 105, rotate: 20 },
+    { top: 350, right: 60, size: 150, rotate: 12 },
+    { top: 540, left: 48, size: 120, rotate: -10 },
+    { top: 880, right: 70, size: 130, rotate: 18 },
+    { top: 1010, left: 56, size: 110, rotate: -20 },
+    { top: 210, left: 170, size: 85, rotate: 8 },
+    { top: 760, right: 190, size: 90, rotate: -8 },
   ];
+  const abs = (u: string) => (u.startsWith('http') ? u : origin + u);
 
   // Alternating tilt on covers, like the printed category signs.
   const coverW = books.length > 3 ? 240 : 270;
@@ -73,7 +81,7 @@ export async function GET(req: Request) {
         const s = slots[i] as { top?: number; left?: number; right?: number; size: number; rotate: number };
         return (
           // eslint-disable-next-line @next/next/no-img-element
-          <img key={i} src={u} width={s.size} height={s.size} alt="" style={{ position: 'absolute', ...(s.top !== undefined ? { top: s.top } : {}), ...(s.left !== undefined ? { left: s.left } : {}), ...(s.right !== undefined ? { right: s.right } : {}), transform: `rotate(${s.rotate}deg)`, objectFit: 'contain', opacity: 0.9 }} />
+          <img key={i} src={abs(u)} width={s.size} height={s.size} alt="" style={{ position: 'absolute', ...(s.top !== undefined ? { top: s.top } : {}), ...(s.left !== undefined ? { left: s.left } : {}), ...(s.right !== undefined ? { right: s.right } : {}), transform: `rotate(${s.rotate}deg)`, objectFit: 'contain', opacity: 0.25 }} />
         );
       })}
 

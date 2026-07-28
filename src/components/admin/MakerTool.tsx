@@ -44,6 +44,10 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
   const [sColor, setSColor] = useState('');
   const [pdfBusy, setPdfBusy] = useState(false);
 
+  // Bumped by the Refresh button: re-pulls Training colors/doodads and
+  // cache-busts the preview render.
+  const [refreshNonce, setRefreshNonce] = useState(0);
+
   useEffect(() => {
     fetch('/api/admin/training/profile')
       .then((r) => (r.ok ? r.json() : null))
@@ -53,10 +57,18 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
       .then((r) => (r.ok ? r.json() : []))
       .then((imgs: Img[]) => setDoodadPool(imgs.filter((i) => i.category === 'doodads')))
       .catch(() => {});
-  }, []);
+  }, [refreshNonce]);
+
+  const maxDoodads = isHeader ? 6 : 8;
 
   const toggleDoodad = (url: string) =>
-    setPicked((cur) => (cur.includes(url) ? cur.filter((u) => u !== url) : cur.length >= 3 ? cur : [...cur, url]));
+    setPicked((cur) => (cur.includes(url) ? cur.filter((u) => u !== url) : cur.length >= maxDoodads ? cur : [...cur, url]));
+
+  // One click fills every scatter slot from the library (repeating if needed).
+  const scatterDoodads = () => {
+    if (!doodadPool.length) return;
+    setPicked(Array.from({ length: maxDoodads }, (_, i) => doodadPool[i % doodadPool.length].url));
+  };
 
   const onPickImage = async (file: File) => {
     setUploadMsg('');
@@ -92,8 +104,9 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
       if (footer.trim()) q.set('footer', footer.trim());
       if (h2Color) q.set('h2Color', h2Color);
     }
+    if (refreshNonce) q.set('v', String(refreshNonce));
     return `/api/og/${isHeader ? 'header' : 'sign'}?${q.toString()}`;
-  }, [headline, sub, bg, picked, showLogo, hColor, sColor, layout, img, isHeader, books, eyebrow, qrUrl, footer, h2Color]);
+  }, [headline, sub, bg, picked, showLogo, hColor, sColor, layout, img, isHeader, books, eyebrow, qrUrl, footer, h2Color, refreshNonce]);
 
   const fetchCovers = async () => {
     const urls = bookUrls.split('\n').map((s) => s.trim()).filter(Boolean).slice(0, 6);
@@ -220,7 +233,15 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
           )}
 
           <div>
-            <label className={label}>Doodads (up to 3)</label>
+            <div className="flex items-center justify-between">
+              <label className={label}>Doodads (up to {maxDoodads})</label>
+              {doodadPool.length > 0 && (
+                <div className="flex items-center gap-3">
+                  <button onClick={scatterDoodads} className="text-xs bg-[#7c3aed] hover:bg-[#6b2fd6] text-white font-semibold px-3 py-1.5 rounded-md mb-1">✨ Scatter doodads</button>
+                  {picked.length > 0 && <button onClick={() => setPicked([])} className="text-xs text-gray-500 hover:underline mb-1">Clear</button>}
+                </div>
+              )}
+            </div>
             {doodadPool.length === 0 ? (
               <p className="text-sm text-gray-400">No doodads in the Training image library yet — add images with category “Doodads” and they’ll show up here.</p>
             ) : (
@@ -232,7 +253,7 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
                     src={d.url}
                     alt={d.alt}
                     onClick={() => toggleDoodad(d.url)}
-                    className={`w-16 h-16 object-contain rounded-lg border-2 cursor-pointer bg-gray-50 p-1 transition-all ${picked.includes(d.url) ? 'border-[#7c3aed] scale-105' : 'border-transparent hover:border-gray-300'}`}
+                    className={`w-16 h-16 object-contain rounded-lg border-2 cursor-pointer p-1 transition-all bg-[#02176f] ${picked.includes(d.url) ? 'border-[#7c3aed] scale-105' : 'border-transparent hover:border-gray-300'}`}
                   />
                 ))}
               </div>
@@ -316,6 +337,7 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
           <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
             <h2 className="font-brother text-[#02176f] text-lg font-semibold">Preview</h2>
             <div className="flex gap-3">
+              <button onClick={() => setRefreshNonce(Date.now())} title="Re-pull Training colors & doodads and re-render" className="text-sm border border-gray-300 text-[#02176f] px-4 py-2 rounded-md hover:bg-gray-50 transition-colors">↻ Refresh</button>
               <a href={previewUrl} download={isHeader ? 'ibf-email-header.png' : 'ibf-sign.png'} className="bg-[#02176f] hover:bg-[#021a85] text-white font-semibold text-sm px-5 py-2 rounded-md transition-colors">Download PNG</a>
               {!isHeader && (
                 <button onClick={downloadPdf} disabled={pdfBusy} className="bg-[#00c853] hover:bg-[#00a843] text-white font-semibold text-sm px-5 py-2 rounded-md transition-colors disabled:opacity-60">

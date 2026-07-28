@@ -22,7 +22,7 @@ export async function GET(req: Request) {
   const layout = q.get('layout') === 'split' ? 'split' : 'center';
   const img = q.get('img') || '';
   let doodads: string[] = [];
-  try { doodads = JSON.parse(q.get('doodads') || '[]').slice(0, 3); } catch { doodads = []; }
+  try { doodads = JSON.parse(q.get('doodads') || '[]').slice(0, 6); } catch { doodads = []; }
 
   const origin = new URL(req.url).origin;
   const [d700, d500] = await Promise.all(
@@ -33,19 +33,26 @@ export async function GET(req: Request) {
     ? (headline.length > 30 ? 54 : 66)
     : (headline.length > 34 ? 64 : headline.length > 22 ? 76 : 92);
 
-  // Fixed decorative slots so a couple of doodads always land nicely. In split
-  // layout the top-right slot would collide with the image, so it moves left.
+  // Subtle scatter slots around the edges (kept clear of the content column and
+  // the split-layout image on the right).
   const slots = layout === 'split'
     ? [
-        { top: 26, left: 420, size: 96, rotate: 12 },
-        { bottom: 120, left: 46, size: 96, rotate: -10 },
-        { top: 150, left: 620, size: 72, rotate: -18 },
+        { top: 22, left: 380, size: 78, rotate: 12 },
+        { bottom: 110, left: 40, size: 80, rotate: -10 },
+        { top: 140, left: 620, size: 62, rotate: -18 },
+        { top: 26, left: 60, size: 66, rotate: 18 },
+        { bottom: 130, left: 560, size: 60, rotate: 8 },
+        { top: 210, left: 300, size: 54, rotate: -8 },
       ]
     : [
-        { top: 34, right: 60, size: 130, rotate: 12 },
-        { bottom: 120, left: 46, size: 104, rotate: -10 },
-        { top: 26, left: 150, size: 78, rotate: -18 },
+        { top: 30, right: 56, size: 100, rotate: 12 },
+        { bottom: 116, left: 42, size: 88, rotate: -10 },
+        { top: 24, left: 140, size: 70, rotate: -18 },
+        { bottom: 120, right: 150, size: 76, rotate: 16 },
+        { top: 150, left: 48, size: 62, rotate: 8 },
+        { top: 160, right: 210, size: 58, rotate: -8 },
       ];
+  const abs = (u: string) => (u.startsWith('http') ? u : origin + u);
 
   const doodadImgs = doodads.map((u, i) => {
     const s = slots[i] as { top?: number; bottom?: number; left?: number; right?: number; size: number; rotate: number };
@@ -53,11 +60,11 @@ export async function GET(req: Request) {
       // eslint-disable-next-line @next/next/no-img-element
       <img
         key={i}
-        src={u}
+        src={abs(u)}
         width={s.size}
         height={s.size}
         alt=""
-        style={{ position: 'absolute', ...(s.top !== undefined ? { top: s.top } : {}), ...(s.bottom !== undefined ? { bottom: s.bottom } : {}), ...(s.left !== undefined ? { left: s.left } : {}), ...(s.right !== undefined ? { right: s.right } : {}), transform: `rotate(${s.rotate}deg)`, objectFit: 'contain', opacity: 0.95 }}
+        style={{ position: 'absolute', ...(s.top !== undefined ? { top: s.top } : {}), ...(s.bottom !== undefined ? { bottom: s.bottom } : {}), ...(s.left !== undefined ? { left: s.left } : {}), ...(s.right !== undefined ? { right: s.right } : {}), transform: `rotate(${s.rotate}deg)`, objectFit: 'contain', opacity: 0.25 }}
       />
     );
   });
