@@ -28,6 +28,11 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
   const [uploading, setUploading] = useState(false);
   const [uploadMsg, setUploadMsg] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
+  // Sign-only: script eyebrow, QR code, footer note
+  const [eyebrow, setEyebrow] = useState('');
+  const [qrUrl, setQrUrl] = useState('');
+  const [footer, setFooter] = useState('');
+  const [h2Color, setH2Color] = useState('');
   // Sign-only: optional BigCommerce book covers
   const [bookUrls, setBookUrls] = useState('');
   const [books, setBooks] = useState<{ title: string; image: string }[]>([]);
@@ -81,8 +86,14 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
       if (img) q.set('img', img);
     }
     if (!isHeader && books.length) q.set('books', JSON.stringify(books));
+    if (!isHeader) {
+      if (eyebrow.trim()) q.set('eyebrow', eyebrow.trim());
+      if (qrUrl.trim()) q.set('qr', qrUrl.trim());
+      if (footer.trim()) q.set('footer', footer.trim());
+      if (h2Color) q.set('h2Color', h2Color);
+    }
     return `/api/og/${isHeader ? 'header' : 'sign'}?${q.toString()}`;
-  }, [headline, sub, bg, picked, showLogo, hColor, sColor, layout, img, isHeader, books]);
+  }, [headline, sub, bg, picked, showLogo, hColor, sColor, layout, img, isHeader, books, eyebrow, qrUrl, footer, h2Color]);
 
   const fetchCovers = async () => {
     const urls = bookUrls.split('\n').map((s) => s.trim()).filter(Boolean).slice(0, 6);
@@ -229,6 +240,23 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
           </div>
 
           {!isHeader && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className={label}>Script eyebrow (optional)</label>
+                <input className={input} value={eyebrow} onChange={(e) => setEyebrow(e.target.value)} placeholder="Looking for more" />
+              </div>
+              <div>
+                <label className={label}>QR code URL (optional)</label>
+                <input className={input} value={qrUrl} onChange={(e) => setQrUrl(e.target.value)} placeholder="https://store.ignatiusbookfairs.com/…" />
+              </div>
+              <div>
+                <label className={label}>Footer note (optional)</label>
+                <input className={input} value={footer} onChange={(e) => setFooter(e.target.value)} placeholder="Check out our FULL selection at Ignatiusbookfairs.com" />
+              </div>
+            </div>
+          )}
+
+          {!isHeader && (
             <div>
               <label className={label}>Book covers (optional — up to 6 BigCommerce URLs, one per line)</label>
               <textarea
@@ -264,7 +292,7 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
             </button>
             {tweakOpen && (
               <div className="space-y-3 mt-3 border border-gray-200 rounded-lg p-4">
-                {([['Headline color', hColor, setHColor], ['Subhead color', sColor, setSColor]] as [string, string, (v: string) => void][]).map(([lbl, val, set]) => (
+                {([['Headline color', hColor, setHColor], ['Subhead color', sColor, setSColor], ...(!isHeader ? [['Last-word accent', h2Color, setH2Color] as [string, string, (v: string) => void]] : [])] as [string, string, (v: string) => void][]).map(([lbl, val, set]) => (
                   <div key={lbl} className="flex flex-wrap items-center gap-2">
                     <span className="text-sm text-gray-600 w-28">{lbl}</span>
                     {[{ name: 'White', hex: '#ffffff' }, ...colors].map((c) => (
@@ -278,7 +306,7 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
                     ))}
                   </div>
                 ))}
-                <button onClick={() => { setHColor(''); setSColor(''); }} className="text-xs text-gray-500 hover:underline">Reset</button>
+                <button onClick={() => { setHColor(''); setSColor(''); setH2Color(''); }} className="text-xs text-gray-500 hover:underline">Reset</button>
               </div>
             )}
           </div>
