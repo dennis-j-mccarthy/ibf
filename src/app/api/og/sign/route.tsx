@@ -133,14 +133,14 @@ export async function GET(req: Request) {
       ) : (
         <div style={{ position: 'absolute', bottom: -300, left: -260, width: W + 520, height: 560, borderRadius: '50%', backgroundColor: '#ffffff', display: 'flex' }} />
       )}
-      <div style={{ position: 'absolute', bottom: 40, left: 0, width: '100%', display: 'flex', justifyContent: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 60, maxWidth: 1050 }}>
+      <div style={{ position: 'absolute', bottom: 62, left: 0, width: '100%', display: 'flex', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 52, maxWidth: 1080 }}>
           {showLogo ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={`${origin}/images/ibf-logo-blue.png`} width={290} height={46} alt="" style={{ display: 'flex' }} />
+            <img src={`${origin}/images/ibf-logo-blue.png`} width={270} height={43} alt="" style={{ display: 'flex' }} />
           ) : null}
           {footer ? (
-            <div style={{ display: 'flex', fontSize: 30, fontWeight: 500, lineHeight: 1.35, color: accents.darkBlue, maxWidth: 560 }}>{footer}</div>
+            <div style={{ display: 'flex', fontSize: 28, fontWeight: 500, lineHeight: 1.4, color: accents.darkBlue, maxWidth: 600 }}>{footer}</div>
           ) : null}
         </div>
       </div>

@@ -176,6 +176,16 @@ model SavedSocialPost {
   createdAt   DateTime @default(now())
 }
 
+// A saved Header Maker / Sign Maker design: the full editor state, reloadable
+// for duplicate-and-tweak.
+model SavedDesign {
+  id        Int      @id @default(autoincrement())
+  tool      String // header | sign
+  name      String   @default("")
+  params    Json // full maker editor state
+  createdAt DateTime @default(now())
+}
+
 // Brand documents (design-language guides, angle decks, style references) for
 // the Training library.
 model TrainingDocument {

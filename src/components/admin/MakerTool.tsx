@@ -14,6 +14,39 @@ type Img = { id: number; url: string; alt: string; category: string };
 const input = 'w-full px-3 py-2 border border-[#dddddd] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0066ff] text-sm';
 const label = 'block text-sm font-medium text-[#02176f] mb-1';
 
+// The full editor state — saved as-is to SavedDesign.params and reloadable.
+type DesignParams = {
+  headline: string; sub: string; bg: string; eyebrow: string; qrUrl: string; footer: string;
+  hColor: string; sColor: string; h2Color: string; showLogo: boolean;
+  layout: 'center' | 'split'; img: string; imgMode: 'card' | 'png'; curve: 'arc' | 'wave' | 'wave2' | 'flat';
+  picked: string[]; bookUrls: string; books: { title: string; image: string }[];
+};
+type DesignRow = { id: number; name: string; params: DesignParams };
+
+function buildOgUrl(kind: 'header' | 'sign', p: DesignParams): string {
+  const isHeader = kind === 'header';
+  const q = new URLSearchParams({ headline: p.headline, sub: p.sub, bg: p.bg, logo: p.showLogo ? '1' : '0' });
+  if (p.picked.length) q.set('doodads', JSON.stringify(p.picked));
+  if (p.hColor) q.set('hColor', p.hColor);
+  if (p.sColor) q.set('sColor', p.sColor);
+  if (isHeader && p.layout === 'split') {
+    q.set('layout', 'split');
+    if (p.img) {
+      q.set('img', p.img);
+      q.set('imgMode', p.imgMode);
+    }
+  }
+  if (p.books.length) q.set('books', JSON.stringify(p.books));
+  if (p.eyebrow.trim()) q.set('eyebrow', p.eyebrow.trim());
+  if (p.h2Color) q.set('h2Color', p.h2Color);
+  if (!isHeader) {
+    if (p.qrUrl.trim()) q.set('qr', p.qrUrl.trim());
+    if (p.footer.trim()) q.set('footer', p.footer.trim());
+  }
+  if (p.curve !== 'arc') q.set('curve', p.curve);
+  return `/api/og/${isHeader ? 'header' : 'sign'}?${q.toString()}`;
+}
+
 export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
   const isHeader = kind === 'header';
   const [headline, setHeadline] = useState(isHeader ? 'The Book Fair Is Coming!' : 'Book Fair This Week!');
@@ -92,29 +125,84 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
     }
   };
 
+  const currentParams: DesignParams = useMemo(
+    () => ({ headline, sub, bg, eyebrow, qrUrl, footer, hColor, sColor, h2Color, showLogo, layout, img, imgMode, curve, picked, bookUrls, books }),
+    [headline, sub, bg, eyebrow, qrUrl, footer, hColor, sColor, h2Color, showLogo, layout, img, imgMode, curve, picked, bookUrls, books],
+  );
+
   const previewUrl = useMemo(() => {
-    const q = new URLSearchParams({ headline, sub, bg, logo: showLogo ? '1' : '0' });
-    if (picked.length) q.set('doodads', JSON.stringify(picked));
-    if (hColor) q.set('hColor', hColor);
-    if (sColor) q.set('sColor', sColor);
-    if (isHeader && layout === 'split') {
-      q.set('layout', 'split');
-      if (img) {
-        q.set('img', img);
-        q.set('imgMode', imgMode);
+    const url = buildOgUrl(kind, currentParams);
+    return refreshNonce ? `${url}&v=${refreshNonce}` : url;
+  }, [kind, currentParams, refreshNonce]);
+
+  // Saved designs — the grid below the tool. Load fills the editor; Save while
+  // loaded can update in place or save as a new copy.
+  const [designs, setDesigns] = useState<DesignRow[]>([]);
+  const [loadedId, setLoadedId] = useState<number | null>(null);
+  const [designBusy, setDesignBusy] = useState(false);
+
+  const loadDesigns = async () => {
+    const r = await fetch(`/api/admin/designs?tool=${kind}`).catch(() => null);
+    if (r?.ok) setDesigns(await r.json());
+  };
+  useEffect(() => { loadDesigns(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [kind, refreshNonce]);
+
+  const applyParams = (p: DesignParams) => {
+    setHeadline(p.headline ?? ''); setSub(p.sub ?? ''); setBg(p.bg ?? '#02176f');
+    setEyebrow(p.eyebrow ?? ''); setQrUrl(p.qrUrl ?? ''); setFooter(p.footer ?? '');
+    setHColor(p.hColor ?? ''); setSColor(p.sColor ?? ''); setH2Color(p.h2Color ?? '');
+    setShowLogo(p.showLogo ?? true); setLayout(p.layout ?? 'center'); setImg(p.img ?? '');
+    setImgMode(p.imgMode ?? 'card'); setCurve(p.curve ?? 'arc'); setPicked(p.picked ?? []);
+    setBookUrls(p.bookUrls ?? ''); setBooks(p.books ?? []);
+  };
+
+  const saveDesign = async (mode: 'new' | 'update') => {
+    setDesignBusy(true);
+    try {
+      if (mode === 'update' && loadedId) {
+        await fetch('/api/admin/designs', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: loadedId, params: currentParams }),
+        });
+      } else {
+        const r = await fetch('/api/admin/designs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tool: kind, name: headline.slice(0, 60), params: currentParams }),
+        });
+        if (r.ok) setLoadedId((await r.json()).id);
       }
+      loadDesigns();
+    } finally {
+      setDesignBusy(false);
     }
-    if (books.length) q.set('books', JSON.stringify(books));
-    if (eyebrow.trim()) q.set('eyebrow', eyebrow.trim());
-    if (h2Color) q.set('h2Color', h2Color);
-    if (!isHeader) {
-      if (qrUrl.trim()) q.set('qr', qrUrl.trim());
-      if (footer.trim()) q.set('footer', footer.trim());
-    }
-    if (curve !== 'arc') q.set('curve', curve);
-    if (refreshNonce) q.set('v', String(refreshNonce));
-    return `/api/og/${isHeader ? 'header' : 'sign'}?${q.toString()}`;
-  }, [headline, sub, bg, picked, showLogo, hColor, sColor, layout, img, imgMode, isHeader, books, eyebrow, qrUrl, footer, h2Color, curve, refreshNonce]);
+  };
+
+  const duplicateDesign = async (d: DesignRow) => {
+    await fetch('/api/admin/designs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tool: kind, name: `${d.name || 'Untitled'} copy`, params: d.params }),
+    });
+    loadDesigns();
+  };
+
+  const renameDesign = async (id: number, name: string) => {
+    setDesigns((cur) => cur.map((d) => (d.id === id ? { ...d, name } : d)));
+    await fetch('/api/admin/designs', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, name }),
+    });
+  };
+
+  const removeDesign = async (id: number) => {
+    if (!confirm('Delete this saved design?')) return;
+    if (loadedId === id) setLoadedId(null);
+    setDesigns((cur) => cur.filter((d) => d.id !== id));
+    await fetch(`/api/admin/designs?id=${id}`, { method: 'DELETE' });
+  };
 
   const fetchCovers = async () => {
     const urls = bookUrls.split('\n').map((s) => s.trim()).filter(Boolean).slice(0, 6);
@@ -381,6 +469,12 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
             <h2 className="font-brother text-[#02176f] text-lg font-semibold">Preview</h2>
             <div className="flex gap-3">
               <button onClick={() => setRefreshNonce(Date.now())} title="Re-pull Training colors & doodads and re-render" className="text-sm border border-gray-300 text-[#02176f] px-4 py-2 rounded-md hover:bg-gray-50 transition-colors">↻ Refresh</button>
+              {loadedId && (
+                <button onClick={() => saveDesign('update')} disabled={designBusy} className="text-sm bg-[#7c3aed] hover:bg-[#6b2fd6] text-white font-semibold px-4 py-2 rounded-md disabled:opacity-60">Update saved</button>
+              )}
+              <button onClick={() => saveDesign('new')} disabled={designBusy} className="text-sm bg-[#00c853] hover:bg-[#00a843] text-white font-semibold px-4 py-2 rounded-md disabled:opacity-60">
+                {designBusy ? 'Saving…' : loadedId ? 'Save as new' : 'Save design'}
+              </button>
               <a href={previewUrl} download={isHeader ? 'ibf-email-header.png' : 'ibf-sign.png'} className="bg-[#02176f] hover:bg-[#021a85] text-white font-semibold text-sm px-5 py-2 rounded-md transition-colors">Download PNG</a>
               {!isHeader && (
                 <button onClick={downloadPdf} disabled={pdfBusy} className="bg-[#00c853] hover:bg-[#00a843] text-white font-semibold text-sm px-5 py-2 rounded-md transition-colors disabled:opacity-60">
@@ -397,6 +491,39 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
               : '1275×1650 (150 dpi letter) — the PDF is print-ready 8.5×11.'}
           </p>
         </section>
+
+        {/* Saved designs */}
+        {designs.length > 0 && (
+          <section className="bg-white rounded-xl shadow-sm p-6">
+            <h2 className="font-brother text-[#02176f] text-lg font-semibold mb-1">Saved {isHeader ? 'headers' : 'signs'}</h2>
+            <p className="text-sm text-gray-500 mb-4">Load one to change it (then Update saved or Save as new), or Duplicate for a quick copy.</p>
+            <div className={`grid grid-cols-1 sm:grid-cols-2 ${isHeader ? 'lg:grid-cols-2' : 'lg:grid-cols-4'} gap-4`}>
+              {designs.map((d) => (
+                <div key={d.id} className={`border rounded-xl overflow-hidden ${loadedId === d.id ? 'border-[#7c3aed] ring-2 ring-[#7c3aed]/25' : 'border-gray-100'}`}>
+                  <div className="bg-gray-50 p-2">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={buildOgUrl(kind, d.params)} alt={d.name} className="w-full rounded shadow-sm" />
+                  </div>
+                  <div className="p-2.5 space-y-2">
+                    <input
+                      value={d.name}
+                      placeholder="Untitled"
+                      onChange={(e) => setDesigns((cur) => cur.map((x) => (x.id === d.id ? { ...x, name: e.target.value } : x)))}
+                      onBlur={(e) => renameDesign(d.id, e.target.value)}
+                      className="w-full text-sm font-medium text-[#02176f] bg-transparent border-0 focus:outline-none focus:ring-1 focus:ring-[#0066ff] rounded px-1 -mx-1"
+                    />
+                    <div className="flex items-center gap-3 text-xs">
+                      <button onClick={() => { applyParams(d.params); setLoadedId(d.id); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="text-[#0066ff] hover:underline font-semibold">Load</button>
+                      <button onClick={() => duplicateDesign(d)} className="text-[#7c3aed] hover:underline">Duplicate</button>
+                      <a href={buildOgUrl(kind, d.params)} download={`ibf-${kind}-${d.id}.png`} className="text-gray-500 hover:underline">PNG</a>
+                      <button onClick={() => removeDesign(d.id)} className="text-gray-400 hover:text-red-600 ml-auto">Delete</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
       </main>
     </div>
   );
