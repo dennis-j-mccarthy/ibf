@@ -97,12 +97,12 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
       q.set('layout', 'split');
       if (img) q.set('img', img);
     }
-    if (!isHeader && books.length) q.set('books', JSON.stringify(books));
+    if (books.length) q.set('books', JSON.stringify(books));
+    if (eyebrow.trim()) q.set('eyebrow', eyebrow.trim());
+    if (h2Color) q.set('h2Color', h2Color);
     if (!isHeader) {
-      if (eyebrow.trim()) q.set('eyebrow', eyebrow.trim());
       if (qrUrl.trim()) q.set('qr', qrUrl.trim());
       if (footer.trim()) q.set('footer', footer.trim());
-      if (h2Color) q.set('h2Color', h2Color);
     }
     if (refreshNonce) q.set('v', String(refreshNonce));
     return `/api/og/${isHeader ? 'header' : 'sign'}?${q.toString()}`;
@@ -234,7 +234,10 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
 
           <div>
             <div className="flex items-center justify-between">
-              <label className={label}>Doodads (up to {maxDoodads})</label>
+              <label className={label}>
+                Doodads (up to {maxDoodads})
+                {picked.length > 0 && <span className="ml-2 text-[#7c3aed] font-semibold">{picked.length} applied</span>}
+              </label>
               {doodadPool.length > 0 && (
                 <div className="flex items-center gap-3">
                   <button onClick={scatterDoodads} className="text-xs bg-[#7c3aed] hover:bg-[#6b2fd6] text-white font-semibold px-3 py-1.5 rounded-md mb-1">✨ Scatter doodads</button>
@@ -246,40 +249,51 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
               <p className="text-sm text-gray-400">No doodads in the Training image library yet — add images with category “Doodads” and they’ll show up here.</p>
             ) : (
               <div className="flex flex-wrap gap-2">
-                {doodadPool.map((d) => (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    key={d.id}
-                    src={d.url}
-                    alt={d.alt}
-                    onClick={() => toggleDoodad(d.url)}
-                    className={`w-16 h-16 object-contain rounded-lg border-2 cursor-pointer p-1 transition-all bg-[#02176f] ${picked.includes(d.url) ? 'border-[#7c3aed] scale-105' : 'border-transparent hover:border-gray-300'}`}
-                  />
-                ))}
+                {doodadPool.map((d) => {
+                  const times = picked.filter((u) => u === d.url).length;
+                  return (
+                    <button
+                      key={d.id}
+                      onClick={() => toggleDoodad(d.url)}
+                      title={d.alt}
+                      className={`relative w-16 h-16 rounded-lg border-[3px] p-1 transition-all bg-[#02176f] ${times ? 'border-[#00c853] ring-2 ring-[#00c853]/30' : 'border-transparent opacity-60 hover:opacity-100 hover:border-gray-300'}`}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={d.url} alt={d.alt} className="w-full h-full object-contain" />
+                      {times > 0 && (
+                        <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-[#00c853] text-white text-[10px] font-bold grid place-items-center shadow">
+                          {times > 1 ? times : '✓'}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
 
-          {!isHeader && (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label className={label}>Script eyebrow (optional)</label>
-                <input className={input} value={eyebrow} onChange={(e) => setEyebrow(e.target.value)} placeholder="Looking for more" />
-              </div>
+          <div className={`grid grid-cols-1 gap-4 ${isHeader ? 'sm:grid-cols-1' : 'sm:grid-cols-3'}`}>
+            <div>
+              <label className={label}>Script eyebrow (optional)</label>
+              <input className={input} value={eyebrow} onChange={(e) => setEyebrow(e.target.value)} placeholder="Looking for more" />
+            </div>
+            {!isHeader && (
               <div>
                 <label className={label}>QR code URL (optional)</label>
                 <input className={input} value={qrUrl} onChange={(e) => setQrUrl(e.target.value)} placeholder="https://store.ignatiusbookfairs.com/…" />
               </div>
+            )}
+            {!isHeader && (
               <div>
                 <label className={label}>Footer note (optional)</label>
                 <input className={input} value={footer} onChange={(e) => setFooter(e.target.value)} placeholder="Check out our FULL selection at Ignatiusbookfairs.com" />
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
-          {!isHeader && (
+          {(
             <div>
-              <label className={label}>Book covers (optional — up to 6 BigCommerce URLs, one per line)</label>
+              <label className={label}>Book covers (optional — up to {isHeader ? '5' : '6'} BigCommerce URLs, one per line{isHeader ? '; centered layout only' : ''})</label>
               <textarea
                 className={input}
                 rows={3}
@@ -313,7 +327,7 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
             </button>
             {tweakOpen && (
               <div className="space-y-3 mt-3 border border-gray-200 rounded-lg p-4">
-                {([['Headline color', hColor, setHColor], ['Subhead color', sColor, setSColor], ...(!isHeader ? [['Last-word accent', h2Color, setH2Color] as [string, string, (v: string) => void]] : [])] as [string, string, (v: string) => void][]).map(([lbl, val, set]) => (
+                {([['Headline color', hColor, setHColor], ['Subhead color', sColor, setSColor], ['Last-word accent', h2Color, setH2Color]] as [string, string, (v: string) => void][]).map(([lbl, val, set]) => (
                   <div key={lbl} className="flex flex-wrap items-center gap-2">
                     <span className="text-sm text-gray-600 w-28">{lbl}</span>
                     {[{ name: 'White', hex: '#ffffff' }, ...colors].map((c) => (
