@@ -32,6 +32,9 @@ export async function GET(req: Request) {
   const showLogo = q.get('logo') !== '0';
   const qrUrl = q.get('qr') || '';
   const curveStyle = q.get('curve') || 'arc';
+  const img = q.get('img') || '';
+  // blob = organic shape (default), card = rounded photo, png = transparent cutout
+  const imgMode = ['png', 'card'].includes(q.get('imgMode') || '') ? (q.get('imgMode') as 'png' | 'card') : 'blob';
   let doodads: string[] = [];
   try { doodads = JSON.parse(q.get('doodads') || '[]').slice(0, 8); } catch { doodads = []; }
   let books: { title: string; image: string }[] = [];
@@ -51,7 +54,7 @@ export async function GET(req: Request) {
     qrData = await QRCode.toDataURL(qrUrl, { width: 640, margin: 1, color: { dark, light: '#ffffff' } });
   }
 
-  const busy = Boolean(qrUrl) || books.length > 0;
+  const busy = Boolean(qrUrl) || books.length > 0 || Boolean(img);
   const hSize = busy ? (headline.length > 26 ? 88 : 104) : headline.length > 30 ? 108 : headline.length > 18 ? 132 : 156;
 
   // Split the headline so the last word can take the accent color.
@@ -102,6 +105,19 @@ export async function GET(req: Request) {
         </div>
         {sub ? <div style={{ display: 'flex', fontSize: busy ? 36 : 52, fontWeight: 500, lineHeight: 1.3, color: sColor, marginTop: 26, textAlign: 'center', maxWidth: 980 }}>{sub}</div> : null}
       </div>
+
+      {img ? (
+        imgMode === 'png' ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={img} width={620} height={440} alt="" style={{ objectFit: 'contain', marginTop: 44 }} />
+        ) : imgMode === 'blob' ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={img} width={620} height={470} alt="" style={{ objectFit: 'cover', borderRadius: '58% 42% 65% 35%', marginTop: 44, boxShadow: '0 22px 54px rgba(0,0,0,0.3)' }} />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={img} width={620} height={440} alt="" style={{ objectFit: 'cover', borderRadius: 28, marginTop: 44, boxShadow: '0 22px 54px rgba(0,0,0,0.3)' }} />
+        )
+      ) : null}
 
       {qrData ? (
         <div style={{ display: 'flex', backgroundColor: '#ffffff', borderRadius: 34, padding: 26, marginTop: 44, boxShadow: '0 18px 44px rgba(0,0,0,0.22)' }}>

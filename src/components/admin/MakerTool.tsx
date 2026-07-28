@@ -18,7 +18,7 @@ const label = 'block text-sm font-medium text-[#02176f] mb-1';
 type DesignParams = {
   headline: string; sub: string; bg: string; eyebrow: string; qrUrl: string; footer: string;
   hColor: string; sColor: string; h2Color: string; showLogo: boolean;
-  layout: 'center' | 'split'; img: string; imgMode: 'card' | 'png'; curve: 'arc' | 'wave' | 'wave2' | 'flat';
+  layout: 'center' | 'split'; img: string; imgMode: 'blob' | 'card' | 'png'; curve: 'arc' | 'wave' | 'wave2' | 'flat';
   picked: string[]; bookUrls: string; books: { title: string; image: string }[];
 };
 type DesignRow = { id: number; name: string; params: DesignParams };
@@ -42,6 +42,10 @@ function buildOgUrl(kind: 'header' | 'sign', p: DesignParams): string {
   if (!isHeader) {
     if (p.qrUrl.trim()) q.set('qr', p.qrUrl.trim());
     if (p.footer.trim()) q.set('footer', p.footer.trim());
+    if (p.img) {
+      q.set('img', p.img);
+      q.set('imgMode', p.imgMode);
+    }
   }
   if (p.curve !== 'arc') q.set('curve', p.curve);
   return `/api/og/${isHeader ? 'header' : 'sign'}?${q.toString()}`;
@@ -58,7 +62,7 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
   const [showLogo, setShowLogo] = useState(true);
   const [layout, setLayout] = useState<'center' | 'split'>('center');
   const [img, setImg] = useState('');
-  const [imgMode, setImgMode] = useState<'card' | 'png'>('card');
+  const [imgMode, setImgMode] = useState<'blob' | 'card' | 'png'>('blob');
   const [curve, setCurve] = useState<'arc' | 'wave' | 'wave2' | 'flat'>('arc');
   const [uploading, setUploading] = useState(false);
   const [uploadMsg, setUploadMsg] = useState('');
@@ -115,8 +119,8 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
       const j = await up.json().catch(() => ({}));
       if (!up.ok) throw new Error(j.error || `Upload failed (${up.status})`);
       setImg(j.url);
-      // PNGs default to the transparent-cutout treatment; photos to the card.
-      setImgMode(file.type === 'image/png' ? 'png' : 'card');
+      // PNGs default to the transparent-cutout treatment; photos to the blob.
+      setImgMode(file.type === 'image/png' ? 'png' : 'blob');
     } catch (e) {
       setUploadMsg(e instanceof Error ? e.message : 'Upload failed');
     } finally {
@@ -152,7 +156,7 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
     setEyebrow(p.eyebrow ?? ''); setQrUrl(p.qrUrl ?? ''); setFooter(p.footer ?? '');
     setHColor(p.hColor ?? ''); setSColor(p.sColor ?? ''); setH2Color(p.h2Color ?? '');
     setShowLogo(p.showLogo ?? true); setLayout(p.layout ?? 'center'); setImg(p.img ?? '');
-    setImgMode(p.imgMode ?? 'card'); setCurve(p.curve ?? 'arc'); setPicked(p.picked ?? []);
+    setImgMode(p.imgMode ?? 'blob'); setCurve(p.curve ?? 'arc'); setPicked(p.picked ?? []);
     setBookUrls(p.bookUrls ?? ''); setBooks(p.books ?? []);
   };
 
@@ -322,6 +326,7 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={img} alt="" className="w-10 h-10 object-cover rounded" />
                         <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+                          <button onClick={() => setImgMode('blob')} className={`text-xs px-3 py-1.5 ${imgMode === 'blob' ? 'bg-[#02176f] text-white' : 'bg-white text-gray-600'}`}>Blob</button>
                           <button onClick={() => setImgMode('card')} className={`text-xs px-3 py-1.5 ${imgMode === 'card' ? 'bg-[#02176f] text-white' : 'bg-white text-gray-600'}`}>Photo card</button>
                           <button onClick={() => setImgMode('png')} className={`text-xs px-3 py-1.5 ${imgMode === 'png' ? 'bg-[#02176f] text-white' : 'bg-white text-gray-600'}`}>Transparent PNG</button>
                         </div>
@@ -392,6 +397,36 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
               </div>
             )}
           </div>
+
+          {!isHeader && (
+            <div>
+              <label className={label}>Image (optional — uploads to Blob)</label>
+              <div className="flex flex-wrap items-center gap-3">
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  disabled={uploading}
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) onPickImage(f); }}
+                  className="block text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-[#7c3aed] file:text-white file:font-semibold file:cursor-pointer disabled:opacity-50"
+                />
+                {uploading && <span className="text-xs text-gray-500">Uploading…</span>}
+                {img && !uploading && (
+                  <>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={img} alt="" className="w-10 h-10 object-cover rounded" />
+                    <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+                      <button onClick={() => setImgMode('blob')} className={`text-xs px-3 py-1.5 ${imgMode === 'blob' ? 'bg-[#02176f] text-white' : 'bg-white text-gray-600'}`}>Blob</button>
+                      <button onClick={() => setImgMode('card')} className={`text-xs px-3 py-1.5 ${imgMode === 'card' ? 'bg-[#02176f] text-white' : 'bg-white text-gray-600'}`}>Photo card</button>
+                      <button onClick={() => setImgMode('png')} className={`text-xs px-3 py-1.5 ${imgMode === 'png' ? 'bg-[#02176f] text-white' : 'bg-white text-gray-600'}`}>Transparent PNG</button>
+                    </div>
+                    <button onClick={() => setImg('')} className="text-xs text-gray-500 hover:underline">Remove</button>
+                  </>
+                )}
+              </div>
+              {uploadMsg && <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 mt-2">{uploadMsg}</p>}
+            </div>
+          )}
 
           {(
             <div>

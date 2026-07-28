@@ -23,7 +23,8 @@ export async function GET(req: Request) {
   const showLogo = q.get('logo') !== '0';
   const layout = q.get('layout') === 'split' ? 'split' : 'center';
   const img = q.get('img') || '';
-  const imgMode = q.get('imgMode') === 'png' ? 'png' : 'card'; // png = transparent cutout, no crop/card
+  // blob = organic shape (default), card = rounded photo, png = transparent cutout
+  const imgMode = ['png', 'card'].includes(q.get('imgMode') || '') ? (q.get('imgMode') as 'png' | 'card') : 'blob';
   let doodads: string[] = [];
   try { doodads = JSON.parse(q.get('doodads') || '[]').slice(0, 6); } catch { doodads = []; }
   let books: { title: string; image: string }[] = [];
@@ -118,9 +119,9 @@ export async function GET(req: Request) {
 
   // Logo always rides top-center, in both layouts.
   const logoBand = showLogo ? (
-    <div style={{ position: 'absolute', top: 20, left: 0, width: '100%', display: 'flex', justifyContent: 'center' }}>
+    <div style={{ position: 'absolute', top: 40, left: 0, width: '100%', display: 'flex', justifyContent: 'center' }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={`${origin}/images/ibf-logo-white-p-800.png`} width={books.length ? 128 : 150} height={books.length ? 28 : 33} alt="" style={{ display: 'flex' }} />
+      <img src={`${origin}/images/ibf-logo-white-p-800.png`} width={books.length ? 154 : 180} height={books.length ? 33 : 39} alt="" style={{ display: 'flex' }} />
     </div>
   ) : null;
 
@@ -140,6 +141,9 @@ export async function GET(req: Request) {
         imgMode === 'png' ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={img} width={430} height={380} alt="" style={{ objectFit: 'contain', marginRight: 60, marginBottom: 40 }} />
+        ) : imgMode === 'blob' ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={img} width={400} height={350} alt="" style={{ objectFit: 'cover', borderRadius: '58% 42% 65% 35%', marginRight: 70, marginBottom: 34, boxShadow: '0 18px 44px rgba(0,0,0,0.28)' }} />
         ) : (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={img} width={400} height={330} alt="" style={{ objectFit: 'cover', borderRadius: 24, marginRight: 70, marginBottom: 34, boxShadow: '0 18px 44px rgba(0,0,0,0.28)' }} />
