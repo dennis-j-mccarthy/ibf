@@ -131,8 +131,11 @@ export async function GET(req: Request) {
   const node = layout === 'split' ? (
     <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: bg, fontFamily: 'Fredoka', overflow: 'hidden' }}>
       {doodadImgs}
-      {logoBand}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', flex: 1, padding: '30px 40px 30px 90px' }}>
+        {showLogo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={`${origin}/images/ibf-logo-white-p-800.png`} width={180} height={39} alt="" style={{ display: 'flex', marginBottom: 22 }} />
+        ) : null}
         {eyebrow ? <div style={{ display: 'flex', fontFamily: 'Caveat', fontSize: 52, fontWeight: 700, color: hColor, marginBottom: 2 }}>{eyebrow}</div> : null}
         {headlineNode('flex-start')}
         {sub ? <div style={{ display: 'flex', fontSize: 28, fontWeight: 500, lineHeight: 1.3, color: sColor, marginTop: 14, maxWidth: 560 }}>{sub}</div> : null}
