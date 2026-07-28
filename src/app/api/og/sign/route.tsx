@@ -123,12 +123,12 @@ export async function GET(req: Request) {
       {curveStyle === 'flat' ? (
         <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 190, backgroundColor: '#ffffff', display: 'flex' }} />
       ) : curveStyle === 'wave' ? (
-        <svg width={W} height={250} viewBox={`0 0 ${W} 250`} style={{ position: 'absolute', bottom: 0, left: 0 }}>
-          <path d={`M0,108 C330,236 950,-16 ${W},118 L${W},250 L0,250 Z`} fill="#ffffff" />
+        <svg width={W} height={300} viewBox={`0 0 ${W} 300`} style={{ position: 'absolute', bottom: 0, left: 0 }}>
+          <path d={`M0,118 C330,255 950,-14 ${W},130 L${W},300 L0,300 Z`} fill="#ffffff" />
         </svg>
       ) : curveStyle === 'wave2' ? (
-        <svg width={W} height={250} viewBox={`0 0 ${W} 250`} style={{ position: 'absolute', bottom: 0, left: 0 }}>
-          <path d={`M0,118 C330,-16 950,236 ${W},108 L${W},250 L0,250 Z`} fill="#ffffff" />
+        <svg width={W} height={300} viewBox={`0 0 ${W} 300`} style={{ position: 'absolute', bottom: 0, left: 0 }}>
+          <path d={`M0,130 C330,-14 950,255 ${W},118 L${W},300 L0,300 Z`} fill="#ffffff" />
         </svg>
       ) : (
         <div style={{ position: 'absolute', bottom: -300, left: -260, width: W + 520, height: 560, borderRadius: '50%', backgroundColor: '#ffffff', display: 'flex' }} />
