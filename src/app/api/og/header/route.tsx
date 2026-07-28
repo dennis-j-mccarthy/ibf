@@ -23,6 +23,7 @@ export async function GET(req: Request) {
   const showLogo = q.get('logo') !== '0';
   const layout = q.get('layout') === 'split' ? 'split' : 'center';
   const img = q.get('img') || '';
+  const imgMode = q.get('imgMode') === 'png' ? 'png' : 'card'; // png = transparent cutout, no crop/card
   let doodads: string[] = [];
   try { doodads = JSON.parse(q.get('doodads') || '[]').slice(0, 6); } catch { doodads = []; }
   let books: { title: string; image: string }[] = [];
@@ -118,8 +119,13 @@ export async function GET(req: Request) {
         {sub ? <div style={{ display: 'flex', fontSize: 28, fontWeight: 500, lineHeight: 1.3, color: sColor, marginTop: 14, maxWidth: 560 }}>{sub}</div> : null}
       </div>
       {img ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={img} width={400} height={330} alt="" style={{ objectFit: 'cover', borderRadius: 24, marginRight: 70, marginBottom: 34, boxShadow: '0 18px 44px rgba(0,0,0,0.28)' }} />
+        imgMode === 'png' ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={img} width={430} height={380} alt="" style={{ objectFit: 'contain', marginRight: 60, marginBottom: 40 }} />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={img} width={400} height={330} alt="" style={{ objectFit: 'cover', borderRadius: 24, marginRight: 70, marginBottom: 34, boxShadow: '0 18px 44px rgba(0,0,0,0.28)' }} />
+        )
       ) : null}
       {curve}
     </div>
@@ -127,9 +133,9 @@ export async function GET(req: Request) {
     <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: bg, fontFamily: 'Fredoka', overflow: 'hidden' }}>
       {doodadImgs}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 110px', marginTop: books.length ? -26 : showLogo ? 6 : -20 }}>
-        {showLogo && !books.length ? (
+        {showLogo ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={`${origin}/images/ibf-logo-white-p-800.png`} width={170} height={37} alt="" style={{ display: 'flex', marginBottom: 20 }} />
+          <img src={`${origin}/images/ibf-logo-white-p-800.png`} width={books.length ? 128 : 170} height={books.length ? 28 : 37} alt="" style={{ display: 'flex', marginBottom: books.length ? 10 : 20 }} />
         ) : null}
         {eyebrow ? <div style={{ display: 'flex', fontFamily: 'Caveat', fontSize: books.length ? 48 : 58, fontWeight: 700, color: hColor, marginBottom: 2 }}>{eyebrow}</div> : null}
         {headlineNode('center')}

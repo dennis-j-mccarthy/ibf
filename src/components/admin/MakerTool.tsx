@@ -25,6 +25,7 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
   const [showLogo, setShowLogo] = useState(true);
   const [layout, setLayout] = useState<'center' | 'split'>('center');
   const [img, setImg] = useState('');
+  const [imgMode, setImgMode] = useState<'card' | 'png'>('card');
   const [uploading, setUploading] = useState(false);
   const [uploadMsg, setUploadMsg] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
@@ -80,6 +81,8 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
       const j = await up.json().catch(() => ({}));
       if (!up.ok) throw new Error(j.error || `Upload failed (${up.status})`);
       setImg(j.url);
+      // PNGs default to the transparent-cutout treatment; photos to the card.
+      setImgMode(file.type === 'image/png' ? 'png' : 'card');
     } catch (e) {
       setUploadMsg(e instanceof Error ? e.message : 'Upload failed');
     } finally {
@@ -95,7 +98,10 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
     if (sColor) q.set('sColor', sColor);
     if (isHeader && layout === 'split') {
       q.set('layout', 'split');
-      if (img) q.set('img', img);
+      if (img) {
+        q.set('img', img);
+        q.set('imgMode', imgMode);
+      }
     }
     if (books.length) q.set('books', JSON.stringify(books));
     if (eyebrow.trim()) q.set('eyebrow', eyebrow.trim());
@@ -222,8 +228,14 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
                     />
                     {uploading && <span className="text-xs text-gray-500">Uploading…</span>}
                     {img && !uploading && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={img} alt="" className="w-10 h-10 object-cover rounded" />
+                      <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={img} alt="" className="w-10 h-10 object-cover rounded" />
+                        <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+                          <button onClick={() => setImgMode('card')} className={`text-xs px-3 py-1.5 ${imgMode === 'card' ? 'bg-[#02176f] text-white' : 'bg-white text-gray-600'}`}>Photo card</button>
+                          <button onClick={() => setImgMode('png')} className={`text-xs px-3 py-1.5 ${imgMode === 'png' ? 'bg-[#02176f] text-white' : 'bg-white text-gray-600'}`}>Transparent PNG</button>
+                        </div>
+                      </>
                     )}
                   </div>
                 )}
