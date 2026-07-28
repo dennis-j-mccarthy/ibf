@@ -146,7 +146,7 @@ export async function GET(req: Request) {
           <img src={img} width={430} height={380} alt="" style={{ objectFit: 'contain', marginRight: 60, marginBottom: 40 }} />
         ) : imgMode === 'blob' ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={img} width={400} height={350} alt="" style={{ objectFit: 'cover', borderRadius: '58% 42% 65% 35%', marginRight: 70, marginBottom: 34, boxShadow: '0 18px 44px rgba(0,0,0,0.28)' }} />
+          <img src={img} width={400} height={350} alt="" style={{ objectFit: 'cover', borderRadius: '62% 38% 56% 44% / 44% 58% 42% 60%', transform: 'rotate(-3deg)', marginRight: 70, marginBottom: 34, boxShadow: '0 18px 44px rgba(0,0,0,0.28)' }} />
         ) : (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={img} width={400} height={330} alt="" style={{ objectFit: 'cover', borderRadius: 24, marginRight: 70, marginBottom: 34, boxShadow: '0 18px 44px rgba(0,0,0,0.28)' }} />
