@@ -111,10 +111,10 @@ const ALMA_STATES = [...SOUTHEAST_STATES, ...SOUTHWEST_STATES];
 
 // HubSpot Meeting Embed URLs
 const APPOINTMENT_URLS: Record<string, string> = {
-  'julie': 'https://meetings.hubspot.com/julie-degregoria?uuid=f012da76-1f7b-4474-be12-2d6ba4a4524d', // Northeast
+  'julie': 'https://meetings.hubspot.com/julie-degregoria?uuid=f012da76-1f7b-4474-be12-2d6ba4a4524d', // Northeast + all home school leads
   'jeanette': 'https://meetings.hubspot.com/jeanette-pohl1/ignatius-book-fair', // Northwest
   'alma': 'https://meetings.hubspot.com/alma-cue', // Southeast & Southwest
-  'marni': 'https://meetings.hubspot.com/marni-spewock', // Public, Private, Home school other, Other
+  'marni': 'https://meetings.hubspot.com/marni-spewock', // Public, Private, Other
   'kim': 'https://meetings.hubspot.com/kneumaier/ignatius-book-fair', // All Diocese
 };
 
@@ -124,8 +124,13 @@ function getAppointmentRedirect(orgType: string, schoolType: string, state: stri
   const schoolLower = schoolType.toLowerCase();
   const stateAbbrev = STATE_ABBREVS[state] || state.toUpperCase();
 
-  // Public, Private, Home school other, Other -> Marni
-  if (['public', 'private', 'home school other', 'other'].includes(schoolLower)) {
+  // All home school leads -> Julie
+  if (orgLower === 'home school' || schoolLower.startsWith('home school')) {
+    return APPOINTMENT_URLS['julie'];
+  }
+
+  // Public, Private, Other -> Marni
+  if (['public', 'private', 'other'].includes(schoolLower)) {
     return APPOINTMENT_URLS['marni'];
   }
 
@@ -134,9 +139,9 @@ function getAppointmentRedirect(orgType: string, schoolType: string, state: stri
     return APPOINTMENT_URLS['kim'] || null;
   }
 
-  // Catholic, Christian, Home school Catholic, Parish -> Geographic split
+  // Catholic, Christian, Parish -> Geographic split
   const needsGeographicRouting =
-    ['catholic', 'christian', 'home school catholic'].includes(schoolLower) ||
+    ['catholic', 'christian'].includes(schoolLower) ||
     orgLower === 'parish';
 
   if (needsGeographicRouting) {
@@ -158,11 +163,6 @@ function getAppointmentRedirect(orgType: string, schoolType: string, state: stri
     }
   }
 
-  // Home school org type with no school-type match above (Catholic home schools
-  // route geographically via schoolType) -> Marni
-  if (orgLower === 'home school') {
-    return APPOINTMENT_URLS['marni'];
-  }
 
   return null; // No match - don't redirect
 }
