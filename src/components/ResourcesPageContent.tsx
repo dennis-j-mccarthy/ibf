@@ -172,6 +172,10 @@ export default function ResourcesPageContent({ resources }: ResourcesPageContent
         r.slug === 'bookfair-sneak-peek' || r.slug === 'lent-flyer-2026'
       );
     }
+    // Public Back-to-School Flyer: relate to the public Sneak Peek
+    else if (resource.slug === 'back-to-school-flyer-public-2026') {
+      related = resources.filter(r => r.slug === 'public-sneak-peek-2026-2027');
+    }
     // Back-to-School Flyer: relate to Sneak Peek, Summer Catalog, Sacramental Gifts
     else if (resource.slug === 'back-to-school-flyer-2026') {
       related = resources.filter(r =>
@@ -264,6 +268,7 @@ export default function ResourcesPageContent({ resources }: ResourcesPageContent
     // Sort order: Guides, FAQs, Checklists, Parent Letters, other docs, videos
     const typeOrder = (r: Resource) => {
       if (activeFilter === 'Advertising' && r.slug === 'back-to-school-flyer-2026') return -1; // Pin to position one within Advertising
+      if (activeFilter === 'Tutorials' && r.slug.startsWith('tutorial-')) return -1; // Newly published tutorials pin to the top of Tutorials
       if (r.slug.endsWith('operational-guide')) return 0; // Guides
       if (r.slug.startsWith('faqs-') || r.slug === 'faqs-virtual-coordinators') return 1; // FAQs
       if (r.slug.includes('planning-checklist') || r.slug.includes('book-fair-checklist')) return 2; // Checklists
@@ -769,6 +774,9 @@ function VideoModal({ resource, onClose }: { resource: Resource; onClose: () => 
               className="absolute inset-0"
               dangerouslySetInnerHTML={{ __html: processEmbedCode(resource.embedCode) }}
             />
+          ) : resource.fileUrl ? (
+            // Published tutorial: a direct video file (no embed code) — play it natively.
+            <video src={resource.fileUrl} controls playsInline className="absolute inset-0 w-full h-full bg-black" />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center text-white bg-gray-900">
               <div className="text-center">
