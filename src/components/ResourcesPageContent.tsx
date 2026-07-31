@@ -268,6 +268,7 @@ export default function ResourcesPageContent({ resources }: ResourcesPageContent
     // Sort order: Guides, FAQs, Checklists, Parent Letters, other docs, videos
     const typeOrder = (r: Resource) => {
       if (activeFilter === 'Advertising' && r.slug === 'back-to-school-flyer-2026') return -1; // Pin to position one within Advertising
+      if (activeFilter === 'Public' && r.slug === 'back-to-school-flyer-public-2026') return -1; // Pin to position one within Public
       if (activeFilter === 'Tutorials' && r.slug.startsWith('tutorial-')) return -1; // Newly published tutorials pin to the top of Tutorials
       if (r.slug.endsWith('operational-guide')) return 0; // Guides
       if (r.slug.startsWith('faqs-') || r.slug === 'faqs-virtual-coordinators') return 1; // FAQs
