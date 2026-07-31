@@ -129,11 +129,6 @@ function getAppointmentRedirect(orgType: string, schoolType: string, state: stri
     return APPOINTMENT_URLS['marni'];
   }
 
-  // Home school org type -> Marni
-  if (orgLower === 'home school') {
-    return APPOINTMENT_URLS['marni'];
-  }
-
   // Diocese, Business, Other org types -> Kim
   if (orgLower === 'diocese' || orgLower === 'business' || orgLower === 'other') {
     return APPOINTMENT_URLS['kim'] || null;
@@ -161,6 +156,12 @@ function getAppointmentRedirect(orgType: string, schoolType: string, state: stri
     if (['AK', 'HI'].includes(stateAbbrev)) {
       return APPOINTMENT_URLS['alma'];
     }
+  }
+
+  // Home school org type with no school-type match above (Catholic home schools
+  // route geographically via schoolType) -> Marni
+  if (orgLower === 'home school') {
+    return APPOINTMENT_URLS['marni'];
   }
 
   return null; // No match - don't redirect
@@ -1476,6 +1477,24 @@ const SignUpForm = () => {
                   <option value="Other">Other</option>
                 </select>
               </div>
+
+              {/* Home school: school type only, filtered to home school options */}
+              {formData.orgType === 'Home school' && (
+                <div className="mb-2.5">
+                  <select
+                    name="schoolType"
+                    value={formData.schoolType}
+                    onChange={handleChange}
+                    required
+                    className="w-full h-11 px-4 rounded-lg border-0 bg-[#0088ff] text-white tracking-wide"
+                    style={{ fontFamily: 'brother-1816, sans-serif' }}
+                  >
+                    <option value="">Home School Type *</option>
+                    <option value="Home school Catholic">Home school Catholic</option>
+                    <option value="Home school other">Home school other</option>
+                  </select>
+                </div>
+              )}
 
               {/* School specific fields */}
               {formData.orgType === 'School' && (
