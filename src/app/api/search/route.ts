@@ -18,7 +18,9 @@ const STATIC_PAGES: { title: string; href: string; keywords: string }[] = [
   { title: 'About', href: '/about', keywords: 'about story mission ave maria ignatius press partnership' },
   { title: 'FAQs', href: '/faqs', keywords: 'faq frequently asked questions help support' },
   { title: 'Book Fair Resources', href: '/bookfair-resources', keywords: 'resources guides flyers videos downloads tutorials printables' },
-  { title: 'Book Battles', href: '/book-battles', keywords: 'book battles competition reading worksheets' },
+  // /book-battles intentionally hidden from search for now — the interest form
+  // is the destination for battle searches (incl. "ibb").
+  { title: 'Book Battle Interest Form', href: '/book-battle-interest-form', keywords: 'book battle battles bok battle ibb competition reading interest form sign up' },
   { title: 'Catholic In-Person Guide', href: '/guide/catholic-in-person', keywords: 'guide catholic in person setup how to run a fair' },
   { title: 'Terms of Service', href: '/terms-of-service', keywords: 'terms service legal policy' },
 ];
