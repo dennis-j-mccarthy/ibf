@@ -13,14 +13,14 @@ type SearchResult = {
 
 // Static marketing pages (title + keyword matching only — there is no full-text
 // index of page bodies). Intentionally excludes /press-room (removed from nav).
-const STATIC_PAGES: { title: string; href: string; keywords: string }[] = [
+const STATIC_PAGES: { title: string; href: string; keywords: string; snippet?: string }[] = [
   { title: 'Home', href: '/', keywords: 'home book fairs ignatius catholic public host' },
   { title: 'About', href: '/about', keywords: 'about story mission ave maria ignatius press partnership' },
   { title: 'FAQs', href: '/faqs', keywords: 'faq frequently asked questions help support' },
   { title: 'Book Fair Resources', href: '/bookfair-resources', keywords: 'resources guides flyers videos downloads tutorials printables' },
   // /book-battles intentionally hidden from search for now — the interest form
   // is the destination for battle searches (incl. "ibb").
-  { title: 'Book Battle Interest Form', href: '/book-battle-interest-form', keywords: 'book battle battles bok battle ibb competition reading interest form sign up' },
+  { title: 'Book Battle Interest Form', href: '/book-battle-interest-form', keywords: 'book battle battles bok battle ibb competition reading interest form sign up', snippet: 'Interested in bringing a Book Battle to your school? Connect with our Book Battle coordinator!' },
   { title: 'Catholic In-Person Guide', href: '/guide/catholic-in-person', keywords: 'guide catholic in person setup how to run a fair' },
   { title: 'Terms of Service', href: '/terms-of-service', keywords: 'terms service legal policy' },
 ];
@@ -92,7 +92,7 @@ export async function GET(request: Request) {
   const ql = q.toLowerCase();
   for (const p of STATIC_PAGES) {
     if (p.title.toLowerCase().includes(ql) || p.keywords.includes(ql)) {
-      results.push({ type: 'page', title: p.title, href: p.href, badge: 'Page' });
+      results.push({ type: 'page', title: p.title, href: p.href, badge: 'Page', ...(p.snippet ? { snippet: p.snippet } : {}) });
     }
   }
 
