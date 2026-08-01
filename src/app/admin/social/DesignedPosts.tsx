@@ -41,6 +41,17 @@ const PLATFORMS = [
 
 const MODE_HEX: Record<string, string> = { catholic: '#0088ff', parish: '#50db92', public: '#ff6445', virtual: '#42ade2' };
 
+// Social destinations for the (demo) one-click "Post" button. This is a
+// simulated publish — nothing goes live until real Meta/etc. accounts are wired
+// up. Each has a brand color for the toggle chip.
+const SOCIALS = [
+  { key: 'facebook', label: 'Facebook', hex: '#1877f2' },
+  { key: 'instagram', label: 'Instagram', hex: '#e1306c' },
+  { key: 'x', label: 'X', hex: '#000000' },
+  { key: 'tiktok', label: 'TikTok', hex: '#010101' },
+  { key: 'pinterest', label: 'Pinterest', hex: '#e60023' },
+];
+
 // Lifestyle photo pool for photo-hero posts (public/brand/photos). photo-05 is
 // the Loupio mascot, excluded from full-bleed backgrounds.
 const PHOTOS = ['photo-01.jpg', 'photo-02.jpg', 'photo-03.jpg', 'photo-04.jpg', 'photo-06.jpg', 'photo-07.jpg', 'photo-08.jpg', 'photo-09.jpg', 'photo-10.jpg', 'photo-11.jpg', 'photo-12.jpg', 'photo-13.jpg', 'photo-14.jpg', 'photo-15.jpg'];
@@ -95,6 +106,23 @@ export default function DesignedPosts({
   const [reelPct, setReelPct] = useState(0);
   const [tweakOpen, setTweakOpen] = useState<number | null>(null);
   const [library, setLibrary] = useState<{ url: string; alt: string; category: string }[]>([]);
+
+  // Demo "Post" flow (simulated — no real publishing yet).
+  const [postOpen, setPostOpen] = useState<number | null>(null);
+  const [postSel, setPostSel] = useState<Record<string, boolean>>({ facebook: true, instagram: true });
+  const [postingIdx, setPostingIdx] = useState<number | null>(null);
+  const [postedIdx, setPostedIdx] = useState<Record<number, string[]>>({});
+
+  async function fakePost(i: number) {
+    const chosen = SOCIALS.filter((s) => postSel[s.key]).map((s) => s.key);
+    if (!chosen.length) return;
+    setPostingIdx(i);
+    // Simulated network round-trip so the button visibly "posts".
+    await new Promise((r) => setTimeout(r, 1400));
+    setPostingIdx(null);
+    setPostedIdx((cur) => ({ ...cur, [i]: chosen }));
+    setPostOpen(null);
+  }
 
   // Saved posts, attached to this parent concept (blog title or campaign name).
   const concept = (title || strategy || '').trim();
@@ -352,8 +380,51 @@ export default function DesignedPosts({
                     )
                   )}
                   <button onClick={() => navigator.clipboard?.writeText(`${p.caption}\n\n${(p.hashtags || []).map((h) => `#${h.replace(/^#/, '')}`).join(' ')}`)} className="text-sm border border-gray-300 text-[#02176f] px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors">Copy caption</button>
+                  {postedIdx[i]?.length ? (
+                    <span className="text-sm text-[#00a843] inline-flex items-center gap-1.5">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                      Posted to {postedIdx[i].map((k) => SOCIALS.find((s) => s.key === k)?.label).join(', ')}
+                    </span>
+                  ) : (
+                    <button onClick={() => setPostOpen(postOpen === i ? null : i)} className={`text-sm px-4 py-2 rounded-lg transition-colors inline-flex items-center gap-1.5 ${postOpen === i ? 'bg-[#0088ff] text-white' : 'bg-[#0088ff] text-white hover:bg-[#0088ff]/90'}`}>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                      Post
+                    </button>
+                  )}
                   <button onClick={() => setTweakOpen(tweakOpen === i ? null : i)} className={`text-sm px-4 py-2 rounded-lg border transition-colors ml-auto ${tweakOpen === i ? 'bg-[#7c3aed] text-white border-[#7c3aed]' : 'border-[#7c3aed] text-[#7c3aed] hover:bg-[#7c3aed]/5'}`}>Tweak</button>
                 </div>
+
+                {postOpen === i && (
+                  <div className="mt-4 border-t border-gray-100 pt-4">
+                    <p className="text-xs font-semibold text-gray-600 mb-0.5">Post to accounts</p>
+                    <p className="text-[11px] text-gray-400 mb-3">Demo — this simulates publishing. No accounts are connected yet, so nothing goes live.</p>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {SOCIALS.map((s) => {
+                        const on = !!postSel[s.key];
+                        return (
+                          <button
+                            key={s.key}
+                            onClick={() => setPostSel((sel) => ({ ...sel, [s.key]: !sel[s.key] }))}
+                            className="text-xs px-3 py-1.5 rounded-full border transition-colors"
+                            style={on ? { backgroundColor: s.hex, borderColor: s.hex, color: '#fff' } : { borderColor: '#d1d5db', color: '#4b5563' }}
+                          >
+                            {s.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => fakePost(i)}
+                        disabled={postingIdx === i || !SOCIALS.some((s) => postSel[s.key])}
+                        className="text-sm bg-[#0088ff] text-white px-4 py-2 rounded-lg hover:bg-[#0088ff]/90 disabled:opacity-60 transition-colors"
+                      >
+                        {postingIdx === i ? 'Posting…' : 'Post now'}
+                      </button>
+                      <button onClick={() => setPostOpen(null)} className="text-xs text-gray-500 hover:underline">Cancel</button>
+                    </div>
+                  </div>
+                )}
 
                 {tweakOpen === i && (
                   <div className="mt-4 border-t border-gray-100 pt-4 space-y-3">

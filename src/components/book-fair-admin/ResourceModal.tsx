@@ -83,6 +83,9 @@ export default function ResourceModal({
                 className="absolute inset-0"
                 dangerouslySetInnerHTML={{ __html: processEmbedCode(resource.embedCode) }}
               />
+            ) : resource.fileUrl ? (
+              // Published tutorial: a direct video file (no embed code) — play it natively.
+              <video src={resource.fileUrl} controls playsInline className="absolute inset-0 w-full h-full bg-black" />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center text-white bg-gray-900">
                 <p className="text-gray-400">Video not available</p>

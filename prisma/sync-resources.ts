@@ -108,7 +108,10 @@ const liveResources = [
 
 async function main() {
   console.log('Clearing existing resources...');
-  await prisma.resource.deleteMany({});
+  // Preserve tutorials published from /admin/tutorials (slug "tutorial-<id>") —
+  // they are user-generated and not part of this seeded list, so the wipe must
+  // skip them or a sync would delete every published recording.
+  await prisma.resource.deleteMany({ where: { NOT: { slug: { startsWith: 'tutorial-' } } } });
 
   console.log('Inserting new resources...');
   for (const resource of liveResources) {

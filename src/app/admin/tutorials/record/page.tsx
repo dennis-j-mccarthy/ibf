@@ -70,9 +70,20 @@ export default function RecordTutorialPage() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     if (sv.videoWidth) {
-      if (canvas.width !== sv.videoWidth || canvas.height !== sv.videoHeight) {
-        canvas.width = sv.videoWidth;
-        canvas.height = sv.videoHeight;
+      // Composite at a capped resolution. A Retina/large screen is captured at
+      // its full native size (often 3000-5000px wide); redrawing that plus the
+      // webcam bubble's shadow-blur every 33ms can't finish within the frame
+      // budget, so the worker's ticks pile up and the main thread locks solid
+      // (looks like an infinite freeze right after the share picker). Scale the
+      // longest edge down to MAX_DIM — 1080p is the right target for a tutorial
+      // anyway (smaller files, plays on iPhones).
+      const MAX_DIM = 1920;
+      const scale = Math.min(1, MAX_DIM / Math.max(sv.videoWidth, sv.videoHeight));
+      const w = Math.round(sv.videoWidth * scale);
+      const h = Math.round(sv.videoHeight * scale);
+      if (canvas.width !== w || canvas.height !== h) {
+        canvas.width = w;
+        canvas.height = h;
       }
       ctx.drawImage(sv, 0, 0, canvas.width, canvas.height);
     }
@@ -159,7 +170,10 @@ export default function RecordTutorialPage() {
     setError(null);
     try {
       const display = await navigator.mediaDevices.getDisplayMedia({
-        video: { frameRate: 30 },
+        // Ask for a capped source frame (Chrome downscales to fit). The canvas
+        // also caps compositing to MAX_DIM, so this is belt-and-suspenders to
+        // keep the hidden-video decode cheap on Retina/large screens.
+        video: { frameRate: 30, width: { max: 1920 }, height: { max: 1920 } },
         audio: true,
       });
       let cam: MediaStream | null = null;

@@ -8,7 +8,13 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   if (!(await getAdminEmail())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const tutorials = await prisma.tutorial.findMany({ orderBy: { createdAt: 'desc' } }).catch(() => []);
-  return NextResponse.json(tutorials);
+  // Mark which tutorials have been published to the public Resources library
+  // (a Resource with slug "tutorial-<id>" exists).
+  const published = await prisma.resource
+    .findMany({ where: { slug: { startsWith: 'tutorial-' } }, select: { slug: true } })
+    .catch(() => [] as { slug: string }[]);
+  const publishedIds = new Set(published.map((r) => Number(r.slug.slice('tutorial-'.length))));
+  return NextResponse.json(tutorials.map((t) => ({ ...t, published: publishedIds.has(t.id) })));
 }
 
 // Records a saved tutorial after its video finished uploading to Blob.
@@ -38,5 +44,8 @@ export async function DELETE(request: NextRequest) {
   const id = Number(new URL(request.url).searchParams.get('id'));
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
   await prisma.tutorial.delete({ where: { id } }).catch(() => {});
+  // Also unpublish it from the public Resources page (removes the "tutorial-<id>"
+  // resource if this tutorial was published).
+  await prisma.resource.deleteMany({ where: { slug: `tutorial-${id}` } }).catch(() => {});
   return NextResponse.json({ ok: true });
 }
