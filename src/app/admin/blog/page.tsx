@@ -320,14 +320,49 @@ export default function BlogAdmin() {
   };
 
   // A designed, email-safe newsletter (inline styles + table layout) — this is
-  // exactly what Copy HTML produces and what the Preview renders.
+  // exactly what Copy HTML produces and what the Preview renders. The masthead
+  // is a live render from the brand Header Maker (Fredoka, doodads, wave edge);
+  // dividers and card accents rotate through the Training palette.
   const newsletterHtml = () => {
     const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    // Rotating brand palette for pills, card accents, buttons, and dividers.
+    // Yellow/mint grounds need navy text; the rest carry white.
+    const PALETTE = [
+      { hex: '#0088ff', text: '#ffffff', wave: 'blue' },
+      { hex: '#50db92', text: '#02176f', wave: 'green' },
+      { hex: '#ff6445', text: '#ffffff', wave: 'orange' },
+      { hex: '#ffd41d', text: '#02176f', wave: 'yellow' },
+    ];
+
+    // Brand masthead from the Header Maker: script eyebrow, Fredoka headline
+    // with a gold accent word, scattered doodads, wavy bottom into the body.
+    const mast = new URLSearchParams({
+      headline: nlTitle || 'Fresh From the Fair',
+      eyebrow: nlTimeframe || 'Looking for more',
+      bg: '#02176f',
+      h2Color: '#ffd41d',
+      curve: 'wave',
+      doodads: JSON.stringify([
+        '/brand/doodads/doodad-circle.png',
+        '/brand/doodads/doodad-squiggle.png',
+        '/brand/doodads/doodad-triangle.png',
+        '/brand/doodads/doodad-loop.png',
+        '/brand/doodads/doodad-dot.png',
+        '/brand/doodads/doodad-arc.png',
+      ]),
+    });
+    const mastUrl = `${SITE}/api/og/header?${mast.toString()}`;
+
+    const waveDivider = (wave: string, pad = '4px 0 26px 0') =>
+      `<tr><td style="padding:${pad};font-size:0;line-height:0;text-align:center;"><img src="${SITE}/brand/email/wave-${wave}.png" alt="" width="180" style="display:inline-block;width:180px;border:0;" /></td></tr>`;
+
     const articles = starred
-      .map(
-        (b) => `
-        <tr><td style="padding:0 0 24px 0;">
-          <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border:1px solid #eceef2;border-radius:12px;overflow:hidden;background:#ffffff;">
+      .map((b, i) => {
+        const c = PALETTE[i % PALETTE.length];
+        return `
+        <tr><td style="padding:0 0 10px 0;">
+          <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border:1px solid #e6ebf5;border-top:4px solid ${c.hex};border-radius:12px;overflow:hidden;background:#ffffff;">
             ${
               b.thumbnail
                 ? `<tr><td style="font-size:0;line-height:0;"><a href="${SITE}/blog/${b.slug}"><img src="${b.thumbnail}" alt="" width="560" style="display:block;width:100%;max-height:240px;object-fit:cover;border:0;" /></a></td></tr>`
@@ -336,37 +371,42 @@ export default function BlogAdmin() {
             <tr><td style="padding:22px 24px 24px 24px;">
               ${
                 b.category
-                  ? `<div style="font:700 11px/1 Arial,Helvetica,sans-serif;letter-spacing:.09em;text-transform:uppercase;color:#0088ff;margin:0 0 10px 0;">${esc(b.category)}</div>`
+                  ? `<div style="display:inline-block;background:${c.hex};color:${c.text};font:700 11px/1 'Segoe UI',Arial,Helvetica,sans-serif;letter-spacing:.09em;text-transform:uppercase;padding:5px 11px;border-radius:999px;margin:0 0 12px 0;">${esc(b.category)}</div>`
                   : ''
               }
-              <a href="${SITE}/blog/${b.slug}" style="text-decoration:none;"><h2 style="margin:0 0 10px 0;font:700 21px/1.3 Georgia,'Times New Roman',serif;color:#02176f;">${esc(b.title)}</h2></a>
+              <a href="${SITE}/blog/${b.slug}" style="text-decoration:none;"><h2 style="margin:0 0 10px 0;font:800 21px/1.3 'Segoe UI',Arial,Helvetica,sans-serif;color:#02176f;">${esc(b.title)}</h2></a>
               ${
                 b.summary
-                  ? `<p style="margin:0 0 18px 0;font:400 15px/1.65 Arial,Helvetica,sans-serif;color:#4a4d57;">${esc(b.summary)}</p>`
+                  ? `<p style="margin:0 0 18px 0;font:400 15px/1.65 'Segoe UI',Arial,Helvetica,sans-serif;color:#4a4d57;">${esc(b.summary)}</p>`
                   : ''
               }
-              <a href="${SITE}/blog/${b.slug}" style="display:inline-block;background:#02176f;color:#ffffff;font:600 14px/1 Arial,Helvetica,sans-serif;text-decoration:none;padding:12px 22px;border-radius:8px;">Read the article &rarr;</a>
+              <a href="${SITE}/blog/${b.slug}" style="display:inline-block;background:${c.hex};color:${c.text};font:700 14px/1 'Segoe UI',Arial,Helvetica,sans-serif;text-decoration:none;padding:12px 22px;border-radius:999px;">Read the article &rarr;</a>
             </td></tr>
           </table>
-        </td></tr>`
-      )
+        </td></tr>
+        ${i < starred.length - 1 ? waveDivider(PALETTE[(i + 1) % PALETTE.length].wave, '12px 0 22px 0') : ''}`;
+      })
       .join('');
 
-    return `<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#eef0f4;margin:0;padding:0;">
+    return `<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#eef4ff;margin:0;padding:0;">
   <tr><td align="center" style="padding:28px 12px;">
     <table width="600" cellpadding="0" cellspacing="0" role="presentation" style="width:100%;max-width:600px;">
-      <tr><td style="background:#02176f;border-radius:16px 16px 0 0;padding:30px 24px;text-align:center;">
-        <div style="font:700 12px/1 Arial,Helvetica,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#aac2ff;margin:0 0 8px 0;">Ignatius Book Fairs</div>
-        <div style="font:700 25px/1.2 Georgia,'Times New Roman',serif;color:#ffffff;letter-spacing:.01em;">${esc(nlTitle) || 'Newsletter'}</div>
-        ${nlTimeframe ? `<div style="font:400 13px/1.5 Arial,Helvetica,sans-serif;color:#aac2ff;margin-top:8px;">${esc(nlTimeframe)}</div>` : ''}
+      <tr><td style="font-size:0;line-height:0;border-radius:16px 16px 0 0;overflow:hidden;">
+        <img src="${mastUrl}" alt="${esc(nlTitle) || 'Ignatius Book Fairs Newsletter'}" width="600" style="display:block;width:100%;border:0;border-radius:16px 16px 0 0;" />
       </td></tr>
-      <tr><td style="background:#ffffff;padding:28px 20px 4px 20px;">
-        ${nlPreamble ? `<p style="margin:0 0 26px 0;font:400 16px/1.7 Georgia,'Times New Roman',serif;color:#3a3d47;">${esc(nlPreamble)}</p>` : ''}
-        <table width="100%" cellpadding="0" cellspacing="0" role="presentation">${articles}</table>
+      <tr><td style="background:#ffffff;padding:6px 20px 4px 20px;">
+        <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+        ${nlPreamble ? `<tr><td style="padding:0 4px 6px 4px;font:400 16px/1.7 'Segoe UI',Arial,Helvetica,sans-serif;color:#3a3d47;text-align:center;">${esc(nlPreamble)}</td></tr>` : ''}
+        ${waveDivider(PALETTE[0].wave)}
+        ${articles}
+        </table>
       </td></tr>
-      <tr><td style="background:#ffffff;border-radius:0 0 16px 16px;border-top:1px solid #eceef2;padding:24px;text-align:center;font:400 12px/1.7 Arial,Helvetica,sans-serif;color:#8b8f99;">
-        Ignatius Book Fairs &middot; <a href="${SITE}" style="color:#0088ff;text-decoration:none;">ignatiusbookfairs.com</a><br/>
-        You&rsquo;re receiving this because you&rsquo;re part of the Ignatius Book Fairs community.
+      <tr><td style="background:#ffffff;border-radius:0 0 16px 16px;padding:8px 24px 24px 24px;text-align:center;">
+        <img src="${SITE}/brand/email/wave-yellow.png" alt="" width="180" style="display:inline-block;width:180px;border:0;margin:0 0 14px 0;" /><br/>
+        <span style="font:400 12px/1.7 'Segoe UI',Arial,Helvetica,sans-serif;color:#8b8f99;">
+          Ignatius Book Fairs &middot; <a href="${SITE}" style="color:#0088ff;text-decoration:none;">ignatiusbookfairs.com</a><br/>
+          You&rsquo;re receiving this because you&rsquo;re part of the Ignatius Book Fairs community.
+        </span>
       </td></tr>
     </table>
   </td></tr>
