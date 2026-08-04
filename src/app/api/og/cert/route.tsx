@@ -73,7 +73,7 @@ export async function GET(req: Request) {
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', flex: 1, backgroundColor: '#fafbff', borderRadius: 6, padding: '54px 80px 46px', boxShadow: '0 10px 40px rgba(0,0,0,0.18)' }}>
         {showLogo ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={`${origin}/images/ibf-logo-blue.png`} width={300} height={47} alt="" style={{ display: 'flex', marginBottom: 40 }} />
+          <img src={`${origin}/images/ibb-logo.png`} width={172} height={220} alt="" style={{ display: 'flex', marginBottom: 30 }} />
         ) : null}
 
         <div style={{ display: 'flex', fontSize: 84, fontWeight: 700, letterSpacing: -1, color: hColor, textAlign: 'center' }}>{title}</div>
