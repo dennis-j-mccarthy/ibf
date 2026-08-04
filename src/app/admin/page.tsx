@@ -149,6 +149,21 @@ export default async function AdminDashboard() {
       ),
     },
     {
+      href: '/admin/certificate-maker',
+      title: 'Certificate Maker',
+      desc: 'Printable 11x8.5 certificates - title, recipient, signatures, doodad border.',
+      stat: 'Award',
+      statLabel: 'print-ready',
+      accent: '#f5c518',
+      icon: (
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M12 14a4.5 4.5 0 100-9 4.5 4.5 0 000 9zm0 0v6.5l-3-1.8-3 1.8V14m12 6.5l-3-1.8-3 1.8"
+        />
+      ),
+    },
+    {
       href: '/admin/tutorials',
       title: 'Tutorials',
       desc: 'Record screen + webcam tutorials and save them to a reopenable video library.',

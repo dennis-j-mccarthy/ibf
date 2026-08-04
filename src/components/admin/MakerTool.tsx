@@ -20,10 +20,24 @@ type DesignParams = {
   hColor: string; sColor: string; h2Color: string; showLogo: boolean;
   layout: 'center' | 'split'; img: string; imgMode: 'blob' | 'card' | 'png'; curve: 'arc' | 'wave' | 'wave2' | 'flat';
   picked: string[]; bookUrls: string; books: { title: string; image: string }[];
+  recipient?: string; certDate?: string; sig1Name?: string; sig1Title?: string; sig2Name?: string; sig2Title?: string; showSeal?: boolean;
 };
 type DesignRow = { id: number; name: string; params: DesignParams };
 
-function buildOgUrl(kind: 'header' | 'sign', p: DesignParams): string {
+function buildOgUrl(kind: 'header' | 'sign' | 'cert', p: DesignParams): string {
+  if (kind === 'cert') {
+    const q = new URLSearchParams({ title: p.headline, body: p.sub, bg: p.bg, logo: p.showLogo ? '1' : '0', seal: p.showSeal === false ? '0' : '1' });
+    if (p.recipient) q.set('recipient', p.recipient);
+    if (p.certDate) q.set('date', p.certDate);
+    if (p.sig1Name) q.set('sig1Name', p.sig1Name);
+    if (p.sig1Title) q.set('sig1Title', p.sig1Title);
+    if (p.sig2Name) q.set('sig2Name', p.sig2Name);
+    if (p.sig2Title) q.set('sig2Title', p.sig2Title);
+    if (p.picked.length) q.set('doodads', JSON.stringify(p.picked));
+    if (p.hColor) q.set('hColor', p.hColor);
+    if (p.sColor) q.set('sColor', p.sColor);
+    return `/api/og/cert?${q.toString()}`;
+  }
   const isHeader = kind === 'header';
   const q = new URLSearchParams({ headline: p.headline, sub: p.sub, bg: p.bg, logo: p.showLogo ? '1' : '0' });
   if (p.picked.length) q.set('doodads', JSON.stringify(p.picked));
@@ -51,9 +65,10 @@ function buildOgUrl(kind: 'header' | 'sign', p: DesignParams): string {
   return `/api/og/${isHeader ? 'header' : 'sign'}?${q.toString()}`;
 }
 
-export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
+export default function MakerTool({ kind }: { kind: 'header' | 'sign' | 'cert' }) {
   const isHeader = kind === 'header';
-  const [headline, setHeadline] = useState(isHeader ? 'The Book Fair Is Coming!' : 'Book Fair This Week!');
+  const isCert = kind === 'cert';
+  const [headline, setHeadline] = useState(isHeader ? 'The Book Fair Is Coming!' : isCert ? 'Certificate of Participation' : 'Book Fair This Week!');
   const [sub, setSub] = useState('');
   const [bg, setBg] = useState('#02176f');
   const [colors, setColors] = useState<Color[]>([]);
@@ -72,6 +87,14 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
   const [qrUrl, setQrUrl] = useState('');
   const [footer, setFooter] = useState('');
   const [h2Color, setH2Color] = useState('');
+  // Cert-only fields
+  const [recipient, setRecipient] = useState('');
+  const [certDate, setCertDate] = useState('');
+  const [sig1Name, setSig1Name] = useState('');
+  const [sig1Title, setSig1Title] = useState('');
+  const [sig2Name, setSig2Name] = useState('');
+  const [sig2Title, setSig2Title] = useState('');
+  const [showSeal, setShowSeal] = useState(true);
   // Sign-only: optional BigCommerce book covers
   const [bookUrls, setBookUrls] = useState('');
   const [books, setBooks] = useState<{ title: string; image: string }[]>([]);
@@ -98,7 +121,7 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
       .catch(() => {});
   }, [refreshNonce]);
 
-  const maxDoodads = isHeader ? 6 : 8;
+  const maxDoodads = isHeader ? 6 : isCert ? 10 : 8;
 
   const toggleDoodad = (url: string) =>
     setPicked((cur) => (cur.includes(url) ? cur.filter((u) => u !== url) : cur.length >= maxDoodads ? cur : [...cur, url]));
@@ -130,8 +153,8 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
   };
 
   const currentParams: DesignParams = useMemo(
-    () => ({ headline, sub, bg, eyebrow, qrUrl, footer, hColor, sColor, h2Color, showLogo, layout, img, imgMode, curve, picked, bookUrls, books }),
-    [headline, sub, bg, eyebrow, qrUrl, footer, hColor, sColor, h2Color, showLogo, layout, img, imgMode, curve, picked, bookUrls, books],
+    () => ({ headline, sub, bg, eyebrow, qrUrl, footer, hColor, sColor, h2Color, showLogo, layout, img, imgMode, curve, picked, bookUrls, books, recipient, certDate, sig1Name, sig1Title, sig2Name, sig2Title, showSeal }),
+    [headline, sub, bg, eyebrow, qrUrl, footer, hColor, sColor, h2Color, showLogo, layout, img, imgMode, curve, picked, bookUrls, books, recipient, certDate, sig1Name, sig1Title, sig2Name, sig2Title, showSeal],
   );
 
   const previewUrl = useMemo(() => {
@@ -158,6 +181,9 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
     setShowLogo(p.showLogo ?? true); setLayout(p.layout ?? 'center'); setImg(p.img ?? '');
     setImgMode(p.imgMode ?? 'blob'); setCurve(p.curve ?? 'arc'); setPicked(p.picked ?? []);
     setBookUrls(p.bookUrls ?? ''); setBooks(p.books ?? []);
+    setRecipient(p.recipient ?? ''); setCertDate(p.certDate ?? '');
+    setSig1Name(p.sig1Name ?? ''); setSig1Title(p.sig1Title ?? '');
+    setSig2Name(p.sig2Name ?? ''); setSig2Title(p.sig2Title ?? ''); setShowSeal(p.showSeal !== false);
   };
 
   const saveDesign = async (mode: 'new' | 'update') => {
@@ -239,13 +265,13 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
       const png = await fetch(previewUrl).then((r) => r.arrayBuffer());
       const doc = await PDFDocument.create();
       const embedded = await doc.embedPng(png);
-      const page = doc.addPage([612, 792]);
-      page.drawImage(embedded, { x: 0, y: 0, width: 612, height: 792 });
+      const page = isCert ? doc.addPage([792, 612]) : doc.addPage([612, 792]);
+      page.drawImage(embedded, { x: 0, y: 0, width: isCert ? 792 : 612, height: isCert ? 612 : 792 });
       const bytes = await doc.save();
       const url = URL.createObjectURL(new Blob([new Uint8Array(bytes)], { type: 'application/pdf' }));
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'ibf-sign.pdf';
+      a.download = isCert ? 'ibf-certificate.pdf' : 'ibf-sign.pdf';
       a.click();
       URL.revokeObjectURL(url);
     } catch (e) {
@@ -259,7 +285,7 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
     <div className="min-h-screen bg-[#f5f5f5]">
       <header className="bg-[#02176f] text-white">
         <div className="max-w-5xl mx-auto px-5 h-16 flex items-center justify-between">
-          <h1 className="font-brother text-lg sm:text-xl font-semibold">{isHeader ? 'Header Maker' : 'Sign Maker'}</h1>
+          <h1 className="font-brother text-lg sm:text-xl font-semibold">{isHeader ? 'Header Maker' : isCert ? 'Certificate Maker' : 'Sign Maker'}</h1>
           <a href="/admin" className="text-sm bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-md transition-colors">Back to admin</a>
         </div>
       </header>
@@ -268,18 +294,20 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
         <p className="text-sm text-gray-600 -mt-2">
           {isHeader
             ? 'Craft an email header with a curved bottom edge. '
-            : 'Craft a printable 8.5×11 sign with the brand curve. '}
+            : isCert
+              ? 'Craft a printable 11x8.5 certificate with a doodad border. '
+              : 'Craft a printable 8.5×11 sign with the brand curve. '}
           Colors and doodads come from <a href="/admin/training" className="text-[#0066ff] hover:underline">Training</a>; the type is the brand Fredoka.
         </p>
 
         <section className="bg-white rounded-xl shadow-sm p-6 space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className={label}>Headline</label>
+              <label className={label}>{isCert ? 'Certificate title' : 'Headline'}</label>
               <input className={input} value={headline} onChange={(e) => setHeadline(e.target.value)} />
             </div>
             <div>
-              <label className={label}>Subhead (optional)</label>
+              <label className={label}>{isCert ? 'Body line' : 'Subhead (optional)'}</label>
               <input className={input} value={sub} onChange={(e) => setSub(e.target.value)} placeholder="October 6–10 · St. Mary's Gymnasium" />
             </div>
           </div>
@@ -379,6 +407,7 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
             )}
           </div>
 
+          {!isCert && (
           <div className={`grid grid-cols-1 gap-4 ${isHeader ? 'sm:grid-cols-1' : 'sm:grid-cols-3'}`}>
             <div>
               <label className={label}>Script eyebrow (optional)</label>
@@ -397,8 +426,9 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
               </div>
             )}
           </div>
+          )}
 
-          {!isHeader && (
+          {!isHeader && !isCert && (
             <div>
               <label className={label}>Image (optional — uploads to Blob)</label>
               <div className="flex flex-wrap items-center gap-3">
@@ -428,7 +458,7 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
             </div>
           )}
 
-          {(
+          {!isCert && (
             <div>
               <label className={label}>Book covers (optional — up to {isHeader ? '5' : '6'} BigCommerce URLs, one per line{isHeader ? '; centered layout only' : ''})</label>
               <textarea
@@ -458,6 +488,7 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
             </div>
           )}
 
+          {!isCert && (
           <div>
             <label className={label}>Bottom edge</label>
             <div className="flex flex-wrap gap-2">
@@ -472,6 +503,44 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
               ))}
             </div>
           </div>
+          )}
+
+          {isCert && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className={label}>Presented to (leave blank for a write-in line)</label>
+                  <input className={input} value={recipient} onChange={(e) => setRecipient(e.target.value)} placeholder="Loupio Magnificat" />
+                </div>
+                <div>
+                  <label className={label}>Date (optional)</label>
+                  <input className={input} value={certDate} onChange={(e) => setCertDate(e.target.value)} placeholder="November 15, 2026" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div>
+                  <label className={label}>Signature 1 name</label>
+                  <input className={input} value={sig1Name} onChange={(e) => setSig1Name(e.target.value)} placeholder="John Doe" />
+                </div>
+                <div>
+                  <label className={label}>Signature 1 title</label>
+                  <input className={input} value={sig1Title} onChange={(e) => setSig1Title(e.target.value)} placeholder="Superintendent of Schools" />
+                </div>
+                <div>
+                  <label className={label}>Signature 2 name</label>
+                  <input className={input} value={sig2Name} onChange={(e) => setSig2Name(e.target.value)} placeholder="John Doe" />
+                </div>
+                <div>
+                  <label className={label}>Signature 2 title</label>
+                  <input className={input} value={sig2Title} onChange={(e) => setSig2Title(e.target.value)} placeholder="Book Battle Coordinator" />
+                </div>
+              </div>
+              <label className="flex items-center gap-2 text-sm text-gray-600">
+                <input type="checkbox" checked={showSeal} onChange={(e) => setShowSeal(e.target.checked)} />
+                Gold star seal
+              </label>
+            </div>
+          )}
 
           <div>
             <button onClick={() => setTweakOpen((v) => !v)} className="text-sm text-[#7c3aed] hover:underline">
@@ -510,7 +579,7 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
               <button onClick={() => saveDesign('new')} disabled={designBusy} className="text-sm bg-[#00c853] hover:bg-[#00a843] text-white font-semibold px-4 py-2 rounded-md disabled:opacity-60">
                 {designBusy ? 'Saving…' : loadedId ? 'Save as new' : 'Save design'}
               </button>
-              <a href={previewUrl} download={isHeader ? 'ibf-email-header.png' : 'ibf-sign.png'} className="bg-[#02176f] hover:bg-[#021a85] text-white font-semibold text-sm px-5 py-2 rounded-md transition-colors">Download PNG</a>
+              <a href={previewUrl} download={isHeader ? 'ibf-email-header.png' : isCert ? 'ibf-certificate.png' : 'ibf-sign.png'} className="bg-[#02176f] hover:bg-[#021a85] text-white font-semibold text-sm px-5 py-2 rounded-md transition-colors">Download PNG</a>
               {!isHeader && (
                 <button onClick={downloadPdf} disabled={pdfBusy} className="bg-[#00c853] hover:bg-[#00a843] text-white font-semibold text-sm px-5 py-2 rounded-md transition-colors disabled:opacity-60">
                   {pdfBusy ? 'Building PDF…' : 'Download PDF (8.5×11)'}
@@ -519,20 +588,20 @@ export default function MakerTool({ kind }: { kind: 'header' | 'sign' }) {
             </div>
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={previewUrl} alt="Preview" className={`rounded-lg border border-gray-100 shadow-sm ${isHeader ? 'w-full' : 'max-w-[480px] mx-auto block'}`} />
+          <img src={previewUrl} alt="Preview" className={`rounded-lg border border-gray-100 shadow-sm ${isHeader || isCert ? 'w-full' : 'max-w-[480px] mx-auto block'}`} />
           <p className="text-xs text-gray-400 mt-2">
             {isHeader
               ? '1200×450 — drop into your email at 600px wide; the curved edge blends into a white email body.'
-              : '1275×1650 (150 dpi letter) — the PDF is print-ready 8.5×11.'}
+              : isCert ? '1650x1275 (150 dpi letter, landscape) - the PDF is print-ready 11x8.5.' : '1275×1650 (150 dpi letter) — the PDF is print-ready 8.5×11.'}
           </p>
         </section>
 
         {/* Saved designs */}
         {designs.length > 0 && (
           <section className="bg-white rounded-xl shadow-sm p-6">
-            <h2 className="font-brother text-[#02176f] text-lg font-semibold mb-1">Saved {isHeader ? 'headers' : 'signs'}</h2>
+            <h2 className="font-brother text-[#02176f] text-lg font-semibold mb-1">Saved {isHeader ? 'headers' : isCert ? 'certificates' : 'signs'}</h2>
             <p className="text-sm text-gray-500 mb-4">Load one to change it (then Update saved or Save as new), or Duplicate for a quick copy.</p>
-            <div className={`grid grid-cols-1 sm:grid-cols-2 ${isHeader ? 'lg:grid-cols-2' : 'lg:grid-cols-4'} gap-4`}>
+            <div className={`grid grid-cols-1 sm:grid-cols-2 ${isHeader || isCert ? 'lg:grid-cols-2' : 'lg:grid-cols-4'} gap-4`}>
               {designs.map((d) => (
                 <div key={d.id} className={`border rounded-xl overflow-hidden ${loadedId === d.id ? 'border-[#7c3aed] ring-2 ring-[#7c3aed]/25' : 'border-gray-100'}`}>
                   <div className="bg-gray-50 p-2">

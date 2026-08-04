@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 // Saved Header/Sign Maker designs — the full editor state, so any saved item
 // can be reloaded, duplicated, and tweaked.
 
-const TOOLS = new Set(['header', 'sign']);
+const TOOLS = new Set(['header', 'sign', 'cert']);
 
 export async function GET(request: NextRequest) {
   if (!(await getAdminEmail())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   if (!(await getAdminEmail())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const b = await request.json().catch(() => null);
-  if (!TOOLS.has(b?.tool)) return NextResponse.json({ error: 'tool must be header or sign.' }, { status: 400 });
+  if (!TOOLS.has(b?.tool)) return NextResponse.json({ error: 'tool must be header, sign, or cert.' }, { status: 400 });
   if (!b?.params || typeof b.params !== 'object') return NextResponse.json({ error: 'params required.' }, { status: 400 });
   const row = await prisma.savedDesign.create({
     data: { tool: b.tool, name: typeof b.name === 'string' ? b.name.slice(0, 120) : '', params: b.params },
