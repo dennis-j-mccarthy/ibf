@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { templateForResource } from '@/lib/templates/resource-map';
 import type { Resource } from '@prisma/client';
 import BookFairPlanner from './BookFairPlanner';
 
@@ -23,6 +24,9 @@ const getCategoryColor = (category: string | null) => categoryColors[category ||
 export default function ResourcesPageContent({ resources }: ResourcesPageContentProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  // Soft launch: the "filled in for your school" prompt only appears with
+  // ?templates=1, so it can be exercised in production before going wide.
+  const showTemplates = searchParams.get('templates') === '1';
   const [activeFilter, setActiveFilter] = useState<ActiveFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedVideo, setSelectedVideo] = useState<Resource | null>(null);
@@ -421,6 +425,7 @@ export default function ResourcesPageContent({ resources }: ResourcesPageContent
           onClose={closeResourceModal}
           onRelatedClick={openResourceModal}
           onVideoClick={setSelectedVideo}
+          showTemplates={showTemplates}
         />
       )}
     </>
@@ -535,13 +540,16 @@ function ResourceDetailModal({
   onClose,
   onRelatedClick,
   onVideoClick,
+  showTemplates = false,
 }: {
   resource: Resource;
   relatedResources: Resource[];
   onClose: () => void;
   onRelatedClick: (resource: Resource) => void;
   onVideoClick: (resource: Resource) => void;
+  showTemplates?: boolean;
 }) {
+  const hasTemplate = showTemplates && !!templateForResource(resource.slug);
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
@@ -648,6 +656,26 @@ function ResourceDetailModal({
                   </a>
                 )}
               </div>
+
+              {hasTemplate && (
+                <a
+                  href="/book-fair-admin"
+                  className="mt-4 flex items-start gap-3 rounded-xl border border-[#0088ff]/30 bg-[#f2f8ff] px-4 py-3 hover:border-[#0088ff] transition-colors group/tpl"
+                >
+                  <svg className="w-5 h-5 mt-0.5 flex-shrink-0 text-[#0088ff]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4h16v12H5.75L4 18.75V4zM8 9h8m-8 3.5h5" />
+                  </svg>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold text-[#02176f] group-hover/tpl:underline">
+                      Skip the blanks &mdash; get this filled in for your school &rarr;
+                    </span>
+                    <span className="block text-xs text-[#5a6480] mt-0.5 leading-relaxed">
+                      Sign in to your Book Fair Admin dashboard and this arrives with your school name, dates, and
+                      shopping link already in it &mdash; ready to print or email.
+                    </span>
+                  </span>
+                </a>
+              )}
             </div>
           </div>
 
