@@ -4,6 +4,7 @@ import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import type { Resource } from '@prisma/client';
 import PrepChecklist from './PrepChecklist';
+import type { CoordinatorTemplate } from './TemplateModal';
 
 // The calendar is heavy, so it only loads/mounts when the Calendar view is selected.
 const BookFairPlanner = dynamic(() => import('@/components/BookFairPlanner'), {
@@ -19,6 +20,7 @@ interface ChecklistProps {
   autoDone: Record<string, boolean>;
   taxCertMissing?: boolean;
   resourcesBySlug?: Record<string, Resource>;
+  templatesBySlug?: Record<string, CoordinatorTemplate>;
   adminSignupUrl?: string;
   fairStartDate?: string;
 }

@@ -275,6 +275,8 @@ export default async function BookFairAdminDashboard({
   const coordinatorTemplates = templatesForAudience(allTemplates, resourceAudience).map((t) =>
     resolveTemplate(t, templateValues)
   );
+  // slug -> merged template, so checklist tasks can open the finished letter.
+  const templateBySlug = Object.fromEntries(coordinatorTemplates.map((t) => [t.slug, t]));
 
   const widgetData: WidgetData = {
     schoolName,
@@ -334,6 +336,7 @@ export default async function BookFairAdminDashboard({
                 autoDone: checklistAutoDone,
                 taxCertMissing: taxCertStatus === 'missing',
                 resourcesBySlug: resourceBySlug,
+                templatesBySlug: templateBySlug,
                 adminSignupUrl,
                 fairStartDate: plannerDate,
               }}

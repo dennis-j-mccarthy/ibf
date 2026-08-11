@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import type { Resource } from '@prisma/client';
 import { CALENDAR_ITEMS_BY_TYPE } from '@/lib/book-fair-admin/checklist-items';
 import ResourceModal from './ResourceModal';
+import TemplateModal, { type CoordinatorTemplate } from './TemplateModal';
 import HeaderIcon from './HeaderIcon';
 
 export type TaxCertStatus = 'complete' | 'missing' | 'unavailable';
@@ -17,6 +18,7 @@ interface Item {
   phase: Phase;
   auto?: boolean; // data-driven (not manually toggleable)
   resourceSlug?: string;
+  templateSlug?: string; // merged, ready-to-send copy for this task
   link?: string; // a "set up" link shown when the auto item isn't done yet
   daysFromFair?: number; // offset from fair start date (calendar-derived items)
 }
@@ -69,6 +71,7 @@ export default function PrepChecklist({
   autoDone,
   taxCertMissing = false,
   resourcesBySlug = {},
+  templatesBySlug = {},
   adminSignupUrl,
   fairStartDate,
   view,
@@ -80,6 +83,7 @@ export default function PrepChecklist({
   autoDone: Record<string, boolean>;
   taxCertMissing?: boolean;
   resourcesBySlug?: Record<string, Resource>;
+  templatesBySlug?: Record<string, CoordinatorTemplate>;
   adminSignupUrl?: string;
   fairStartDate?: string;
   view: View;
@@ -89,6 +93,11 @@ export default function PrepChecklist({
   const storageKey = `bfa-checklist-${schoolId}`;
   const [checked, setChecked] = useState<Record<string, boolean>>({});
   const [modalResource, setModalResource] = useState<Resource | null>(null);
+  // The merged template plus the blank fill-in-the-blank original for the same
+  // task, so the modal can offer the download as a secondary option.
+  const [modalTemplate, setModalTemplate] = useState<
+    { template: CoordinatorTemplate; blank: { title: string; href: string } | null } | null
+  >(null);
 
   useEffect(() => {
     try {
@@ -172,6 +181,7 @@ export default function PrepChecklist({
                       const done = isDone(item);
                       const interactive = !item.auto;
                       const resource = item.resourceSlug ? resourcesBySlug[item.resourceSlug] : undefined;
+                      const template = item.templateSlug ? templatesBySlug[item.templateSlug] : undefined;
                       const dateLabel =
                         fairStartDate && item.daysFromFair !== undefined
                           ? itemDateLabel(fairStartDate, item.daysFromFair)
@@ -196,7 +206,24 @@ export default function PrepChecklist({
                             </span>
                           </button>
 
-                          {resource ? (
+                          {template ? (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setModalTemplate({
+                                  template,
+                                  blank: resource?.fileUrl
+                                    ? { title: resource.title, href: resource.fileUrl }
+                                    : null,
+                                })
+                              }
+                              className={`flex-1 min-w-0 text-left text-sm ${
+                                done ? 'text-[#7e828f] line-through' : 'text-[#0088ff] hover:text-[#0066cc]'
+                              }`}
+                            >
+                              {item.label}
+                            </button>
+                          ) : resource ? (
                             <button
                               type="button"
                               onClick={() => setModalResource(resource)}
@@ -273,6 +300,13 @@ export default function PrepChecklist({
 
       {modalResource && (
         <ResourceModal resource={modalResource} onClose={() => setModalResource(null)} />
+      )}
+      {modalTemplate && (
+        <TemplateModal
+          template={modalTemplate.template}
+          onClose={() => setModalTemplate(null)}
+          blank={modalTemplate.blank}
+        />
       )}
     </section>
   );
