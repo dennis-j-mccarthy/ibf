@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import HeaderIcon from './HeaderIcon';
 import { TEMPLATE_KINDS, type TemplateKind } from '@/lib/templates/defaults';
 import { toPlainText } from '@/lib/templates/format';
 import { letterCss, letterFragment, letterPrintDocument } from '@/lib/templates/letter';
+import { buildMailto, parseRecipients } from '@/lib/templates/recipients';
 
 // Coordinator-facing template center. Everything here arrives already merged
 // with this school's fair (server-side), so a coordinator copies or prints and
@@ -30,6 +31,7 @@ const KIND_META = Object.fromEntries(TEMPLATE_KINDS.map((k) => [k.key, k])) as R
 export default function TemplateCenter({ templates }: { templates: CoordinatorTemplate[] }) {
   const [openSlug, setOpenSlug] = useState<string | null>(null);
   const [copied, setCopied] = useState('');
+  const [listOpen, setListOpen] = useState(false);
 
   if (!templates.length) return null;
 
@@ -201,10 +203,139 @@ export default function TemplateCenter({ templates }: { templates: CoordinatorTe
               <button onClick={() => copyText(open)} className="text-sm font-semibold text-[#0088ff] hover:underline">
                 {copied === 'text' ? 'Copied!' : 'Copy plain text'}
               </button>
+              <button
+                onClick={() => setListOpen((v) => !v)}
+                className="text-sm font-semibold text-[#0088ff] hover:underline ml-auto"
+              >
+                {listOpen ? 'Hide my list' : 'Send to my list'}
+              </button>
             </div>
+
+            {listOpen && <RecipientPanel template={open} onCopyHtml={() => copyFormatted(open)} />}
           </div>
         </div>
       )}
     </section>
+  );
+}
+
+// Builds a ready-to-send draft in the coordinator's own mail client. We do not
+// send on their behalf on purpose: mail from the school's own address lands
+// better with parents than mail from a vendor domain, and their address list
+// never touches our servers.
+const STORAGE_KEY = 'ibf-bfa-recipients';
+
+function RecipientPanel({
+  template,
+  onCopyHtml,
+}: {
+  template: CoordinatorTemplate;
+  onCopyHtml: () => void;
+}) {
+  const [raw, setRaw] = useState('');
+  const [note, setNote] = useState('');
+
+  // Remembered in this browser so the list survives switching templates.
+  useEffect(() => {
+    try {
+      setRaw(localStorage.getItem(STORAGE_KEY) ?? '');
+    } catch {
+      /* private browsing */
+    }
+  }, []);
+
+  const update = (v: string) => {
+    setRaw(v);
+    try {
+      localStorage.setItem(STORAGE_KEY, v);
+    } catch {
+      /* private browsing */
+    }
+  };
+
+  const parsed = useMemo(() => parseRecipients(raw), [raw]);
+  const plan = useMemo(
+    () => buildMailto(parsed.valid, template.subject, toPlainText(template.body)),
+    [parsed.valid, template.subject, template.body]
+  );
+
+  const openDraft = () => {
+    if (!parsed.valid.length) return;
+    if (plan.tooManyRecipients) {
+      navigator.clipboard.writeText(parsed.valid.join(', ')).catch(() => {});
+      setNote(
+        `That is more addresses than a mail app will accept in one link, so we opened an empty draft instead. All ${parsed.valid.length} addresses are on your clipboard — paste them into BCC, then use "Copy for email" above to paste the letter itself.`
+      );
+    } else if (plan.bodyOmitted) {
+      onCopyHtml();
+      setNote('Draft opened with everyone in BCC. The letter is on your clipboard — paste it into the message body.');
+    } else {
+      setNote('Draft opened in your email app with everyone in BCC. Review it, then send.');
+    }
+    window.location.href = plan.href;
+  };
+
+  const copyAddresses = async () => {
+    await navigator.clipboard.writeText(parsed.valid.join(', ')).catch(() => {});
+    setNote(`${parsed.valid.length} addresses copied. Paste them into the BCC field of a new message.`);
+  };
+
+  return (
+    <div className="px-6 py-5 border-t border-[#eef0f5] bg-white">
+      <p className="text-sm font-semibold text-[#02176f] mb-1">Send this from your own email</p>
+      <p className="text-xs text-[#7e828f] mb-3 leading-relaxed">
+        Paste your addresses below and we will open a draft in your email app with everyone in BCC. It sends from
+        your school account, so families recognize the sender &mdash; and your list never leaves this browser.
+      </p>
+      <textarea
+        value={raw}
+        onChange={(e) => update(e.target.value)}
+        rows={4}
+        placeholder="Paste addresses here &mdash; commas, semicolons, or one per line. A spreadsheet column works too."
+        className="w-full text-xs font-mono text-[#3a3f4b] bg-[#f7f9fc] border border-[#eef0f5] rounded-lg p-3 resize-y focus:outline-none focus:border-[#0088ff]"
+      />
+
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs">
+        <span className="font-semibold text-[#02176f]">
+          {parsed.valid.length} {parsed.valid.length === 1 ? 'address' : 'addresses'}
+        </span>
+        {parsed.duplicates > 0 && (
+          <span className="text-[#7e828f]">{parsed.duplicates} duplicate removed</span>
+        )}
+        {parsed.invalid.length > 0 && (
+          <span className="text-[#ff6445]">
+            {parsed.invalid.length} not usable: {parsed.invalid.slice(0, 3).join(', ')}
+            {parsed.invalid.length > 3 ? '...' : ''}
+          </span>
+        )}
+        {plan.tooManyRecipients && (
+          <span className="text-[#7e828f]">
+            too many for one draft &mdash; we will put them on your clipboard to paste into BCC
+          </span>
+        )}
+        {!plan.tooManyRecipients && plan.bodyOmitted && (
+          <span className="text-[#7e828f]">draft will carry the addresses; the letter goes on your clipboard</span>
+        )}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3 mt-4">
+        <button
+          onClick={openDraft}
+          disabled={!parsed.valid.length}
+          className="bg-[#02176f] hover:bg-[#001456] disabled:opacity-40 text-white font-semibold rounded-full py-2.5 px-5 text-sm transition-colors"
+        >
+          Open draft in my email app
+        </button>
+        <button
+          onClick={copyAddresses}
+          disabled={!parsed.valid.length}
+          className="text-sm font-semibold text-[#0088ff] hover:underline disabled:opacity-40"
+        >
+          Copy addresses instead
+        </button>
+      </div>
+
+      {note && <p className="text-xs text-[#02176f] mt-3 leading-relaxed">{note}</p>}
+    </div>
   );
 }
