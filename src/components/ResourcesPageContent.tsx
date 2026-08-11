@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { templateForResource } from '@/lib/templates/resource-map';
 import type { Resource } from '@prisma/client';
 import BookFairPlanner from './BookFairPlanner';
@@ -24,6 +24,7 @@ const getCategoryColor = (category: string | null) => categoryColors[category ||
 export default function ResourcesPageContent({ resources }: ResourcesPageContentProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   // Soft launch: the "filled in for your school" prompt only appears with
   // ?templates=1, so it can be exercised in production before going wide.
   const showTemplates = searchParams.get('templates') === '1';
@@ -61,12 +62,24 @@ export default function ResourcesPageContent({ resources }: ResourcesPageContent
     }
   }, [searchParams, resources]);
 
+  // Opening a modal only changes the `resource` param. Every other param on the
+  // URL survives -- previously this rebuilt the query string from scratch, which
+  // dropped `category` and `templates` and bounced /resources visitors over to
+  // /bookfair-resources.
+  const urlWith = (resourceSlug: string | null) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (resourceSlug) params.set('resource', resourceSlug);
+    else params.delete('resource');
+    const qs = params.toString();
+    return qs ? `${pathname}?${qs}` : pathname;
+  };
+
   const openResourceModal = (resource: Resource) => {
-    router.push(`/bookfair-resources?resource=${resource.slug}`, { scroll: false });
+    router.push(urlWith(resource.slug), { scroll: false });
   };
 
   const closeResourceModal = () => {
-    router.push('/bookfair-resources', { scroll: false });
+    router.push(urlWith(null), { scroll: false });
   };
 
   const virtualGuideChildren = new Set([
