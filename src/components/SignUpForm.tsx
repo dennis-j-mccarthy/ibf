@@ -223,6 +223,9 @@ const SignUpForm = () => {
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [existingDomain, setExistingDomain] = useState<HubSpotData | null>(null);
   const [isCheckingDomain, setIsCheckingDomain] = useState(false);
+  // Last domain reported as a duplicate, so the analytics event fires once per
+  // domain rather than on every blur/retype.
+  const reportedDomain = useRef<string | null>(null);
 
   // Auto-fill form with test data using keyboard shortcuts
   // Works in dev mode OR when ?testmode=true is in the URL
@@ -411,6 +414,18 @@ const SignUpForm = () => {
         const data = await response.json();
         if (data.found) {
           setExistingDomain(data);
+          // Record the catch once per domain: this runs on blur and again on
+          // submit, and a visitor can retype the same address several times.
+          const key = website.trim().toLowerCase();
+          if (reportedDomain.current !== key) {
+            reportedDomain.current = key;
+            trackFunnelEvent('duplicate_domain_blocked', {
+              domain: key,
+              existingCompany: data.company?.name ?? '',
+              rep: data.owner ? `${data.owner.firstName ?? ''} ${data.owner.lastName ?? ''}`.trim() : '',
+              hasUpcomingFair: !!data.upcomingDeal,
+            });
+          }
           return data;
         }
         setExistingDomain(null);

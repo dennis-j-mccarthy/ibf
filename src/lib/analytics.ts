@@ -7,7 +7,11 @@ type FunnelEvent =
   | 'form_step2_started'
   | 'form_step2_completed'
   | 'appointment_shown'
-  | 'appointment_scheduled';
+  | 'appointment_scheduled'
+  // Step 2 matched an existing company by website domain, so the submit was
+  // blocked and the visitor was routed to their existing rep instead. These are
+  // warm re-engagement signals, not failures — track them.
+  | 'duplicate_domain_blocked';
 
 interface EventProperties {
   orgType?: string;
