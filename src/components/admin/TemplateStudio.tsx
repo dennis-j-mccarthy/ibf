@@ -1,14 +1,17 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { TEMPLATE_KINDS, type TemplateKind } from '@/lib/templates/defaults';
+import { LETTER_PHOTOS, TEMPLATE_KINDS, type TemplateKind } from '@/lib/templates/defaults';
 import { SAMPLE_VALUES, TOKENS, renderTokens, unknownTokens } from '@/lib/templates/tokens';
-import { toHtml } from '@/lib/templates/format';
+import { letterCss, letterFragment } from '@/lib/templates/letter';
 
-// Template Studio — staff edit the marketing template library (parent letters,
-// email copy, press releases, wishlist asks, flyers, social graphics) and see a
-// live preview merged against a sample school. Coordinators get the same
-// templates on their fair dashboard, merged against their real fair.
+// Template Studio — staff edit the marketing copy library (letters, email,
+// announcements, press releases, wishlist asks) and see the finished, designed
+// letter merged against a sample school. Coordinators get the same templates on
+// their fair dashboard, merged against their real fair.
+//
+// Printed collateral and social graphics are deliberately not here: Sign Maker
+// and Social Posts own those.
 
 type Template = {
   slug: string;
@@ -18,8 +21,9 @@ type Template = {
   audience: string;
   subject: string;
   body: string;
-  route: '' | 'sign' | 'post' | 'header';
-  params: Record<string, string>;
+  heroImage: string;
+  heroScript: string;
+  footerImage: string;
   order: number;
   customized: boolean;
   isActive: boolean;
@@ -30,7 +34,6 @@ const label = 'block text-sm font-medium text-[#02176f] mb-1';
 
 const AUDIENCES = ['', 'Catholic In Person', 'Parish In Person', 'Public In Person'];
 const KIND_LABEL = Object.fromEntries(TEMPLATE_KINDS.map((k) => [k.key, k.label])) as Record<string, string>;
-const isVisual = (kind: TemplateKind) => TEMPLATE_KINDS.find((k) => k.key === kind)?.visual ?? false;
 
 const blank = (kind: TemplateKind): Template => ({
   slug: '',
@@ -39,13 +42,10 @@ const blank = (kind: TemplateKind): Template => ({
   description: '',
   audience: '',
   subject: '',
-  body: isVisual(kind) ? '' : 'Dear Families,\n\n',
-  route: isVisual(kind) ? (kind === 'flyer' ? 'sign' : 'post') : '',
-  params: isVisual(kind)
-    ? kind === 'flyer'
-      ? { headline: 'Headline', sub: '{{school_name}}\n{{fair_dates}}', bg: '#02176f', qr: '{{shop_url}}', curve: 'wave' }
-      : { theme: 'statement', statement: 'Headline', sub: '{{fair_dates}}', size: 'instagram', mode: 'catholic' }
-    : {},
+  body: 'Dear Families,\n\n',
+  heroImage: '',
+  heroScript: '',
+  footerImage: '',
   order: 99,
   customized: true,
   isActive: true,
@@ -58,11 +58,12 @@ export default function TemplateStudio() {
   const [draft, setDraft] = useState<Template | null>(null);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
+  const [picking, setPicking] = useState<'heroImage' | 'footerImage' | null>(null);
   // The field the token palette inserts into.
   const lastField = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null);
 
   // Reloads the library and selects `selectSlug`, falling back to the first
-  // parent letter on the initial load.
+  // letter on the initial load.
   const load = (selectSlug?: string) =>
     fetch('/api/admin/templates')
       .then((r) => (r.ok ? r.json() : []))
@@ -94,17 +95,6 @@ export default function TemplateStudio() {
   const set = <K extends keyof Template>(key: K, value: Template[K]) =>
     setDraft((d) => (d ? { ...d, [key]: value } : d));
 
-  const setParam = (key: string, value: string) =>
-    setDraft((d) => (d ? { ...d, params: { ...d.params, [key]: value } } : d));
-
-  const removeParam = (key: string) =>
-    setDraft((d) => {
-      if (!d) return d;
-      const params = { ...d.params };
-      delete params[key];
-      return { ...d, params };
-    });
-
   // Insert {{token}} at the cursor of whichever field was last focused.
   const insertToken = (key: string) => {
     const el = lastField.current;
@@ -116,9 +106,7 @@ export default function TemplateStudio() {
     const start = el.selectionStart ?? el.value.length;
     const end = el.selectionEnd ?? start;
     const next = el.value.slice(0, start) + snippet + el.value.slice(end);
-    const name = el.dataset.field ?? 'body';
-    if (name.startsWith('param:')) setParam(name.slice(6), next);
-    else set(name as 'body' | 'subject', next);
+    set((el.dataset.field ?? 'body') as 'body' | 'subject', next);
     requestAnimationFrame(() => {
       el.focus();
       el.setSelectionRange(start + snippet.length, start + snippet.length);
@@ -159,19 +147,27 @@ export default function TemplateStudio() {
   };
 
   // --- Preview, merged against the sample school ---
-  const previewSubject = draft ? renderTokens(draft.subject, SAMPLE_VALUES) : '';
-  const previewHtml = draft ? toHtml(renderTokens(draft.body, SAMPLE_VALUES)) : '';
-  const previewImg = useMemo(() => {
-    if (!draft?.route) return '';
-    const q = new URLSearchParams();
-    for (const [k, v] of Object.entries(draft.params)) {
-      const value = renderTokens(String(v ?? ''), SAMPLE_VALUES).trim();
-      if (value) q.set(k, value);
-    }
-    return `/api/og/${draft.route}?${q.toString()}`;
-  }, [draft]);
+  const origin = typeof window === 'undefined' ? '' : window.location.origin;
+  const preview = useMemo(
+    () =>
+      draft
+        ? letterFragment(
+            {
+              name: draft.name,
+              subject: renderTokens(draft.subject, SAMPLE_VALUES),
+              body: renderTokens(draft.body, SAMPLE_VALUES),
+              heroImage: draft.heroImage,
+              heroScript: renderTokens(draft.heroScript, SAMPLE_VALUES),
+              footerImage: draft.footerImage,
+            },
+            origin,
+            'page'
+          )
+        : '',
+    [draft, origin]
+  );
 
-  const badTokens = draft ? unknownTokens(`${draft.subject}\n${draft.body}\n${Object.values(draft.params).join('\n')}`) : [];
+  const badTokens = draft ? unknownTokens(`${draft.subject}\n${draft.body}\n${draft.heroScript}`) : [];
 
   return (
     <div className="min-h-screen bg-[#f5f5f5]">
@@ -189,9 +185,10 @@ export default function TemplateStudio() {
 
       <main className="max-w-6xl mx-auto px-5 py-8 space-y-5">
         <p className="text-sm text-gray-600 -mt-2">
-          Fill-in-the-blank marketing pieces, turned into merge templates. Coordinators see these on their fair
-          dashboard with their own school, dates, and links already filled in. Edit here and every school gets the
-          new wording.
+          Fill-in-the-blank marketing copy, turned into merge templates. Coordinators see these on their fair dashboard
+          with their own school, dates, and links already filled in. Printed collateral lives in{' '}
+          <a href="/admin/sign-maker" className="text-[#0066ff] hover:underline">Sign Maker</a> and graphics in{' '}
+          <a href="/admin/social" className="text-[#0066ff] hover:underline">Social Posts</a>.
         </p>
 
         {/* Kind chips */}
@@ -232,8 +229,8 @@ export default function TemplateStudio() {
                 <span className="block text-sm font-semibold">{t.name}</span>
                 <span className="block text-xs text-[#7e828f] mt-0.5">
                   {t.audience || 'All fair types'}
-                  {t.customized && <span className="text-[#0088ff]"> · edited</span>}
-                  {!t.isActive && <span className="text-[#ff6445]"> · hidden</span>}
+                  {t.customized && <span className="text-[#0088ff]"> &middot; edited</span>}
+                  {!t.isActive && <span className="text-[#ff6445]"> &middot; hidden</span>}
                 </span>
               </button>
             ))}
@@ -245,7 +242,7 @@ export default function TemplateStudio() {
               }}
               className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-semibold text-[#0088ff] hover:bg-[#f5f6fa]"
             >
-              + New {KIND_LABEL[kind]?.toLowerCase().replace(/s$/, '') ?? 'template'}
+              + New {(KIND_LABEL[kind] ?? 'template').toLowerCase().replace(/s$/, '')}
             </button>
           </aside>
 
@@ -277,67 +274,60 @@ export default function TemplateStudio() {
                   />
                 </div>
 
-                {!isVisual(draft.kind) ? (
-                  <>
-                    <div>
-                      <label className={label}>{draft.kind === 'email' ? 'Subject line' : 'Headline'}</label>
-                      <input
-                        className={input}
-                        data-field="subject"
-                        value={draft.subject}
-                        onChange={(e) => set('subject', e.target.value)}
-                        onFocus={(e) => { lastField.current = e.currentTarget; }}
-                      />
-                    </div>
-                    <div>
-                      <label className={label}>Body</label>
-                      <textarea
-                        className={`${input} font-mono text-[13px] leading-relaxed`}
-                        data-field="body"
-                        rows={18}
-                        value={draft.body}
-                        onChange={(e) => set('body', e.target.value)}
-                        onFocus={(e) => { lastField.current = e.currentTarget; }}
-                      />
-                      <p className="text-xs text-[#7e828f] mt-1.5">
-                        Markup: <code>## Heading</code>, <code>- bullet</code>, <code>**bold**</code>, blank line for a new
-                        paragraph.
-                      </p>
-                    </div>
-                  </>
-                ) : (
-                  <div className="space-y-3">
-                    <div>
-                      <label className={label}>Renderer</label>
-                      <select className={input} value={draft.route} onChange={(e) => set('route', e.target.value as Template['route'])}>
-                        <option value="sign">Sign / flyer (8.5x11)</option>
-                        <option value="post">Social post</option>
-                        <option value="header">Email header</option>
-                      </select>
-                    </div>
-                    <label className={label}>Design fields</label>
-                    {Object.entries(draft.params).map(([k, v]) => (
-                      <div key={k} className="flex gap-2 items-start">
-                        <span className="w-28 shrink-0 text-xs font-mono text-[#7e828f] pt-2.5">{k}</span>
-                        <input
-                          className={input}
-                          data-field={`param:${k}`}
-                          value={v}
-                          onChange={(e) => setParam(k, e.target.value)}
-                          onFocus={(e) => { lastField.current = e.currentTarget; }}
-                        />
-                        <button
-                          onClick={() => removeParam(k)}
-                          className="text-[#7e828f] hover:text-[#ff6445] px-2 pt-2 text-sm"
-                          title="Remove field"
-                        >
-                          &times;
-                        </button>
-                      </div>
-                    ))}
-                    <AddParam onAdd={(k) => setParam(k, '')} />
+                <div>
+                  <label className={label}>{draft.kind === 'email' ? 'Subject line' : 'Headline'}</label>
+                  <input
+                    className={input}
+                    data-field="subject"
+                    value={draft.subject}
+                    onChange={(e) => set('subject', e.target.value)}
+                    onFocus={(e) => { lastField.current = e.currentTarget; }}
+                  />
+                </div>
+
+                <div>
+                  <label className={label}>Body</label>
+                  <textarea
+                    className={`${input} font-mono text-[13px] leading-relaxed`}
+                    data-field="body"
+                    rows={18}
+                    value={draft.body}
+                    onChange={(e) => set('body', e.target.value)}
+                    onFocus={(e) => { lastField.current = e.currentTarget; }}
+                  />
+                  <p className="text-xs text-[#7e828f] mt-1.5">
+                    Markup: <code>## Heading</code>, <code>- bullet</code>, <code>**bold**</code>, blank line for a new
+                    paragraph.
+                  </p>
+                </div>
+
+                {/* Artwork */}
+                <div className="border-t border-[#eef0f5] pt-4 space-y-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[#a0a4b0]">Artwork</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <ImageSlot
+                      title="Masthead photo"
+                      value={draft.heroImage}
+                      onPick={() => setPicking('heroImage')}
+                      onClear={() => set('heroImage', '')}
+                    />
+                    <ImageSlot
+                      title="Sign-off photo"
+                      value={draft.footerImage}
+                      onPick={() => setPicking('footerImage')}
+                      onClear={() => set('footerImage', '')}
+                    />
                   </div>
-                )}
+                  <div>
+                    <label className={label}>Script word over the photo</label>
+                    <input
+                      className={`${input} max-w-[280px]`}
+                      value={draft.heroScript}
+                      onChange={(e) => set('heroScript', e.target.value)}
+                      placeholder="Coming Soon!"
+                    />
+                  </div>
+                </div>
 
                 {/* Token palette */}
                 <div className="border-t border-[#eef0f5] pt-4">
@@ -390,65 +380,83 @@ export default function TemplateStudio() {
                   <h2 className="font-brother text-[#02176f] font-semibold">Preview</h2>
                   <span className="text-xs text-[#7e828f]">merged with a sample school</span>
                 </div>
-                {isVisual(draft.kind) ? (
-                  previewImg && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={previewImg} alt="" className="max-w-full mx-auto rounded-lg shadow-sm" style={{ maxHeight: 620 }} />
-                  )
-                ) : (
-                  <article className="rounded-lg border border-[#eef0f5] bg-[#fcfdff] p-7 max-w-[640px] mx-auto">
-                    {previewSubject && (
-                      <p className="font-brother text-[#02176f] text-lg font-semibold mb-4 pb-3 border-b border-[#eef0f5]">
-                        {previewSubject}
-                      </p>
-                    )}
-                    <div className="tpl-body text-[15px] leading-relaxed text-[#1a1b1f]" dangerouslySetInnerHTML={{ __html: previewHtml }} />
-                  </article>
-                )}
+                <div className="bg-[#f7f8fb] rounded-lg p-6">
+                  <div className="bg-white rounded-lg shadow-sm px-8 py-9">
+                    <style>{letterCss(origin)}</style>
+                    <div dangerouslySetInnerHTML={{ __html: preview }} />
+                  </div>
+                </div>
               </section>
             </div>
           )}
         </div>
       </main>
 
-      <style>{`
-        .tpl-body p { margin: 0 0 1em; }
-        .tpl-body h3 { font-weight: 700; color: #02176f; margin: 1.4em 0 .5em; font-size: 15px; }
-        .tpl-body ul { margin: 0 0 1em; padding-left: 1.2em; list-style: disc; }
-        .tpl-body li { margin: .3em 0; }
-      `}</style>
+      {picking && (
+        <div
+          className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
+          onClick={() => setPicking(null)}
+        >
+          <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#eef0f5] sticky top-0 bg-white">
+              <h4 className="font-brother text-[#02176f] font-semibold">Choose a photo</h4>
+              <button onClick={() => setPicking(null)} className="text-[#7e828f] hover:text-[#02176f] text-2xl leading-none" aria-label="Close">
+                &times;
+              </button>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-6">
+              {LETTER_PHOTOS.map((p) => (
+                <button
+                  key={p}
+                  onClick={() => {
+                    set(picking, p);
+                    setPicking(null);
+                  }}
+                  className="rounded-lg overflow-hidden border-2 border-transparent hover:border-[#0088ff] transition-colors"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={p} alt="" className="w-full h-24 object-cover" loading="lazy" />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-// Adds a new query param to a visual template.
-function AddParam({ onAdd }: { onAdd: (key: string) => void }) {
-  const [key, setKey] = useState('');
+function ImageSlot({
+  title,
+  value,
+  onPick,
+  onClear,
+}: {
+  title: string;
+  value: string;
+  onPick: () => void;
+  onClear: () => void;
+}) {
   return (
-    <div className="flex gap-2">
-      <input
-        className={`${input} max-w-[220px]`}
-        placeholder="Add a field (eyebrow, footer, bg...)"
-        value={key}
-        onChange={(e) => setKey(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' && key.trim()) {
-            onAdd(key.trim());
-            setKey('');
-          }
-        }}
-      />
-      <button
-        onClick={() => {
-          if (key.trim()) {
-            onAdd(key.trim());
-            setKey('');
-          }
-        }}
-        className="text-sm font-semibold text-[#0088ff] hover:underline"
-      >
-        Add field
-      </button>
+    <div>
+      <label className={label}>{title}</label>
+      {value ? (
+        <div className="relative rounded-lg overflow-hidden border border-[#eef0f5]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={value} alt="" className="w-full h-24 object-cover" />
+          <div className="absolute inset-x-0 bottom-0 flex gap-3 bg-black/45 px-3 py-1.5">
+            <button onClick={onPick} className="text-xs font-semibold text-white hover:underline">Change</button>
+            <button onClick={onClear} className="text-xs font-semibold text-white/80 hover:underline">Remove</button>
+          </div>
+        </div>
+      ) : (
+        <button
+          onClick={onPick}
+          className="w-full h-24 rounded-lg border-2 border-dashed border-[#dfe3ec] text-sm font-semibold text-[#7e828f] hover:border-[#0088ff] hover:text-[#02176f] transition-colors"
+        >
+          + Add photo
+        </button>
+      )}
     </div>
   );
 }

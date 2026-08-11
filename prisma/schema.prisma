@@ -186,21 +186,23 @@ model SavedDesign {
   createdAt DateTime @default(now())
 }
 
-// Admin-authored marketing templates (parent letters, email copy, press
-// releases, wishlist asks, flyers, social graphics). A row overrides the
-// built-in default with the same slug; a new slug is an admin addition.
-// See src/lib/templates/defaults.ts for the shipped library.
+// Admin-authored marketing copy templates (parent letters, email copy,
+// announcements, press releases, wishlist asks). Printed pieces and social
+// graphics are NOT here — Sign Maker and Social Posts own those.
+// A row overrides the built-in default with the same slug; a new slug is an
+// admin addition. See src/lib/templates/defaults.ts for the shipped library.
 model Template {
   id          Int      @id @default(autoincrement())
   slug        String   @unique
-  kind        String // parent-letter | email | press-release | wishlist | flyer | social-graphic
+  kind        String // parent-letter | email | announcement | press-release | wishlist
   name        String
   description String   @default("")
   audience    String   @default("") // "" = every fair type
   subject     String   @default("")
   body        String   @default("") // markup + {{tokens}}
-  route       String   @default("") // visual templates: sign | post | header
-  params      Json     @default("{}") // visual templates: /api/og query params
+  heroImage   String   @default("") // masthead photo, /brand/photos/*.jpg
+  heroScript  String   @default("") // script word over the hero ("Coming Soon!")
+  footerImage String   @default("") // sign-off photo
   order       Float    @default(0)
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())

@@ -32,8 +32,9 @@ export async function PUT(request: NextRequest) {
     audience: String(b.audience ?? ''),
     subject: String(b.subject ?? '').slice(0, 400),
     body: String(b.body ?? ''),
-    route: ['sign', 'post', 'header'].includes(b.route) ? (b.route as string) : '',
-    params: b.params && typeof b.params === 'object' ? b.params : {},
+    heroImage: String(b.heroImage ?? '').slice(0, 300),
+    heroScript: String(b.heroScript ?? '').slice(0, 60),
+    footerImage: String(b.footerImage ?? '').slice(0, 300),
     order: Number.isFinite(Number(b.order)) ? Number(b.order) : 0,
     isActive: b.isActive !== false,
   };

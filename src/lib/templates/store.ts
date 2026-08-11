@@ -24,8 +24,9 @@ function fromRow(row: TemplateRow): Template {
     audience: row.audience,
     subject: row.subject,
     body: row.body,
-    route: (row.route || '') as TemplateDef['route'],
-    params: (row.params ?? {}) as Record<string, string>,
+    heroImage: row.heroImage,
+    heroScript: row.heroScript,
+    footerImage: row.footerImage,
     order: row.order,
     customized: true,
     isActive: row.isActive,
@@ -48,8 +49,7 @@ export function templatesForAudience(all: Template[], audience: string): Templat
   return all.filter((t) => t.isActive && (!t.audience || t.audience === audience));
 }
 
-// A template with every {{token}} resolved. Text templates get subject/body;
-// visual templates get a ready-to-use /api/og URL.
+// A template with every {{token}} resolved, ready to render as a letter.
 export interface ResolvedTemplate {
   slug: string;
   kind: TemplateKind;
@@ -57,19 +57,12 @@ export interface ResolvedTemplate {
   description: string;
   subject: string;
   body: string;
-  imageUrl: string;
+  heroImage: string;
+  heroScript: string;
+  footerImage: string;
 }
 
 export function resolveTemplate(t: Template, values: TokenValues): ResolvedTemplate {
-  let imageUrl = '';
-  if (t.route) {
-    const q = new URLSearchParams();
-    for (const [key, raw] of Object.entries(t.params)) {
-      const value = renderTokens(String(raw ?? ''), values).trim();
-      if (value) q.set(key, value);
-    }
-    imageUrl = `/api/og/${t.route}?${q.toString()}`;
-  }
   return {
     slug: t.slug,
     kind: t.kind,
@@ -77,6 +70,8 @@ export function resolveTemplate(t: Template, values: TokenValues): ResolvedTempl
     description: t.description,
     subject: renderTokens(t.subject, values),
     body: renderTokens(t.body, values),
-    imageUrl,
+    heroImage: t.heroImage,
+    heroScript: renderTokens(t.heroScript, values),
+    footerImage: t.footerImage,
   };
 }
