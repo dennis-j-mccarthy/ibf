@@ -7,6 +7,7 @@ import {
   SESSION_TTL_SECONDS,
   signSessionToken,
   verifyMagicLinkToken,
+  safeNextPath,
 } from '@/lib/book-fair-admin/auth';
 import { getSchool } from '@/lib/book-fair-admin/queries';
 
@@ -40,7 +41,8 @@ export async function GET(request: NextRequest) {
     { userId: claims.user_id, schoolId: claims.school_id },
     secret
   );
-  const response = NextResponse.redirect(new URL('/book-fair-admin', request.url));
+  const destination = safeNextPath(request.nextUrl.searchParams.get('next'));
+  const response = NextResponse.redirect(new URL(destination, request.url));
   response.cookies.set(SESSION_COOKIE_NAME, session, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',

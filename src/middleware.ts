@@ -30,9 +30,12 @@ export async function middleware(req: NextRequest) {
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    // Remember the destination so a deep link (e.g. ?template=) still lands
+    // after signing in. Only the path+query is kept, never an absolute URL.
+    const dest = pathname + req.nextUrl.search;
     const url = req.nextUrl.clone();
     url.pathname = '/book-fair-admin/login';
-    url.search = '';
+    url.search = dest === '/book-fair-admin' ? '' : `?next=${encodeURIComponent(dest)}`;
     return NextResponse.redirect(url);
   }
 

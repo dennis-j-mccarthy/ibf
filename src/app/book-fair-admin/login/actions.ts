@@ -1,7 +1,7 @@
 'use server';
 
 import { headers } from 'next/headers';
-import { signMagicLinkToken } from '@/lib/book-fair-admin/auth';
+import { safeNextPath, signMagicLinkToken } from '@/lib/book-fair-admin/auth';
 import { sendMagicLinkEmail } from '@/lib/book-fair-admin/email';
 import { getSchoolIdByAveDollarsEmail } from '@/lib/book-fair-admin/queries';
 import { allowLoginAttempt } from '@/lib/book-fair-admin/rate-limit';
@@ -19,6 +19,7 @@ export async function requestMagicLink(
   _prev: LoginState,
   formData: FormData
 ): Promise<LoginState> {
+  const next = safeNextPath(String(formData.get('next') ?? ''));
   const email = String(formData.get('email') ?? '')
     .trim()
     .toLowerCase();
@@ -58,7 +59,8 @@ export async function requestMagicLink(
       { bcUserId: 0, userId: 0, schoolId },
       secret
     );
-    const link = `${baseUrl.replace(/\/$/, '')}/book-fair-admin/verify?token=${encodeURIComponent(token)}`;
+    const nextParam = next === '/book-fair-admin' ? '' : `&next=${encodeURIComponent(next)}`;
+    const link = `${baseUrl.replace(/\/$/, '')}/book-fair-admin/verify?token=${encodeURIComponent(token)}${nextParam}`;
     await sendMagicLinkEmail(email, link);
   } catch (error) {
     // Same generic message on errors too — no signal about what failed.

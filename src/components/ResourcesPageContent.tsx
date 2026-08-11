@@ -562,7 +562,7 @@ function ResourceDetailModal({
   onVideoClick: (resource: Resource) => void;
   showTemplates?: boolean;
 }) {
-  const hasTemplate = showTemplates && !!templateForResource(resource.slug);
+  const templateSlug = showTemplates ? templateForResource(resource.slug) : undefined;
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
@@ -670,9 +670,9 @@ function ResourceDetailModal({
                 )}
               </div>
 
-              {hasTemplate && (
+              {templateSlug && (
                 <a
-                  href="/book-fair-admin"
+                  href={`/book-fair-admin?template=${templateSlug}`}
                   className="mt-4 flex items-start gap-3 rounded-xl border border-[#0088ff]/30 bg-[#f2f8ff] px-4 py-3 hover:border-[#0088ff] transition-colors group/tpl"
                 >
                   <svg className="w-5 h-5 mt-0.5 flex-shrink-0 text-[#0088ff]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">

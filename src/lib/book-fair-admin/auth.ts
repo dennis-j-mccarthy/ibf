@@ -145,3 +145,23 @@ export async function verifySessionToken(
   if (typeof obj.user_id !== 'number' || typeof obj.school_id !== 'number') return null;
   return obj as unknown as SessionClaims;
 }
+
+// Where to send a coordinator after a successful magic-link sign-in. Only
+// same-site dashboard paths are honored: anything else (absolute URLs,
+// protocol-relative "//evil.com", other areas of the site) falls back to the
+// dashboard root, so the `next` parameter can never become an open redirect.
+export function safeNextPath(raw: string | null | undefined): string {
+  const fallback = '/book-fair-admin';
+  if (!raw) return fallback;
+  let value = raw;
+  try {
+    value = decodeURIComponent(raw);
+  } catch {
+    return fallback;
+  }
+  if (!value.startsWith('/') || value.startsWith('//') || value.includes('\\')) return fallback;
+  const path = value.split(/[?#]/)[0];
+  if (path !== '/book-fair-admin' && !path.startsWith('/book-fair-admin/')) return fallback;
+  if (path.startsWith('/book-fair-admin/login') || path.startsWith('/book-fair-admin/verify')) return fallback;
+  return value;
+}

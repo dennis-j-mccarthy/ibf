@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import HeaderIcon from './HeaderIcon';
 import TemplateModal, { type CoordinatorTemplate } from './TemplateModal';
 import { TEMPLATE_KINDS } from '@/lib/templates/defaults';
@@ -11,8 +11,22 @@ import { TEMPLATE_KINDS } from '@/lib/templates/defaults';
 
 export type { CoordinatorTemplate };
 
-export default function TemplateCenter({ templates }: { templates: CoordinatorTemplate[] }) {
+export default function TemplateCenter({
+  templates,
+  initialSlug,
+}: {
+  templates: CoordinatorTemplate[];
+  // Deep link from the resources page: open this template on arrival and
+  // scroll it into view, so the coordinator lands on the letter they clicked.
+  initialSlug?: string;
+}) {
   const [openSlug, setOpenSlug] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!initialSlug || !templates.some((t) => t.slug === initialSlug)) return;
+    setOpenSlug(initialSlug);
+    document.getElementById('ready-to-send')?.scrollIntoView({ block: 'start' });
+  }, [initialSlug, templates]);
 
   if (!templates.length) return null;
 
@@ -24,7 +38,7 @@ export default function TemplateCenter({ templates }: { templates: CoordinatorTe
   })).filter((g) => g.items.length > 0);
 
   return (
-    <section className="bg-white rounded-xl shadow-sm p-6">
+    <section id="ready-to-send" className="bg-white rounded-xl shadow-sm p-6">
       <h3
         className="flex items-center gap-2.5 text-[#02176f] text-xl font-semibold mb-1"
         style={{ fontFamily: 'brother-1816, sans-serif' }}

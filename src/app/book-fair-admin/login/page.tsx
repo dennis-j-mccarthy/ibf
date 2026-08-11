@@ -9,6 +9,7 @@ const initialState: LoginState = { message: null };
 function LoginForm() {
   const searchParams = useSearchParams();
   const linkError = searchParams.get('error') === 'link';
+  const next = searchParams.get('next') ?? '';
   const [state, formAction, pending] = useActionState(requestMagicLink, initialState);
 
   return (
@@ -36,6 +37,8 @@ function LoginForm() {
           </div>
         ) : (
           <form action={formAction}>
+            {/* Carries the page they were trying to reach through sign-in. */}
+            {next && <input type="hidden" name="next" value={next} />}
             <label htmlFor="email" className="block text-sm text-[#02176f] mb-1">
               Email address
             </label>

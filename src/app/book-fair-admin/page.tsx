@@ -52,7 +52,7 @@ function isTruthyFlag(value: string | null | undefined): boolean {
 export default async function BookFairAdminDashboard({
   searchParams,
 }: {
-  searchParams: Promise<{ step?: string }>;
+  searchParams: Promise<{ step?: string; template?: string }>;
 }) {
   const session = await requireSession();
   const schoolId = session.school_id;
@@ -361,7 +361,7 @@ export default async function BookFairAdminDashboard({
                 <ShareSignupCard url={teacherUrl} variant="teacher" flat />
               </div>
             </section>
-            <TemplateCenter templates={coordinatorTemplates} />
+            <TemplateCenter templates={coordinatorTemplates} initialSlug={sp?.template} />
             <WidgetMaker schoolId={schoolId} origin={process.env.NEXT_PUBLIC_APP_URL ?? ''} data={widgetData} />
             <ResourceHub resources={resources} audience={resourceAudience} isVirtual={plannerType === 'catholic-virtual'} />
             <InviteTree classrooms={treeClassrooms} schoolId={schoolId} nowMs={Date.now()} />
