@@ -12,8 +12,11 @@ import PastFairsSection, {
 import { type TaxCertStatus } from '@/components/book-fair-admin/PrepChecklist';
 import RepCard from '@/components/book-fair-admin/RepCard';
 import ResourceHub from '@/components/book-fair-admin/ResourceHub';
+import TemplateCenter from '@/components/book-fair-admin/TemplateCenter';
 import WidgetMaker from '@/components/book-fair-admin/WidgetMaker';
 import type { WidgetData } from '@/components/book-fair-admin/widgets';
+import { formatDateET, daysUntil } from '@/lib/book-fair-admin/dates';
+import { getTemplates, resolveTemplate, templatesForAudience } from '@/lib/templates/store';
 import { fairStatusStep } from '@/lib/book-fair-admin/fair-status';
 import { buildRep } from '@/lib/book-fair-admin/reps';
 import { getCompany, getDeal, getDeals, getOwner, parseDollarString } from '@/lib/book-fair-admin/hubspot';
@@ -241,6 +244,38 @@ export default async function BookFairAdminDashboard({
   const familyUrl = `https://store.ignatiusbookfairs.com?signup=true&schoolId=${schoolId}&role=parent`;
   const teacherUrl = `https://store.ignatiusbookfairs.com?signup=true&schoolId=${schoolId}&role=teacher`;
 
+  // Marketing templates, merged with this fair. Coordinators get finished copy
+  // rather than the fill-in-the-blank PDFs.
+  const fairStart = upcomingFair?.startDate ?? '';
+  const fairEnd = upcomingFair?.endDate ?? '';
+  const templateValues = {
+    school_name: schoolName,
+    school_city: school?.city ?? '',
+    school_state: school?.state ?? '',
+    fair_dates:
+      fairStart && fairEnd
+        ? `${formatDateET(fairStart, { year: false })} through ${formatDateET(fairEnd)}`
+        : '',
+    fair_start_date: fairStart ? formatDateET(fairStart) : '',
+    fair_end_date: fairEnd ? formatDateET(fairEnd) : '',
+    fair_type: fairTypeLabel ?? '',
+    fair_location: '',
+    shop_url: familyUrl,
+    family_signup_url: familyUrl,
+    teacher_signup_url: teacherUrl,
+    coordinator_name: coordinator?.name ?? '',
+    coordinator_email: coordinator?.email ?? '',
+    principal_name: dp?.principal_name ?? '',
+    rep_name: rep ? `${rep.firstName} ${rep.lastName}`.trim() : '',
+    days_until_fair: fairStart ? String(daysUntil(fairStart) ?? '') : '',
+    classroom_count: String(classroomCount),
+    current_year: String(new Date().getFullYear()),
+  };
+  const allTemplates = await getTemplates();
+  const coordinatorTemplates = templatesForAudience(allTemplates, resourceAudience).map((t) =>
+    resolveTemplate(t, templateValues)
+  );
+
   const widgetData: WidgetData = {
     schoolName,
     fairStartDate: upcomingFair?.startDate ?? null,
@@ -323,6 +358,7 @@ export default async function BookFairAdminDashboard({
                 <ShareSignupCard url={teacherUrl} variant="teacher" flat />
               </div>
             </section>
+            <TemplateCenter templates={coordinatorTemplates} />
             <WidgetMaker schoolId={schoolId} origin={process.env.NEXT_PUBLIC_APP_URL ?? ''} data={widgetData} />
             <ResourceHub resources={resources} audience={resourceAudience} isVirtual={plannerType === 'catholic-virtual'} />
             <InviteTree classrooms={treeClassrooms} schoolId={schoolId} nowMs={Date.now()} />

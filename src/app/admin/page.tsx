@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { verifySession, COOKIE_NAME } from '@/lib/auth/session';
 import { prisma } from '@/lib/prisma';
 import { getUpcomingFairsAllSchools } from '@/lib/book-fair-admin/queries';
+import { getTemplates } from '@/lib/templates/store';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,6 +25,7 @@ export default async function AdminDashboard() {
     prisma.blog.count({ where: { starred: true } }).catch(() => null),
     prisma.botAnswer.count().catch(() => null),
   ]);
+  const templateCount = (await getTemplates().catch(() => [])).length;
   let fairCount: number | null = null;
   try {
     fairCount = (await getUpcomingFairsAllSchools()).length;
@@ -160,6 +162,36 @@ export default async function AdminDashboard() {
           strokeLinecap="round"
           strokeLinejoin="round"
           d="M12 14a4.5 4.5 0 100-9 4.5 4.5 0 000 9zm0 0v6.5l-3-1.8-3 1.8V14m12 6.5l-3-1.8-3 1.8"
+        />
+      ),
+    },
+    {
+      href: '/admin/templates',
+      title: 'Template Studio',
+      desc: 'Parent letters, email copy, press releases, flyers - merged with each school automatically.',
+      stat: num(templateCount),
+      statLabel: 'templates',
+      accent: '#0088ff',
+      icon: (
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M4 4.5h16v11H5.75L4 18.75V4.5zM8 9h8m-8 3.5h5"
+        />
+      ),
+    },
+    {
+      href: '/admin/signature-maker',
+      title: 'Signature Maker',
+      desc: 'Branded staff email signatures that hold up in Gmail and Outlook.',
+      stat: 'Email',
+      statLabel: 'signatures',
+      accent: '#7b61ff',
+      icon: (
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M3 17.5c3.5 0 4-11 7-11s1.5 8 4 8 2.25-3 3.5-3 1.75 2 3.5 2M3 20.75h18"
         />
       ),
     },

@@ -103,7 +103,15 @@ export async function GET(req: Request) {
             headline
           )}
         </div>
-        {sub ? <div style={{ display: 'flex', fontSize: busy ? 36 : 52, fontWeight: 500, lineHeight: 1.3, color: sColor, marginTop: 26, textAlign: 'center', maxWidth: 980 }}>{sub}</div> : null}
+        {sub ? (
+          // Newlines become real line breaks — satori collapses them inside a
+          // single text node, so each line gets its own row.
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', fontSize: busy ? 36 : 52, fontWeight: 500, lineHeight: 1.3, color: sColor, marginTop: 26, textAlign: 'center', maxWidth: 980 }}>
+            {sub.split('\n').map((line, i) => (
+              <div key={i} style={{ display: 'flex' }}>{line}</div>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       {img ? (
