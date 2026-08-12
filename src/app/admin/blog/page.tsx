@@ -40,6 +40,12 @@ const EMPTY: Draft = {
 const input =
   'w-full px-3 py-2 border border-[#dddddd] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0066ff]';
 const label = 'block text-sm font-medium text-[#02176f] mb-1';
+
+// The only categories the public blog can display. BlogPageContent filters every
+// post against the site's Catholic/Public toggle, so anything else (an empty
+// value, or the "General" the AI generator used to offer) matches neither mode
+// and the post is invisible on the front end in both.
+const BLOG_CATEGORIES = ['Catholic', 'Public', 'Both'] as const;
 const SITE = 'https://www.ignatiusbookfairs.com';
 
 // --- inline SVG icons (no emoji) ---
@@ -582,7 +588,21 @@ export default function BlogAdmin() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
         <div>
           <label className={label}>Category</label>
-          <input className={input} value={draft.category ?? ''} onChange={(e) => setDraft({ ...draft, category: e.target.value })} placeholder="Catholic, Public, …" />
+          <select
+            className={input}
+            value={draft.category ?? ''}
+            onChange={(e) => setDraft({ ...draft, category: e.target.value })}
+          >
+            <option value="">Choose a category…</option>
+            {BLOG_CATEGORIES.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+            {draft.category && !BLOG_CATEGORIES.includes(draft.category as (typeof BLOG_CATEGORIES)[number]) && (
+              // Legacy value: keep it selectable so opening an old post does not
+              // silently change it, but flag that it hides the post.
+              <option value={draft.category}>{draft.category} — not shown on the site</option>
+            )}
+          </select>
         </div>
         <div>
           <label className={label}>Accent color</label>
@@ -731,9 +751,9 @@ export default function BlogAdmin() {
                 <label className={label}>Category (optional)</label>
                 <select className={input} value={aiCategory} onChange={(e) => setAiCategory(e.target.value)}>
                   <option value="">Let AI choose</option>
-                  <option value="Catholic">Catholic</option>
-                  <option value="Public">Public</option>
-                  <option value="General">General</option>
+                  {BLOG_CATEGORIES.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
                 </select>
               </div>
               <div>

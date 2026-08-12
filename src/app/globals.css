@@ -1,4 +1,8 @@
 @import "tailwindcss";
+/* Tailwind v4 loads plugins from CSS. Without this the `prose` / `prose-*`
+   classes on the blog article, FAQs and terms pages are silently no-ops --
+   which is why blog links rendered in body colour instead of brand blue. */
+@plugin "@tailwindcss/typography";
 
 /* Explicitly set source paths to exclude generated files */
 @source "../components/**/*.{js,ts,jsx,tsx}";

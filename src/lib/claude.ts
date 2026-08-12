@@ -18,7 +18,9 @@ const ARTICLE_SCHEMA = {
   properties: {
     title: { type: 'string' },
     summary: { type: 'string' },
-    category: { type: 'string', enum: ['Catholic', 'Public', 'General'] },
+    // "Both" (not "General"): the public blog filters every post against the
+    // site's Catholic/Public toggle, so any other value renders it invisible.
+    category: { type: 'string', enum: ['Catholic', 'Public', 'Both'] },
     contentHtml: { type: 'string' },
   },
   required: ['title', 'summary', 'category', 'contentHtml'],
@@ -48,7 +50,7 @@ ${books.length ? `Feature these specific books — mention each by title natural
 Return:
 - title: a specific, compelling title (no clickbait).
 - summary: a 1–2 sentence excerpt.
-- category: "Catholic", "Public", or "General".
+- category: "Catholic", "Public", or "Both" (use "Both" when the piece suits every family).
 - contentHtml: the full article body as clean semantic HTML using ONLY these tags: <h2>, <h3>, <p>, <ul>, <li>, <strong>, <em>, <a>. No <html>/<head>/<body>, no inline styles, no <h1> (the title is rendered separately). 500–900 words, skimmable, with a few subheadings.`;
 
   const stream = client.messages.stream({
