@@ -160,6 +160,102 @@ function RichText({ value, onChange }: { value: string; onChange: (html: string)
   );
 }
 
+// Thumbnails are uploaded from the browser, so a phone photo would blow the
+// 4.5 MB serverless body limit. Downscale to a sane thumbnail first — these are
+// rendered at a few hundred pixels in the blog list and the newsletter anyway.
+const THUMB_MAX_DIM = 1600;
+
+async function downscaleImage(file: File): Promise<Blob> {
+  // Anything already small, or a format canvas would wreck (GIF animation,
+  // SVG), goes up untouched.
+  if (file.size < 400 * 1024 || file.type === 'image/gif' || file.type === 'image/svg+xml') return file;
+  const bitmap = await createImageBitmap(file).catch(() => null);
+  if (!bitmap) return file;
+  const scale = Math.min(1, THUMB_MAX_DIM / Math.max(bitmap.width, bitmap.height));
+  const w = Math.round(bitmap.width * scale);
+  const h = Math.round(bitmap.height * scale);
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return file;
+  ctx.drawImage(bitmap, 0, 0, w, h);
+  bitmap.close();
+  const type = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+  const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, type, 0.85));
+  return blob && blob.size < file.size ? blob : file;
+}
+
+// URL field + upload button + preview, used for both the editor thumbnail and
+// the AI generator's title image.
+function ThumbnailField({
+  value,
+  onChange,
+  placeholder,
+  extra,
+}: {
+  value: string;
+  onChange: (url: string) => void;
+  placeholder?: string;
+  extra?: ReactNode;
+}) {
+  const fileRef = useRef<HTMLInputElement | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState('');
+
+  const pick = async (file: File) => {
+    setMsg('');
+    setBusy(true);
+    try {
+      const body = new FormData();
+      const shrunk = await downscaleImage(file);
+      body.append('file', shrunk, file.name.replace(/\.[^.]+$/, '') + (shrunk.type === 'image/png' ? '.png' : '.jpg'));
+      body.append('folder', 'blog');
+      const res = await fetch('/api/admin/training/upload', { method: 'POST', body });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error || `Upload failed (${res.status})`);
+      onChange(j.url);
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : 'Upload failed');
+    } finally {
+      setBusy(false);
+      if (fileRef.current) fileRef.current.value = '';
+    }
+  };
+
+  return (
+    <div className="mb-4">
+      <div className="flex items-start gap-3">
+        <input className={input} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder ?? 'https://…'} />
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) pick(f);
+          }}
+        />
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          disabled={busy}
+          className="shrink-0 px-3 py-2 rounded-md border border-[#00c853] text-[#00a843] text-sm font-semibold hover:bg-[#00c853]/5 disabled:opacity-50 whitespace-nowrap"
+        >
+          {busy ? 'Uploading…' : 'Upload'}
+        </button>
+        {extra}
+        {value && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={value} alt="" className="w-16 h-16 rounded-md object-cover border border-gray-200 shrink-0" />
+        )}
+      </div>
+      {msg && <p className="text-xs text-[#e0512f] mt-1">{msg}</p>}
+    </div>
+  );
+}
+
 export default function BlogAdmin() {
   const router = useRouter();
   const [items, setItems] = useState<Blog[]>([]);
@@ -497,8 +593,12 @@ export default function BlogAdmin() {
       <label className={label}>Summary</label>
       <textarea className={`${input} mb-4`} rows={2} value={draft.summary ?? ''} onChange={(e) => setDraft({ ...draft, summary: e.target.value })} />
 
-      <label className={label}>Thumbnail URL</label>
-      <input className={`${input} mb-4`} value={draft.thumbnail ?? ''} onChange={(e) => setDraft({ ...draft, thumbnail: e.target.value })} placeholder="https://…" />
+      <label className={label}>Thumbnail</label>
+      <ThumbnailField
+        value={draft.thumbnail ?? ''}
+        onChange={(url) => setDraft({ ...draft, thumbnail: url })}
+        placeholder="https://…  or upload an image"
+      />
 
       <label className={label}>Content</label>
       <div className="mb-4">
@@ -677,21 +777,16 @@ export default function BlogAdmin() {
             </div>
 
             <label className={label}>Title image URL (optional)</label>
-            <div className="flex items-start gap-3 mb-4">
-              <input
-                className={input}
-                value={aiThumbnail}
-                onChange={(e) => setAiThumbnail(e.target.value)}
-                placeholder="https://…  or choose from the Training library"
-              />
-              <button type="button" onClick={openLibrary} className="shrink-0 px-3 py-2 rounded-md border border-[#7c3aed] text-[#7c3aed] text-sm font-semibold hover:bg-[#7c3aed]/5 whitespace-nowrap">
-                Library
-              </button>
-              {aiThumbnail && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={aiThumbnail} alt="" className="w-16 h-16 rounded-md object-cover border border-gray-200 shrink-0" />
-              )}
-            </div>
+            <ThumbnailField
+              value={aiThumbnail}
+              onChange={setAiThumbnail}
+              placeholder="https://…  upload, or choose from the Training library"
+              extra={
+                <button type="button" onClick={openLibrary} className="shrink-0 px-3 py-2 rounded-md border border-[#7c3aed] text-[#7c3aed] text-sm font-semibold hover:bg-[#7c3aed]/5 whitespace-nowrap">
+                  Library
+                </button>
+              }
+            />
 
             <label className={label}>Feature books (optional, up to 5 — shop.ignatiusbookfairs.com links)</label>
             <div className="space-y-2 mb-4">

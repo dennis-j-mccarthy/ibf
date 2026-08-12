@@ -46,8 +46,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Only image files are allowed.' }, { status: 400 });
   }
 
+  // Callers outside the Training library (e.g. blog thumbnails) pass a folder
+  // so uploads are not all filed under training/.
+  const FOLDERS = new Set(['training', 'blog']);
+  const rawFolder = String(form?.get('folder') ?? 'training');
+  const folder = FOLDERS.has(rawFolder) ? rawFolder : 'training';
+
   try {
-    const blob = await put(`training/${file.name}`, file, {
+    const blob = await put(`${folder}/${file.name}`, file, {
       access: 'public',
       addRandomSuffix: true,
       contentType: file.type,
