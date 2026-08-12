@@ -13,6 +13,14 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'img.youtube.com',
       },
+      {
+        // Vercel Blob — anything uploaded through the admin tools (blog
+        // thumbnails, training images, tutorial posters). Without this,
+        // next/image rejects the URL with INVALID_IMAGE_OPTIMIZE_REQUEST and
+        // the image silently renders blank even though the file is fine.
+        protocol: 'https',
+        hostname: '*.public.blob.vercel-storage.com',
+      },
     ],
   },
   async redirects() {
