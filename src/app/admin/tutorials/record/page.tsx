@@ -30,6 +30,23 @@ function fmt(sec: number) {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
+// Turns a getUserMedia rejection into something a non-engineer can act on.
+function describeMediaError(e: unknown): string {
+  const name = e instanceof Error ? e.name : '';
+  switch (name) {
+    case 'NotAllowedError':
+      return 'permission blocked in the browser';
+    case 'NotFoundError':
+      return 'no device found';
+    case 'NotReadableError':
+      return 'device is in use by another app';
+    case 'OverconstrainedError':
+      return 'device does not support the requested settings';
+    default:
+      return name || 'unknown error';
+  }
+}
+
 export default function RecordTutorialPage() {
   const [phase, setPhase] = useState<Phase>('idle');
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +65,7 @@ export default function RecordTutorialPage() {
 
   const displayStreamRef = useRef<MediaStream | null>(null);
   const camStreamRef = useRef<MediaStream | null>(null);
+  const micStreamRef = useRef<MediaStream | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const mixedAudioRef = useRef<MediaStreamTrack | null>(null);
 
@@ -158,13 +176,38 @@ export default function RecordTutorialPage() {
   const stopAllTracks = useCallback(() => {
     displayStreamRef.current?.getTracks().forEach((t) => t.stop());
     camStreamRef.current?.getTracks().forEach((t) => t.stop());
+    micStreamRef.current?.getTracks().forEach((t) => t.stop());
     displayStreamRef.current = null;
     camStreamRef.current = null;
+    micStreamRef.current = null;
     stopTicker();
     audioCtxRef.current?.close().catch(() => {});
     audioCtxRef.current = null;
     mixedAudioRef.current = null;
   }, [stopTicker]);
+
+  // Acquiring the camera on demand, so ticking the box after a failed start
+  // actually retries instead of toggling a stream that was never obtained.
+  const acquireCam = useCallback(async (): Promise<boolean> => {
+    if (camStreamRef.current) return true;
+    for (const video of [{ width: { ideal: 1280 }, height: { ideal: 720 } }, true] as const) {
+      try {
+        const cam = await navigator.mediaDevices.getUserMedia({ video });
+        camStreamRef.current = cam;
+        if (camVideoRef.current) {
+          camVideoRef.current.srcObject = cam;
+          await camVideoRef.current.play().catch(() => {});
+        }
+        setError(null);
+        return true;
+      } catch (e) {
+        if (video === true) {
+          setError(`Camera still unavailable (${describeMediaError(e)}). Close any other app using it, then try again.`);
+        }
+      }
+    }
+    return false;
+  }, []);
 
   const startCapture = useCallback(async () => {
     setError(null);
@@ -176,21 +219,42 @@ export default function RecordTutorialPage() {
         video: { frameRate: 30, width: { max: 1920 }, height: { max: 1920 } },
         audio: true,
       });
-      let cam: MediaStream | null = null;
+      // Mic and camera are requested SEPARATELY on purpose. getUserMedia is
+      // atomic: one combined request means a single unavailable device costs
+      // you both. That is what made Windows recordings silent and bubble-less
+      // while macOS was fine — a camera held by Teams, or a driver that
+      // rejects facingMode, took the microphone down with it.
+      const problems: string[] = [];
+
+      let mic: MediaStream | null = null;
       try {
-        cam = await navigator.mediaDevices.getUserMedia({
-          // native landscape (head-and-shoulders) — a forced square makes the
-          // browser zoom in and the circular bubble then clips the face.
-          video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
-          audio: true,
-        });
-      } catch {
-        // webcam/mic optional — allow screen-only recordings
-        cam = null;
-        setCamOn(false);
+        mic = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (e) {
+        problems.push(`microphone unavailable (${describeMediaError(e)})`);
       }
+
+      let cam: MediaStream | null = null;
+      // facingMode is a mobile constraint; plenty of Windows webcam drivers do
+      // not report it and reject the request outright. Try the nice
+      // constraints, then fall back to any camera at all.
+      for (const video of [{ width: { ideal: 1280 }, height: { ideal: 720 } }, true] as const) {
+        try {
+          cam = await navigator.mediaDevices.getUserMedia({ video });
+          break;
+        } catch (e) {
+          if (video === true) problems.push(`camera unavailable (${describeMediaError(e)})`);
+        }
+      }
+      if (!cam) setCamOn(false);
+      if (problems.length) {
+        setError(
+          `${problems.join(' and ')}. Recording will continue without it — close any other app using the device, check the browser's site permissions, then Start capture again.`
+        );
+      }
+
       displayStreamRef.current = display;
       camStreamRef.current = cam;
+      micStreamRef.current = mic;
 
       if (screenVideoRef.current) {
         screenVideoRef.current.srcObject = display;
@@ -206,7 +270,7 @@ export default function RecordTutorialPage() {
       const ac = new AC();
       const dest = ac.createMediaStreamDestination();
       let hasAudio = false;
-      [cam, display].forEach((s) => {
+      [mic, display].forEach((s) => {
         if (s && s.getAudioTracks().length) {
           ac.createMediaStreamSource(new MediaStream(s.getAudioTracks())).connect(dest);
           hasAudio = true;
@@ -430,7 +494,16 @@ export default function RecordTutorialPage() {
 
           {live && (
             <label className="ml-auto inline-flex items-center gap-2 text-sm text-gray-600 select-none">
-              <input type="checkbox" checked={camOn} onChange={(e) => setCamOn(e.target.checked)} className="accent-[#02176f]" />
+              <input
+                type="checkbox"
+                checked={camOn}
+                onChange={async (e) => {
+                  const on = e.target.checked;
+                  if (on && !(await acquireCam())) return; // keep it unchecked if the camera still will not open
+                  setCamOn(on);
+                }}
+                className="accent-[#02176f]"
+              />
               Webcam bubble
             </label>
           )}
