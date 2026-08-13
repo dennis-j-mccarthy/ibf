@@ -82,12 +82,18 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           <article className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-8 md:p-12">
             {/* Featured Image */}
             {blog.thumbnail && (
-              <div className="relative aspect-video rounded-lg overflow-hidden mb-8 -mt-20 shadow-lg bg-white">
+              // No fixed aspect: the hero sizes itself to the artwork, so it
+              // reaches both edges of the article without object-cover cropping
+              // the headline out of the graphic.
+              <div className="rounded-lg overflow-hidden mb-8 -mt-20 shadow-lg bg-white">
                 <Image
                   src={blog.thumbnail}
                   alt={blog.title}
-                  fill
-                  className="object-contain"
+                  width={1800}
+                  height={1240}
+                  sizes="(max-width: 768px) 100vw, 768px"
+                  className="w-full h-auto"
+                  priority
                 />
               </div>
             )}
