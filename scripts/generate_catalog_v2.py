@@ -67,12 +67,25 @@ PUBLIC_CATEGORY_MAP = {
     454: 'Graphic Adventure',
 }
 
+# Catholic October 2026 fall flyer. Parent category is 477; these are its subcats.
+FALL_2026_CATEGORY_MAP = {
+    478: 'It feels like Fall!',
+    479: 'Thankful & Grateful',
+    480: 'Chapter Books',
+    481: 'Picture Books To Inspire Little Ones',
+    482: 'Saint Story Chapter Books',
+    483: 'Saintly Reads',
+    484: 'Plushies!',
+}
+
 # When a BC subcategory name doesn't match the IDML group name exactly,
 # map BC-name -> IDML section label (group name minus " Group").
 PUBLIC_SECTION_TO_IDML_GROUP = {
     'Hands-On Crafts and Activities': 'Crafts and Activities',
 }
 CATHOLIC_SECTION_TO_IDML_GROUP = {}
+# The fall flyer's groups were renamed to match BC exactly, so no remapping.
+FALL_2026_SECTION_TO_IDML_GROUP = {}
 
 # Active maps (set by main() based on --mode)
 SNEAK_PEEK_CATEGORY_MAP = CATHOLIC_CATEGORY_MAP
@@ -968,14 +981,17 @@ def main():
     parser.add_argument('--idml', required=True, help='IDML template file')
     parser.add_argument('--csv', required=True, help='BigCommerce product CSV')
     parser.add_argument('--output', required=True, help='Output IDML path')
-    parser.add_argument('--mode', choices=['catholic', 'public'], default='catholic',
-                        help='Which Sneak Peek category set to use (default: catholic)')
+    parser.add_argument('--mode', choices=['catholic', 'public', 'fall2026'], default='catholic',
+                        help='Which category set to use (default: catholic)')
     args = parser.parse_args()
 
     global SNEAK_PEEK_CATEGORY_MAP, SECTION_NAME_TO_IDML_GROUP
     if args.mode == 'public':
         SNEAK_PEEK_CATEGORY_MAP = PUBLIC_CATEGORY_MAP
         SECTION_NAME_TO_IDML_GROUP = PUBLIC_SECTION_TO_IDML_GROUP
+    elif args.mode == 'fall2026':
+        SNEAK_PEEK_CATEGORY_MAP = FALL_2026_CATEGORY_MAP
+        SECTION_NAME_TO_IDML_GROUP = FALL_2026_SECTION_TO_IDML_GROUP
     else:
         SNEAK_PEEK_CATEGORY_MAP = CATHOLIC_CATEGORY_MAP
         SECTION_NAME_TO_IDML_GROUP = CATHOLIC_SECTION_TO_IDML_GROUP
