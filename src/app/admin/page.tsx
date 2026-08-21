@@ -166,6 +166,21 @@ export default async function AdminDashboard() {
       ),
     },
     {
+      href: '/admin/flyer-preflight',
+      title: 'Flyer Preflight',
+      desc: 'Check a generated flyer IDML against the BigCommerce export before it goes to print.',
+      stat: 'Check',
+      statLabel: 'before print',
+      accent: '#ff6445',
+      icon: (
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M9 12.75l2.25 2.25L15 9.75M7.5 3.75h9a1.5 1.5 0 011.5 1.5v13.5a1.5 1.5 0 01-1.5 1.5h-9a1.5 1.5 0 01-1.5-1.5V5.25a1.5 1.5 0 011.5-1.5z"
+        />
+      ),
+    },
+    {
       href: '/admin/templates',
       title: 'Template Studio',
       desc: 'Parent letters, email copy, press releases, flyers - merged with each school automatically.',
