@@ -222,3 +222,18 @@ model TrainingDocument {
   text        String   @default("") // extracted text — injected into the generators' brand brief
   createdAt   DateTime @default(now())
 }
+
+// Team review comments on the standalone spec doc served from
+// public/documents/. Keyed by the section id inside that HTML file
+// ("sec-01".."sec-09"). No auth by design — this is an internal review tool;
+// abuse is held off by a honeypot field and a per-author hourly cap.
+model SpecComment {
+  id          String   @id @default(cuid())
+  docSlug     String   @default("gift-wallet-spec")
+  section     String // matches iframe doc's section id, e.g. "sec-05"
+  authorName  String
+  body        String
+  createdAt   DateTime @default(now())
+
+  @@index([docSlug, section])
+}

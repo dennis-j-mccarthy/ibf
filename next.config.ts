@@ -23,6 +23,17 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async headers() {
+    return [
+      {
+        // The spec doc is a static file, so it can't carry Next metadata --
+        // this header is the only way to keep it out of search results. Scoped
+        // to this one file; nothing else on the site is affected.
+        source: '/documents/ibf-ewallet-gift-flow.html',
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
+      },
+    ];
+  },
   async redirects() {
     return [
       // Old Webflow slugs that don't match current DB slugs
