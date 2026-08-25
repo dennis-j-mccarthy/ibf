@@ -57,3 +57,8 @@ prisma/backup-*
 
 # local read-only DB url (never commit)
 .dashboard-readonly-url
+
+# Extracted IDML working dirs for the flyer generator (rebuilt from the
+# source .idml by prepare_flyer_slots.py -- 11MB of XML, not source of truth)
+scripts/idml/
+scripts/idml_build/

@@ -156,15 +156,47 @@ def main():
         uid[0] += 1
         return f'{prefix}{uid[0]:04d}'
 
+    # Each cloned badge needs its OWN story. A Story lays out in exactly one
+    # TextFrame, so if every clone keeps the source badge's ParentStory only one
+    # badge ever renders the word "AR" and the rest print as empty ovals.
+    # Rewriting Self= is not enough -- ParentStory is a separate attribute.
+    ar_story_ids = re.findall(r'ParentStory="([^"]+)"', ar_src)
+    cloned_stories = []  # (new_story_id, source_story_id)
+
     def clone_ar(oval_x, oval_y):
         """Clone the AR badge with fresh ids, oval's top-left landing on oval_x/y."""
         blk = ar_src
         for sid in sorted(set(re.findall(r'Self="([^"]+)"', blk)), key=len, reverse=True):
             blk = blk.replace(f'"{sid}"', f'"AR{new_id()}"')
+        for src_story in ar_story_ids:
+            new_story = f'ARS{new_id("s")}'
+            cloned_stories.append((new_story, src_story))
+            blk = blk.replace(f'ParentStory="{src_story}"', f'ParentStory="{new_story}"')
         tx, ty = oval_x - AR_OFF_X, oval_y - AR_OFF_Y
         blk = re.sub(r'ItemTransform="[^"]*"', f'ItemTransform="1 0 0 1 {tx:.6f} {ty:.6f}"', blk, count=1)
         blk = re.sub(r'(<Group [^>]*?)Name="[^"]*"', r'\1Name="ar"', blk, count=1)
         return blk
+
+    def write_cloned_stories():
+        """Write one Story file per cloned badge and register it in designmap."""
+        entries = []
+        for new_story, src_story in cloned_stories:
+            src_path = os.path.join(WORK, 'Stories', f'Story_{src_story}.xml')
+            if not os.path.exists(src_path):
+                continue
+            s = open(src_path, encoding='utf-8').read()
+            s = s.replace(f'Self="{src_story}"', f'Self="{new_story}"')
+            open(os.path.join(WORK, 'Stories', f'Story_{new_story}.xml'), 'w',
+                 encoding='utf-8').write(s)
+            entries.append(f'\t<idPkg:Story src="Stories/Story_{new_story}.xml" />')
+        if not entries:
+            return
+        dm_path = os.path.join(WORK, 'designmap.xml')
+        dm = open(dm_path, encoding='utf-8').read()
+        anchor = re.search(r'\t<idPkg:Story src="[^"]*" />\n', dm)
+        dm = dm[:anchor.start()] + '\n'.join(entries) + '\n' + dm[anchor.start():]
+        open(dm_path, 'w', encoding='utf-8').write(dm)
+        print(f'wrote {len(entries)} per-badge AR stories')
 
     total_slots = 0
     for fn in sorted(os.listdir(os.path.join(WORK, 'Spreads'))):
@@ -274,6 +306,7 @@ def main():
         xml = xml.replace('</Spread>', ''.join(sec_xml) + '</Spread>')
         open(path, 'w', encoding='utf-8').write(xml)
 
+    write_cloned_stories()
     print(f'\nTOTAL SLOTS BUILT: {total_slots}')
 
     # Headline/section copy changes. Stories are edited with ElementTree per the

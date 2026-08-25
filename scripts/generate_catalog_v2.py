@@ -661,9 +661,9 @@ def apply_spread_changes(work_dir: str, slots: list[SlotInfo],
         for slot in slot_list:
             product = slot_products.get((slot.cat_num, slot.book_num))
             if not product:
-                # Slot has no product -- could remove the AR badge to avoid orphaned graphics
+                # Slot has no product -- hide the AR badge so no orphaned graphic prints
                 if slot.ar_group_self:
-                    content = _remove_group_by_self(content, slot.ar_group_self)
+                    content = _hide_group_by_self(content, slot.ar_group_self)
                 continue
 
             # Download image and update Link URI
@@ -682,9 +682,12 @@ def apply_spread_changes(work_dir: str, slots: list[SlotInfo],
             if slot.rect_self:
                 content = _clear_rect_fill(content, slot.rect_self)
 
-            # Remove AR badge if product is not AR
-            if slot.ar_group_self and not product.is_ar:
-                content = _remove_group_by_self(content, slot.ar_group_self)
+            # Hide the AR badge when the product is not AR; show it when it is.
+            # Setting both ways keeps the run idempotent -- re-running against
+            # corrected data flips badges back on instead of being a no-op.
+            if slot.ar_group_self:
+                content = (_show_group_by_self if product.is_ar else _hide_group_by_self)(
+                    content, slot.ar_group_self)
 
         with open(spread_path, 'w', encoding='utf-8') as f:
             f.write(content)
@@ -753,6 +756,45 @@ def _clear_rect_fill(content: str, rect_self: str) -> str:
     return content[:idx] + new_tag + content[tag_end:]
 
 
+def _hide_group_by_self(content: str, group_self: str) -> str:
+    """Hide a Group by Self ID -- set Visible="false" on its opening tag.
+
+    Badges are hidden, never deleted. Deleting is one-way: a generated flyer
+    then can't be re-run against corrected data, because the badge groups are
+    gone and nothing in this script recreates them (only prepare_flyer_slots.py
+    clones them, and that runs on the unprepped flyer). Hiding keeps every
+    output re-runnable.
+    """
+    start = content.find(f'<Group Self="{group_self}"')
+    if start < 0:
+        return content
+    tag_end = content.find('>', start)
+    if tag_end < 0:
+        return content
+    tag = content[start:tag_end]
+    if 'Visible="' in tag:
+        new_tag = re.sub(r'Visible="[^"]*"', 'Visible="false"', tag, count=1)
+    else:
+        new_tag = tag + ' Visible="false"'
+    return content[:start] + new_tag + content[tag_end:]
+
+
+def _show_group_by_self(content: str, group_self: str) -> str:
+    """Un-hide a Group by Self ID -- set Visible="true" on its opening tag."""
+    start = content.find(f'<Group Self="{group_self}"')
+    if start < 0:
+        return content
+    tag_end = content.find('>', start)
+    if tag_end < 0:
+        return content
+    tag = content[start:tag_end]
+    if 'Visible="' in tag:
+        new_tag = re.sub(r'Visible="[^"]*"', 'Visible="true"', tag, count=1)
+    else:
+        new_tag = tag + ' Visible="true"'
+    return content[:start] + new_tag + content[tag_end:]
+
+
 def _remove_group_by_self(content: str, group_self: str) -> str:
     """Remove a Group element by Self ID using stack-based matching."""
     pat = f'<Group Self="{group_self}"'
@@ -789,10 +831,16 @@ def add_pdf_hyperlinks(work_dir: str, slots: list[SlotInfo],
     with open(dm_path, 'r', encoding='utf-8') as f:
         dm = f.read()
 
-    # Remove old hyperlink entries
+    # Remove old hyperlink entries. All three kinds must go together: the two
+    # lines below drop EVERY destination and page-item source, so any Hyperlink
+    # left behind would reference a Source that no longer exists. Matching only
+    # this script's own "u_h_<n>" names left InDesign's hand-authored hyperlinks
+    # dangling -- 64 Hyperlink records against 31 sources, half of them still
+    # pointing at last season's product URLs.
     dm = re.sub(r'\t<HyperlinkURLDestination [^/]*/>\n', '', dm)
     dm = re.sub(r'\t<HyperlinkPageItemSource [^/]*/>\n', '', dm)
-    dm = re.sub(r'\t<Hyperlink Self="Hyperlink/u_h_\d+".*?</Hyperlink>\n', '', dm, flags=re.DOTALL)
+    dm = re.sub(r'\t<Hyperlink Self="[^"]*".*?</Hyperlink>\n', '', dm, flags=re.DOTALL)
+    dm = re.sub(r'\t<Hyperlink Self="[^"]*"[^>]*/>\n', '', dm)
 
     dests = []
     sources = []

@@ -124,7 +124,11 @@ export function parseFlyer(bytes: Uint8Array): Flyer {
         if (slot.tagName !== 'Group' || slot.getAttribute('Name') === 'ar') continue;
 
         const slotId = slot.getAttribute('Self') ?? '';
-        const hasAr = Array.from(slot.getElementsByTagName('Group')).some((g) => g.getAttribute('Name') === 'ar');
+        // The generator hides unused AR badges rather than deleting them, so a
+        // badge group being present says nothing -- only a visible one prints.
+        const hasAr = Array.from(slot.getElementsByTagName('Group')).some(
+          (g) => g.getAttribute('Name') === 'ar' && g.getAttribute('Visible') !== 'false',
+        );
         let linkUrl: string | null = null;
         for (const el of Array.from(slot.getElementsByTagName('*'))) {
           const self = el.getAttribute('Self');
