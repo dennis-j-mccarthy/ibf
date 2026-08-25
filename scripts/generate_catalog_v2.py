@@ -78,6 +78,31 @@ FALL_2026_CATEGORY_MAP = {
     484: 'Plushies!',
 }
 
+# Public fall flyer 2026. Parent category is 485; these are its subcats. The
+# public flyer is generated FROM the Catholic fall template, so every section
+# below is remapped onto the Catholic group name that occupies its slot.
+PUBLIC_FALL_2026_CATEGORY_MAP = {
+    486: 'It Feels Like Fall!',
+    487: 'Cooking',
+    488: 'Crafts',
+    489: 'Picture Books to Read Together',
+    490: 'Elementary',
+    491: 'Middle School',
+    492: '14+ Fun',
+}
+
+# Public section -> the Catholic template group it reuses. Slot counts match
+# 1:1 (6/3/3/5/6/6/2), which is why the template can be reused at all.
+PUBLIC_FALL_2026_SECTION_TO_IDML_GROUP = {
+    'It Feels Like Fall!': 'It feels like Fall!',
+    'Cooking': 'Thankful & Grateful',
+    'Crafts': 'Chapter Books',
+    'Picture Books to Read Together': 'Picture Books To Inspire Little Ones',
+    'Elementary': 'Saint Story Chapter Books',
+    'Middle School': 'Saintly Reads',
+    '14+ Fun': 'Plushies!',
+}
+
 # When a BC subcategory name doesn't match the IDML group name exactly,
 # map BC-name -> IDML section label (group name minus " Group").
 PUBLIC_SECTION_TO_IDML_GROUP = {
@@ -1029,7 +1054,7 @@ def main():
     parser.add_argument('--idml', required=True, help='IDML template file')
     parser.add_argument('--csv', required=True, help='BigCommerce product CSV')
     parser.add_argument('--output', required=True, help='Output IDML path')
-    parser.add_argument('--mode', choices=['catholic', 'public', 'fall2026'], default='catholic',
+    parser.add_argument('--mode', choices=['catholic', 'public', 'fall2026', 'public-fall2026'], default='catholic',
                         help='Which category set to use (default: catholic)')
     args = parser.parse_args()
 
@@ -1040,6 +1065,9 @@ def main():
     elif args.mode == 'fall2026':
         SNEAK_PEEK_CATEGORY_MAP = FALL_2026_CATEGORY_MAP
         SECTION_NAME_TO_IDML_GROUP = FALL_2026_SECTION_TO_IDML_GROUP
+    elif args.mode == 'public-fall2026':
+        SNEAK_PEEK_CATEGORY_MAP = PUBLIC_FALL_2026_CATEGORY_MAP
+        SECTION_NAME_TO_IDML_GROUP = PUBLIC_FALL_2026_SECTION_TO_IDML_GROUP
     else:
         SNEAK_PEEK_CATEGORY_MAP = CATHOLIC_CATEGORY_MAP
         SECTION_NAME_TO_IDML_GROUP = CATHOLIC_SECTION_TO_IDML_GROUP
