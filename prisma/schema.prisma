@@ -237,3 +237,15 @@ model SpecComment {
 
   @@index([docSlug, section])
 }
+
+// Stakeholder comments on the /health status board. Public behind a shared
+// password, so same posture as SpecComment: honeypot + per-name hourly cap.
+model HealthComment {
+  id              String   @id @default(cuid())
+  project         String   @default("general") // lead | store | general
+  stakeholderName String
+  body            String
+  createdAt       DateTime @default(now())
+
+  @@index([createdAt])
+}
