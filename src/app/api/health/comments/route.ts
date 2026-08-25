@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import prisma from '@/lib/prisma';
 import { HEALTH_COOKIE, isUnlocked } from '@/lib/health/access';
+import { ITEMS, STAKEHOLDERS } from '@/lib/health/data';
 
 const MAX_NAME = 80;
 const MAX_BODY = 2000;
@@ -36,6 +37,7 @@ export async function POST(request: NextRequest) {
 
   const str = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
   const project = str(payload.project) || 'general';
+  const itemId = str(payload.itemId);
   const stakeholderName = str(payload.stakeholderName);
   const body = str(payload.body);
 
@@ -46,11 +48,17 @@ export async function POST(request: NextRequest) {
   if (!['lead', 'store', 'general'].includes(project)) {
     return NextResponse.json({ error: 'Unknown project' }, { status: 400 });
   }
-  if (!stakeholderName || stakeholderName.length > MAX_NAME) {
-    return NextResponse.json(
-      { error: `Name is required and must be ${MAX_NAME} characters or fewer` },
-      { status: 400 },
-    );
+  // "" is the general board thread; anything else must be a real item.
+  if (itemId && !ITEMS.some((i) => i.id === itemId)) {
+    return NextResponse.json({ error: 'Unknown item' }, { status: 400 });
+  }
+  // Checked here, not just in the dropdown: one shared password means anyone
+  // with the link could otherwise post under any name they invented.
+  if (!(STAKEHOLDERS as readonly string[]).includes(stakeholderName)) {
+    return NextResponse.json({ error: 'Pick your name from the list' }, { status: 400 });
+  }
+  if (stakeholderName.length > MAX_NAME) {
+    return NextResponse.json({ error: 'Name too long' }, { status: 400 });
   }
   if (!body || body.length > MAX_BODY) {
     return NextResponse.json(
@@ -72,7 +80,7 @@ export async function POST(request: NextRequest) {
     }
 
     const comment = await prisma.healthComment.create({
-      data: { project, stakeholderName, body },
+      data: { project, itemId, stakeholderName, body },
     });
     return NextResponse.json(comment, { status: 201 });
   } catch (error) {

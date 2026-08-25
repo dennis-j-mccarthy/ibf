@@ -33,6 +33,27 @@ export interface ProjectMeta {
  *  label so "what state is this in" and "who owns it" stay separate. */
 export type Owner = 'Matellio' | 'Dennis' | 'Kristin';
 
+/**
+ * Who may leave a comment. A fixed list rather than a free-text name field:
+ * the page is behind one shared password, so without this anyone with the link
+ * could post under any name they liked. Enforced server-side too -- the
+ * dropdown alone would only stop honest users.
+ */
+export const STAKEHOLDERS = [
+  'Dennis',
+  'Kristin',
+  'Jessica M',
+  'Kim',
+  'Jeannette',
+  'Jeanette',
+  'Annie',
+  'Father',
+  'Jogendra',
+  'Punit',
+] as const;
+
+export type Stakeholder = (typeof STAKEHOLDERS)[number];
+
 export interface HealthItem {
   id: string;
   project: Project;
@@ -63,7 +84,7 @@ export interface Incident {
 export const PROJECTS: ProjectMeta[] = [
   {
     id: 'lead',
-    name: 'IBF Lead',
+    name: 'IBF Lead Generation Site',
     url: 'https://www.ignatiusbookfairs.com',
     blurb: 'Marketing site, resource library, coordinator dashboard and sign-up forms.',
   },
@@ -106,6 +127,13 @@ export const SCOPE_NOTE =
   'This board covers site functionality, known issues and downtime only. It does not include ongoing marketing projects on either site — those are tracked in ClickUp.';
 
 export const ITEMS: HealthItem[] = [
+  {
+    id: 'store-checkout',
+    project: 'store',
+    title: 'Storefront and checkout',
+    detail: 'Browsing, cart and checkout on the BigCommerce storefront.',
+    status: 'operational',
+  },
   {
     id: 'store-donate',
     project: 'store',
@@ -165,8 +193,7 @@ export const ITEMS: HealthItem[] = [
     id: 'lead-resources',
     project: 'lead',
     title: 'Resource library and downloads',
-    detail:
-      'Two broken links have been reported out of 91 resources on the site. The library, thumbnails and category filters are otherwise loading normally.',
+    detail: '2 of 91 resources have a reported broken link.',
     status: 'degraded',
     owners: ['Dennis'],
   },
@@ -182,13 +209,6 @@ export const ITEMS: HealthItem[] = [
     project: 'lead',
     title: 'Coordinator dashboard sign-in',
     detail: 'Magic-link sign-in for book fair coordinators.',
-    status: 'operational',
-  },
-  {
-    id: 'store-checkout',
-    project: 'store',
-    title: 'Storefront and checkout',
-    detail: 'Browsing, cart and checkout on the BigCommerce storefront.',
     status: 'operational',
   },
 ];

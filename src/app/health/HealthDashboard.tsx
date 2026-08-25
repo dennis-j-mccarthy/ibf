@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   SCOPE_NOTE,
+  STAKEHOLDERS,
   STATUS_LABEL,
   isBuildout,
   isHealthy,
@@ -25,6 +26,7 @@ type ProjectView = {
 
 type Comment = {
   id: string;
+  itemId: string;
   project: string;
   stakeholderName: string;
   body: string;
@@ -304,6 +306,13 @@ export default function HealthDashboard({
                         {STATUS_LABEL[item.status]}
                       </span>
                     </div>
+
+                    <ItemComments
+                      itemId={item.id}
+                      project={p.meta.id}
+                      comments={comments.filter((c) => c.itemId === item.id)}
+                      onPosted={load}
+                    />
                   </div>
                 );
               })}
@@ -343,15 +352,19 @@ export default function HealthDashboard({
 
           <form onSubmit={submit} className="border-t border-[#eef0f3] px-6 py-5">
             <div className="flex flex-wrap gap-3">
-              <input
-                type="text"
+              <select
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Your name"
-                maxLength={80}
                 required
-                className="min-w-[180px] flex-1 rounded-lg border border-[#e4e6ea] px-3 py-2 text-sm outline-none focus:border-[#0088ff]"
-              />
+                className="min-w-[180px] flex-1 rounded-lg border border-[#e4e6ea] bg-white px-3 py-2 text-sm text-[#1a1b1f] outline-none focus:border-[#0088ff]"
+              >
+                <option value="">Your name…</option>
+                {STAKEHOLDERS.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
               <select
                 value={target}
                 onChange={(e) => setTarget(e.target.value as Project | 'general')}
@@ -399,6 +412,123 @@ export default function HealthDashboard({
         </p>
       </div>
     </main>
+  );
+}
+
+/** Per-item comment thread. Collapsed by default so ten of these don't bury
+ *  the status list they hang off. */
+function ItemComments({
+  itemId,
+  project,
+  comments,
+  onPosted,
+}: {
+  itemId: string;
+  project: Project;
+  comments: Comment[];
+  onPosted: () => Promise<void>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [body, setBody] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const submit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const honeypot = (form.elements.namedItem('website') as HTMLInputElement | null)?.value ?? '';
+    setBusy(true);
+    setError('');
+    try {
+      const res = await fetch('/api/health/comments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itemId, project, stakeholderName: name, body, website: honeypot }),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        setError(d.error || 'Could not post that comment.');
+        return;
+      }
+      setBody('');
+      await onPosted();
+    } catch {
+      setError('Could not post that comment.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="w-full pl-[22px]">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="mt-2 text-xs font-semibold text-[#0088ff] transition hover:opacity-70"
+      >
+        {open ? 'Hide comments' : 'Comments'}
+        {comments.length > 0 && ` (${comments.length})`}
+      </button>
+
+      {open && (
+        <div className="mt-2 rounded-lg border border-[#eef0f3] bg-[#fbfcfd] p-3">
+          {comments.length === 0 ? (
+            <p className="text-xs text-[#7e828f]">No comments on this item yet.</p>
+          ) : (
+            [...comments].reverse().map((c) => (
+              <div key={c.id} className="border-b border-[#eef0f3] py-2 first:pt-0 last:border-b-0 last:pb-0">
+                <div className="text-xs text-[#7e828f]">
+                  <span className="font-semibold text-[#1a1b1f]">{c.stakeholderName}</span>
+                  <span className="ml-2">{new Date(c.createdAt).toLocaleString()}</span>
+                </div>
+                <p className="mt-0.5 whitespace-pre-wrap text-sm text-[#1a1b1f]">{c.body}</p>
+              </div>
+            ))
+          )}
+
+          <form onSubmit={submit} className="mt-3 flex flex-wrap items-start gap-2">
+            <select
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              className="rounded-lg border border-[#e4e6ea] bg-white px-2 py-1.5 text-xs text-[#1a1b1f] outline-none focus:border-[#0088ff]"
+            >
+              <option value="">Your name…</option>
+              {STAKEHOLDERS.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+            <textarea
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              placeholder="Add a comment"
+              maxLength={2000}
+              required
+              rows={2}
+              className="min-w-[200px] flex-1 resize-y rounded-lg border border-[#e4e6ea] px-2 py-1.5 text-xs outline-none focus:border-[#0088ff]"
+            />
+            <div aria-hidden="true" className="absolute left-[-9999px] h-px w-px overflow-hidden opacity-0">
+              <label>
+                Website
+                <input type="text" name="website" tabIndex={-1} autoComplete="off" />
+              </label>
+            </div>
+            <button
+              type="submit"
+              disabled={busy || !name || !body}
+              className="rounded-lg bg-[#0088ff] px-3 py-1.5 text-xs font-semibold text-white transition hover:opacity-80 disabled:opacity-50"
+            >
+              {busy ? 'Posting…' : 'Post'}
+            </button>
+            {error && <p className="w-full text-xs text-[#ff6445]">{error}</p>}
+          </form>
+        </div>
+      )}
+    </div>
   );
 }
 

@@ -242,10 +242,12 @@ model SpecComment {
 // password, so same posture as SpecComment: honeypot + per-name hourly cap.
 model HealthComment {
   id              String   @id @default(cuid())
+  itemId          String   @default("") // HealthItem id; "" = general board comment
   project         String   @default("general") // lead | store | general
   stakeholderName String
   body            String
   createdAt       DateTime @default(now())
 
+  @@index([itemId])
   @@index([createdAt])
 }
