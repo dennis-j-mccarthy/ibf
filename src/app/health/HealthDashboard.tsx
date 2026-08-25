@@ -86,52 +86,38 @@ export default function HealthDashboard({
   hasBaseline: boolean;
 }) {
   const [comments, setComments] = useState<Comment[]>([]);
-  const [name, setName] = useState('');
-  const [body, setBody] = useState('');
-  const [target, setTarget] = useState<Project | 'general'>('general');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
 
-  const load = useCallback(async () => {
+  // Returns the rows rather than setting state, so callers decide when to
+  // apply them. A failed fetch yields null: the comment list is non-critical
+  // and the board still stands on its own without it.
+  const load = useCallback(async (): Promise<Comment[] | null> => {
     try {
       const res = await fetch('/api/health/comments');
-      if (res.ok) setComments(await res.json());
+      return res.ok ? await res.json() : null;
     } catch {
-      /* comment list is non-critical; the board still stands on its own */
+      return null;
     }
   }, []);
 
-  useEffect(() => {
-    load();
+  const refresh = useCallback(async () => {
+    const fresh = await load();
+    if (fresh) setComments(fresh);
   }, [load]);
 
-  const submit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const honeypot = (form.elements.namedItem('website') as HTMLInputElement | null)?.value ?? '';
-    setBusy(true);
-    setError('');
-    try {
-      const res = await fetch('/api/health/comments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ project: target, stakeholderName: name, body, website: honeypot }),
-      });
-      if (!res.ok) {
-        const d = await res.json().catch(() => ({}));
-        setError(d.error || 'Could not post that comment.');
-        return;
-      }
-      setName('');
-      setBody('');
-      form.reset();
-      await load();
-    } catch {
-      setError('Could not post that comment.');
-    } finally {
-      setBusy(false);
-    }
-  };
+  useEffect(() => {
+    // Fetched in an async IIFE so the state update happens after the await
+    // rather than synchronously in the effect body, and dropped if the
+    // component unmounts before the response lands.
+    let cancelled = false;
+    (async () => {
+      const fresh = await load();
+      if (!cancelled && fresh) setComments(fresh);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [load]);
+
 
   const allItems = projects.flatMap((p) => p.items);
   const healthyCount = allItems.filter((i) => isHealthy(i.status)).length;
@@ -311,7 +297,7 @@ export default function HealthDashboard({
                       itemId={item.id}
                       project={p.meta.id}
                       comments={comments.filter((c) => c.itemId === item.id)}
-                      onPosted={load}
+                      onPosted={refresh}
                     />
                   </div>
                 );
@@ -319,93 +305,6 @@ export default function HealthDashboard({
             </div>
           </section>
         ))}
-
-        {/* Comments */}
-        <section className="rounded-2xl border border-[#e4e6ea] bg-white">
-          <div className="border-b border-[#eef0f3] px-6 py-5">
-            <h2 className="text-xl font-bold text-[#02176f]">Stakeholder comments</h2>
-            <p className="mt-1 text-sm text-[#7e828f]">
-              Seeing something we have not listed? Add it here and it will be triaged.
-            </p>
-          </div>
-
-          <div className="px-6">
-            {comments.length === 0 ? (
-              <p className="py-5 text-sm text-[#7e828f]">No comments yet.</p>
-            ) : (
-              [...comments].reverse().map((c) => (
-                <div key={c.id} className="border-b border-[#f3f4f6] py-4 last:border-b-0">
-                  <div className="text-xs text-[#7e828f]">
-                    <span className="font-semibold text-[#1a1b1f]">{c.stakeholderName}</span>
-                    {c.project !== 'general' && (
-                      <span className="ml-2 rounded bg-[#f0f2f5] px-1.5 py-0.5">
-                        {projects.find((p) => p.meta.id === c.project)?.meta.name ?? c.project}
-                      </span>
-                    )}
-                    <span className="ml-2">{new Date(c.createdAt).toLocaleString()}</span>
-                  </div>
-                  <p className="mt-1 whitespace-pre-wrap text-sm text-[#1a1b1f]">{c.body}</p>
-                </div>
-              ))
-            )}
-          </div>
-
-          <form onSubmit={submit} className="border-t border-[#eef0f3] px-6 py-5">
-            <div className="flex flex-wrap gap-3">
-              <select
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="min-w-[180px] flex-1 rounded-lg border border-[#e4e6ea] bg-white px-3 py-2 text-sm text-[#1a1b1f] outline-none focus:border-[#0088ff]"
-              >
-                <option value="">Your name…</option>
-                {STAKEHOLDERS.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={target}
-                onChange={(e) => setTarget(e.target.value as Project | 'general')}
-                className="rounded-lg border border-[#e4e6ea] px-3 py-2 text-sm text-[#1a1b1f] outline-none focus:border-[#0088ff]"
-              >
-                <option value="general">General</option>
-                {projects.map((p) => (
-                  <option key={p.meta.id} value={p.meta.id}>
-                    {p.meta.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <textarea
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              placeholder="Your comment"
-              maxLength={2000}
-              required
-              className="mt-3 min-h-[90px] w-full resize-y rounded-lg border border-[#e4e6ea] px-3 py-2 text-sm outline-none focus:border-[#0088ff]"
-            />
-            {/* Honeypot: off-screen and untabbable, not display:none -- some bots
-                skip hidden inputs, and skipping is what we want to prevent. */}
-            <div aria-hidden="true" className="absolute left-[-9999px] h-px w-px overflow-hidden opacity-0">
-              <label>
-                Website
-                <input type="text" name="website" tabIndex={-1} autoComplete="off" />
-              </label>
-            </div>
-            <div className="mt-3 flex items-center gap-3">
-              <button
-                type="submit"
-                disabled={busy}
-                className="rounded-lg bg-[#0088ff] px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-80 disabled:opacity-50"
-              >
-                {busy ? 'Posting…' : 'Post comment'}
-              </button>
-              {error && <span className="text-sm text-[#ff6445]">{error}</span>}
-            </div>
-          </form>
-        </section>
 
         <p className="mt-8 text-center text-xs text-[#7e828f]">
           Generated {new Date(generatedAt).toLocaleString()}
