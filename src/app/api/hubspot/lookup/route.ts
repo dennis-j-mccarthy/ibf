@@ -6,8 +6,15 @@ const HUBSPOT_ACCESS_TOKEN = process.env.HUBSPOT_ACCESS_TOKEN;
 const OWNER_INFO: Record<string, { firstName: string; lastName: string; email: string; bookingUrl: string }> = {
   '681153152': { firstName: 'Alma', lastName: 'Cue', email: 'Alma.Cue@avemaria.edu', bookingUrl: 'https://meetings.hubspot.com/alma-cue' },
   '1438738471': { firstName: 'Jeanette', lastName: 'Pohl', email: 'Jeanette.Pohl@avemaria.edu', bookingUrl: 'https://meetings.hubspot.com/jeanette-pohl1/ignatius-book-fair' },
-  // Add Kim's owner ID when you find it:
-  // 'KIM_OWNER_ID': { firstName: 'Kim', lastName: 'Neumaier', email: 'Kimberly.Neumaier@avemaria.edu', bookingUrl: 'https://meetings.hubspot.com/kneumaier/ignatius-book-fair' },
+  // Owner ids confirmed against the live owners API 2026-08-26 via
+  // scripts/check-owner-scope.js. Emails are the owners' verified HubSpot
+  // login addresses; booking URLs match APPOINTMENT_URLS in SignUpForm.tsx.
+  // Before these three entries, 2,865 companies -- 43% of every domain in
+  // HubSpot -- resolved to no rep, and the duplicate-domain panel rendered
+  // a dead end: no name, no email, no booking link, submit disabled.
+  '87125142': { firstName: 'Julie', lastName: 'DeGregoria', email: 'julie.degregoria@ignatiusbookclub.com', bookingUrl: 'https://meetings.hubspot.com/julie-degregoria?uuid=f012da76-1f7b-4474-be12-2d6ba4a4524d' },
+  '88241325': { firstName: 'Marni', lastName: 'Spewock', email: 'marni.spewock@ignatiusbookclub.com', bookingUrl: 'https://meetings.hubspot.com/marni-spewock' },
+  '462970226': { firstName: 'Kim', lastName: 'Neumaier', email: 'kim.neumaier@ignatiusbookclub.com', bookingUrl: 'https://meetings.hubspot.com/kneumaier/ignatius-book-fair' },
 };
 
 // Helper: fetch a deal's associated contact
