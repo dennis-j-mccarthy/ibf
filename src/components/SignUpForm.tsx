@@ -676,17 +676,35 @@ const SignUpForm = () => {
   }, [submitSuccess, appointmentUrl]);
 
   // Load the HubSpot meetings embed when the existing-domain booking accordion
-  // opens. Same script/re-init pattern as the success screen above.
+  // first opens. Same script/re-init pattern as the success screen above. The
+  // container stays mounted across open/close, so once it holds an iframe there
+  // is nothing to do -- re-running create() would inject a second calendar.
   useEffect(() => {
     if (!bookingOpen || !existingDomain?.bookingUrl) return;
+    const w = window as unknown as { hbspt?: { meetings?: { create?: (selector: string) => void } } };
+    // The script's automatic on-load scan does not reliably pick up a
+    // React-rendered container, so always embed explicitly by selector. The
+    // iframe check makes this idempotent whichever path (auto-scan, onload,
+    // reopen) gets here first.
+    const embed = () => {
+      const container = document.querySelector('.meetings-iframe-container');
+      if (container && !container.querySelector('iframe')) {
+        w.hbspt?.meetings?.create?.('.meetings-iframe-container');
+      }
+    };
+    if (w.hbspt?.meetings?.create) {
+      embed();
+      return;
+    }
     const existingScript = document.querySelector('script[src*="MeetingsEmbedCode"]');
-    if (!existingScript) {
+    if (existingScript) {
+      existingScript.addEventListener('load', embed, { once: true });
+    } else {
       const script = document.createElement('script');
       script.src = 'https://static.hsappstatic.net/MeetingsEmbed/ex/MeetingsEmbedCode.js';
       script.async = true;
+      script.onload = embed;
       document.body.appendChild(script);
-    } else if (typeof window !== 'undefined' && (window as unknown as { hbspt?: { meetings?: { create?: () => void } } }).hbspt?.meetings?.create) {
-      (window as unknown as { hbspt: { meetings: { create: () => void } } }).hbspt.meetings.create();
     }
   }, [bookingOpen, existingDomain]);
 
@@ -1423,13 +1441,6 @@ const SignUpForm = () => {
                     </div>
                   )}
 
-                  <div className="px-5 py-3 border-t border-[#eef0f3] bg-[#f7fbff]">
-                    <p className="text-[#02176f] font-bold text-sm mb-1">Why is my school already here?</p>
-                    <p className="text-sm text-[#3d4854]">
-                      Maybe your school has had a book fair, or a coworker set up the account &mdash; sometimes before you even started.
-                    </p>
-                  </div>
-
                   <div className="px-5 py-4 border-t border-[#eef0f3]">
                     {existingDomain.owner && (
                       <div className="flex items-center gap-3 mb-3">
@@ -1457,23 +1468,29 @@ const SignUpForm = () => {
                           className="w-full flex items-center gap-2 bg-[#0088ff] hover:bg-[#0077e0] transition-colors text-white font-bold text-left px-4 py-3"
                           style={{ fontFamily: 'brother-1816, sans-serif' }}
                         >
-                          Book a time{existingDomain.owner?.firstName ? ` with ${existingDomain.owner.firstName}` : ''}
-                          <span className="ml-auto text-xs font-normal text-[#d6ebff]">30 min {bookingOpen ? '▲' : '▼'}</span>
+                          <span>
+                            Book a time{existingDomain.owner?.firstName ? ` with ${existingDomain.owner.firstName}` : ''}
+                            <span className="block text-xs font-normal text-[#d6ebff] mt-0.5">Click to use our interactive booking tool</span>
+                          </span>
+                          <span className="ml-auto text-xs font-normal text-[#d6ebff] whitespace-nowrap">30 min {bookingOpen ? '▲' : '▼'}</span>
                         </button>
-                        {bookingOpen && (
-                          <div className="border-t border-[#cbd7e3] p-2 bg-white">
-                            <div
-                              className="meetings-iframe-container"
-                              data-src={`${existingDomain.bookingUrl}${existingDomain.bookingUrl.includes('?') ? '&' : '?'}embed=true`}
-                            />
-                          </div>
-                        )}
+                        {/* Kept mounted and toggled with CSS: unmounting removed
+                            HubSpot's injected iframe, and its script never re-ran
+                            the height handshake on a re-created container, leaving
+                            a ~10px sliver on reopen. The min-height floor guards
+                            against the handshake failing outright. */}
+                        <div className={`${bookingOpen ? 'block' : 'hidden'} border-t border-[#cbd7e3] p-2 bg-white [&_iframe]:w-full [&_iframe]:min-h-[640px]`}>
+                          <div
+                            className="meetings-iframe-container"
+                            data-src={`${existingDomain.bookingUrl}${existingDomain.bookingUrl.includes('?') ? '&' : '?'}embed=true`}
+                          />
+                        </div>
                       </div>
                     )}
 
                     <div className="flex items-center gap-3 rounded-lg border border-[#cbd7e3] px-4 py-2.5 mb-2">
                       <div>
-                        <p className="text-[11px] uppercase tracking-wider text-[#7e828f] font-bold">Call</p>
+                        <p className="text-[11px] uppercase tracking-wider text-[#7e828f] font-bold">or call</p>
                         <a href="tel:+18887712321" className="text-[#0088ff] font-bold">888-771-2321</a>
                       </div>
                       <span className="ml-auto text-xs text-[#7e828f]">Mon&ndash;Fri, 9&ndash;5 ET</span>
@@ -1481,7 +1498,7 @@ const SignUpForm = () => {
 
                     {existingDomain.owner?.email && (
                       <div className="rounded-lg border border-[#cbd7e3] px-4 py-2.5">
-                        <p className="text-[11px] uppercase tracking-wider text-[#7e828f] font-bold">Email</p>
+                        <p className="text-[11px] uppercase tracking-wider text-[#7e828f] font-bold">or email</p>
                         <a href={`mailto:${existingDomain.owner.email}`} className="text-[#0088ff] font-bold break-all">{existingDomain.owner.email}</a>
                       </div>
                     )}
