@@ -3,16 +3,16 @@ import { NextRequest, NextResponse } from 'next/server';
 const HUBSPOT_ACCESS_TOKEN = process.env.HUBSPOT_ACCESS_TOKEN;
 
 // Mapping of HubSpot owner IDs to their info and booking URLs
-const OWNER_INFO: Record<string, { firstName: string; lastName: string; email: string; bookingUrl: string }> = {
-  '681153152': { firstName: 'Alma', lastName: 'Cue', email: 'Alma.Cue@avemaria.edu', bookingUrl: 'https://meetings.hubspot.com/alma-cue' },
-  '1438738471': { firstName: 'Jeanette', lastName: 'Pohl', email: 'Jeanette.Pohl@avemaria.edu', bookingUrl: 'https://meetings.hubspot.com/jeanette-pohl1/ignatius-book-fair' },
+const OWNER_INFO: Record<string, { firstName: string; lastName: string; email: string; bookingUrl: string; photo?: string }> = {
+  '681153152': { firstName: 'Alma', lastName: 'Cue', email: 'Alma.Cue@avemaria.edu', bookingUrl: 'https://meetings.hubspot.com/alma-cue', photo: '/images/rep-alma.webp' },
+  '1438738471': { firstName: 'Jeanette', lastName: 'Pohl', email: 'Jeanette.Pohl@avemaria.edu', bookingUrl: 'https://meetings.hubspot.com/jeanette-pohl1/ignatius-book-fair', photo: '/images/rep-jeanette.webp' },
   // Owner ids confirmed against the live owners API 2026-08-26 via
   // scripts/check-owner-scope.js. Emails are the owners' verified HubSpot
   // login addresses; booking URLs match APPOINTMENT_URLS in SignUpForm.tsx.
   // Before these three entries, 2,865 companies -- 43% of every domain in
   // HubSpot -- resolved to no rep, and the duplicate-domain panel rendered
   // a dead end: no name, no email, no booking link, submit disabled.
-  '87125142': { firstName: 'Julie', lastName: 'DeGregoria', email: 'julie.degregoria@ignatiusbookclub.com', bookingUrl: 'https://meetings.hubspot.com/julie-degregoria?uuid=f012da76-1f7b-4474-be12-2d6ba4a4524d' },
+  '87125142': { firstName: 'Julie', lastName: 'DeGregoria', email: 'julie.degregoria@ignatiusbookclub.com', bookingUrl: 'https://meetings.hubspot.com/julie-degregoria?uuid=f012da76-1f7b-4474-be12-2d6ba4a4524d', photo: '/images/rep-julie.webp' },
   '88241325': { firstName: 'Marni', lastName: 'Spewock', email: 'marni.spewock@ignatiusbookclub.com', bookingUrl: 'https://meetings.hubspot.com/marni-spewock' },
   '462970226': { firstName: 'Kim', lastName: 'Neumaier', email: 'kim.neumaier@ignatiusbookclub.com', bookingUrl: 'https://meetings.hubspot.com/kneumaier/ignatius-book-fair' },
 };
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
     if (companyData?.hubspot_owner_id) {
       const ownerInfo = OWNER_INFO[companyData.hubspot_owner_id];
       if (ownerInfo) {
-        ownerData = { firstName: ownerInfo.firstName, lastName: ownerInfo.lastName, email: ownerInfo.email };
+        ownerData = { firstName: ownerInfo.firstName, lastName: ownerInfo.lastName, email: ownerInfo.email, photo: ownerInfo.photo };
         bookingUrl = ownerInfo.bookingUrl;
       }
     }

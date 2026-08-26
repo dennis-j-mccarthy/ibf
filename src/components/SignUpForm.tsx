@@ -27,6 +27,7 @@ interface HubSpotData {
     firstName?: string;
     lastName?: string;
     email?: string;
+    photo?: string;
   };
   bookingUrl?: string;
   debug?: {
@@ -226,6 +227,8 @@ const SignUpForm = () => {
   // Last domain reported as a duplicate, so the analytics event fires once per
   // domain rather than on every blur/retype.
   const reportedDomain = useRef<string | null>(null);
+  // Existing-domain panel: whether the inline booking calendar is expanded.
+  const [bookingOpen, setBookingOpen] = useState(false);
 
   // Auto-fill form with test data using keyboard shortcuts
   // Works in dev mode OR when ?testmode=true is in the URL
@@ -671,6 +674,21 @@ const SignUpForm = () => {
       }
     }
   }, [submitSuccess, appointmentUrl]);
+
+  // Load the HubSpot meetings embed when the existing-domain booking accordion
+  // opens. Same script/re-init pattern as the success screen above.
+  useEffect(() => {
+    if (!bookingOpen || !existingDomain?.bookingUrl) return;
+    const existingScript = document.querySelector('script[src*="MeetingsEmbedCode"]');
+    if (!existingScript) {
+      const script = document.createElement('script');
+      script.src = 'https://static.hsappstatic.net/MeetingsEmbed/ex/MeetingsEmbedCode.js';
+      script.async = true;
+      document.body.appendChild(script);
+    } else if (typeof window !== 'undefined' && (window as unknown as { hbspt?: { meetings?: { create?: () => void } } }).hbspt?.meetings?.create) {
+      (window as unknown as { hbspt: { meetings: { create: () => void } } }).hbspt.meetings.create();
+    }
+  }, [bookingOpen, existingDomain]);
 
   // Success state
   if (submitSuccess) {
@@ -1364,12 +1382,13 @@ const SignUpForm = () => {
                 onChange={(e) => {
                   handleChange(e);
                   setExistingDomain(null);
+                  setBookingOpen(false);
                 }}
                 onBlur={() => {
                   if (formData.website) checkExistingDomain(formData.website);
                 }}
                 required
-                className={`w-full h-11 px-4 rounded-lg border-0 text-white placeholder-white tracking-wide ${existingDomain ? 'mb-0 bg-[#ff6445]' : 'mb-2.5 bg-[#0088ff]'}`}
+                className={`w-full h-11 px-4 rounded-lg tracking-wide ${existingDomain ? 'mb-0 bg-[#eef4f9] text-[#02176f] border border-[#cbd7e3]' : 'mb-2.5 bg-[#0088ff] text-white placeholder-white border-0'}`}
                 style={{ fontFamily: 'brother-1816, sans-serif' }}
               />
               {isCheckingDomain && (
@@ -1378,37 +1397,111 @@ const SignUpForm = () => {
                 </p>
               )}
               {existingDomain && (
-                <div className="bg-[#f0f8ff] border-2 border-[#0088ff] rounded-lg p-4 mt-2 mb-2.5">
-                  <p className="text-[#02176f] font-bold text-sm mb-2" style={{ fontFamily: 'brother-1816, sans-serif' }}>
-                    This organization is already in our system!
-                  </p>
+                <div className="rounded-xl border-2 border-[#0088ff] overflow-hidden bg-white mt-2 mb-2.5 text-left" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+                  {/* Good-news hero: this is a stop, but not an error */}
+                  <div className="flex items-start gap-3 bg-[#e8f8ee] px-5 py-4">
+                    <div className="flex-none w-8 h-8 rounded-full bg-[#50db92] flex items-center justify-center text-[#0a4a26] text-lg font-bold" aria-hidden="true">&#10003;</div>
+                    <div>
+                      <p className="text-[#02176f] font-bold leading-snug">
+                        Good news! Your organization has worked with us before, so there&rsquo;s no need to submit this form.
+                      </p>
+                      <p className="text-[#0a5c33] text-sm mt-1">
+                        {existingDomain.owner
+                          ? <>The next step is to connect with your school&rsquo;s Book Fair Pro, {existingDomain.owner.firstName} {existingDomain.owner.lastName}.</>
+                          : <>The next step is to connect with your Book Fair Pro.</>}
+                      </p>
+                    </div>
+                  </div>
+
                   {existingDomain.company?.name && (
-                    <p className="text-[#02176f] text-sm" style={{ fontFamily: 'brother-1816, sans-serif' }}>
-                      {existingDomain.company.name}
+                    <div className="px-5 py-3 border-t border-[#eef0f3]">
+                      <p className="text-[11px] uppercase tracking-wider text-[#7e828f] font-bold">We found</p>
+                      <p className="text-[#02176f] font-bold">{existingDomain.company.name}</p>
                       {existingDomain.company.city && existingDomain.company.state && (
-                        <span> &mdash; {existingDomain.company.city}, {existingDomain.company.state}</span>
+                        <p className="text-sm text-[#5f6b7a]">{existingDomain.company.city}, {existingDomain.company.state}</p>
                       )}
-                    </p>
+                    </div>
                   )}
-                  {existingDomain.owner && (
-                    <p className="text-[#02176f] text-sm mt-2" style={{ fontFamily: 'brother-1816, sans-serif' }}>
-                      Your rep: <strong>{existingDomain.owner.firstName} {existingDomain.owner.lastName}</strong>
-                      {existingDomain.owner.email && (
-                        <> &mdash; <a href={`mailto:${existingDomain.owner.email}`} className="text-[#0088ff] underline">{existingDomain.owner.email}</a></>
-                      )}
+
+                  <div className="px-5 py-3 border-t border-[#eef0f3] bg-[#f7fbff]">
+                    <p className="text-[#02176f] font-bold text-sm mb-1">Why is my school already here?</p>
+                    <p className="text-sm text-[#3d4854]">
+                      Maybe your school has had a book fair, or a coworker set up the account &mdash; sometimes before you even started.
                     </p>
-                  )}
-                  {existingDomain.bookingUrl && (
-                    <a
-                      href={existingDomain.bookingUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-block mt-3 px-6 py-2 bg-[#50db92] text-white font-bold rounded-lg text-sm hover:opacity-90"
+                  </div>
+
+                  <div className="px-5 py-4 border-t border-[#eef0f3]">
+                    {existingDomain.owner && (
+                      <div className="flex items-center gap-3 mb-3">
+                        {existingDomain.owner.photo ? (
+                          // eslint-disable-next-line @next/next/no-img-element -- small static headshot; next/image is unused in this component
+                          <img src={existingDomain.owner.photo} alt={`${existingDomain.owner.firstName} ${existingDomain.owner.lastName}`} className="w-12 h-12 rounded-full object-cover border-2 border-[#0088ff]" />
+                        ) : (
+                          <div className="flex-none w-12 h-12 rounded-full bg-[#0088ff] flex items-center justify-center text-white font-bold" aria-hidden="true">
+                            {(existingDomain.owner.firstName?.[0] ?? '')}{(existingDomain.owner.lastName?.[0] ?? '')}
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-[11px] uppercase tracking-wider text-[#7e828f] font-bold">Your Book Fair Pro</p>
+                          <p className="text-[#02176f] font-bold">{existingDomain.owner.firstName} {existingDomain.owner.lastName}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {existingDomain.bookingUrl && (
+                      <div className="rounded-lg border border-[#cbd7e3] overflow-hidden mb-2">
+                        <button
+                          type="button"
+                          onClick={() => setBookingOpen(open => !open)}
+                          aria-expanded={bookingOpen}
+                          className="w-full flex items-center gap-2 bg-[#0088ff] hover:bg-[#0077e0] transition-colors text-white font-bold text-left px-4 py-3"
+                          style={{ fontFamily: 'brother-1816, sans-serif' }}
+                        >
+                          Book a time{existingDomain.owner?.firstName ? ` with ${existingDomain.owner.firstName}` : ''}
+                          <span className="ml-auto text-xs font-normal text-[#d6ebff]">30 min {bookingOpen ? '▲' : '▼'}</span>
+                        </button>
+                        {bookingOpen && (
+                          <div className="border-t border-[#cbd7e3] p-2 bg-white">
+                            <div
+                              className="meetings-iframe-container"
+                              data-src={`${existingDomain.bookingUrl}${existingDomain.bookingUrl.includes('?') ? '&' : '?'}embed=true`}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-3 rounded-lg border border-[#cbd7e3] px-4 py-2.5 mb-2">
+                      <div>
+                        <p className="text-[11px] uppercase tracking-wider text-[#7e828f] font-bold">Call</p>
+                        <a href="tel:+18887712321" className="text-[#0088ff] font-bold">888-771-2321</a>
+                      </div>
+                      <span className="ml-auto text-xs text-[#7e828f]">Mon&ndash;Fri, 9&ndash;5 ET</span>
+                    </div>
+
+                    {existingDomain.owner?.email && (
+                      <div className="rounded-lg border border-[#cbd7e3] px-4 py-2.5">
+                        <p className="text-[11px] uppercase tracking-wider text-[#7e828f] font-bold">Email</p>
+                        <a href={`mailto:${existingDomain.owner.email}`} className="text-[#0088ff] font-bold break-all">{existingDomain.owner.email}</a>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="px-5 py-3 border-t border-[#eef0f3] bg-[#fafbfc] text-sm text-[#5f6b7a]">
+                    Not your school?{' '}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setExistingDomain(null);
+                        setBookingOpen(false);
+                        setFormData(prev => ({ ...prev, website: '' }));
+                      }}
+                      className="text-[#0088ff] underline"
                       style={{ fontFamily: 'brother-1816, sans-serif' }}
                     >
-                      Schedule a Meeting
-                    </a>
-                  )}
+                      Change the website above
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -1635,14 +1728,19 @@ const SignUpForm = () => {
                 >
                   &lt; BACK
                 </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting || !!existingDomain}
-                  className="flex-1 bg-[#50db92] text-white font-bold uppercase px-6 py-4 rounded-xl hover:bg-[#45c583] transition-colors tracking-wider disabled:opacity-50"
-                  style={{ fontFamily: 'brother-1816, sans-serif' }}
-                >
-                  {isSubmitting ? 'SUBMITTING...' : existingDomain ? 'CONTACT YOUR REP' : 'SUBMIT >'}
-                </button>
+                {/* Hidden entirely for a matched domain: the panel above says the
+                    form need not be submitted, so a disabled button reading
+                    "CONTACT YOUR REP" (with no rep in sight) only confused people. */}
+                {!existingDomain && (
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="flex-1 bg-[#50db92] text-white font-bold uppercase px-6 py-4 rounded-xl hover:bg-[#45c583] transition-colors tracking-wider disabled:opacity-50"
+                    style={{ fontFamily: 'brother-1816, sans-serif' }}
+                  >
+                    {isSubmitting ? 'SUBMITTING...' : 'SUBMIT >'}
+                  </button>
+                )}
               </div>
                 </form>
               </div>
