@@ -229,6 +229,10 @@ const SignUpForm = () => {
   const reportedDomain = useRef<string | null>(null);
   // Existing-domain panel: whether the inline booking calendar is expanded.
   const [bookingOpen, setBookingOpen] = useState(false);
+  // The panel presents as a modal when a domain matches; closing it (without
+  // changing the website) leaves a slim inline banner that can reopen it.
+  const [orgModalOpen, setOrgModalOpen] = useState(false);
+  const websiteRef = useRef<HTMLInputElement>(null);
 
   // Auto-fill form with test data using keyboard shortcuts
   // Works in dev mode OR when ?testmode=true is in the URL
@@ -417,6 +421,7 @@ const SignUpForm = () => {
         const data = await response.json();
         if (data.found) {
           setExistingDomain(data);
+          setOrgModalOpen(true);
           // Record the catch once per domain: this runs on blur and again on
           // submit, and a visitor can retype the same address several times.
           const key = website.trim().toLowerCase();
@@ -706,7 +711,7 @@ const SignUpForm = () => {
       script.onload = embed;
       document.body.appendChild(script);
     }
-  }, [bookingOpen, existingDomain]);
+  }, [bookingOpen, existingDomain, orgModalOpen]);
 
   // Success state
   if (submitSuccess) {
@@ -1393,6 +1398,7 @@ const SignUpForm = () => {
 
               {/* Website */}
               <input
+                ref={websiteRef}
                 type="text"
                 name="website"
                 placeholder="Website *"
@@ -1414,8 +1420,37 @@ const SignUpForm = () => {
                   Checking...
                 </p>
               )}
-              {existingDomain && (
-                <div className="rounded-xl border-2 border-[#0088ff] overflow-hidden bg-white mt-2 mb-2.5 text-left" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+              {existingDomain && !orgModalOpen && (
+                <div className="flex items-center gap-3 rounded-xl border-2 border-[#50db92] bg-[#e8f8ee] px-4 py-3 mt-2 mb-2.5 text-left" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+                  <p className="text-sm text-[#02176f] font-bold flex-1">Good news &mdash; your organization is already set up.</p>
+                  <button
+                    type="button"
+                    onClick={() => setOrgModalOpen(true)}
+                    className="bg-[#0088ff] hover:bg-[#0077e0] text-white text-sm font-bold px-4 py-2 rounded-lg transition-colors"
+                    style={{ fontFamily: 'brother-1816, sans-serif' }}
+                  >
+                    View your options
+                  </button>
+                </div>
+              )}
+              {existingDomain && orgModalOpen && (
+                <div
+                  className="fixed inset-0 z-50 bg-black/50 flex items-start justify-center overflow-y-auto p-4 sm:py-10"
+                  onClick={() => { setOrgModalOpen(false); setBookingOpen(false); }}
+                >
+                <div
+                  className="relative w-full max-w-xl rounded-xl border-2 border-[#0088ff] overflow-hidden bg-white text-left"
+                  style={{ fontFamily: 'brother-1816, sans-serif' }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    type="button"
+                    aria-label="Close"
+                    onClick={() => { setOrgModalOpen(false); setBookingOpen(false); }}
+                    className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/70 hover:bg-white text-[#02176f] text-lg font-bold leading-none"
+                  >
+                    &times;
+                  </button>
                   {/* Good-news hero: this is a stop, but not an error */}
                   <div className="flex items-start gap-3 bg-[#e8f8ee] px-5 py-4">
                     <div className="flex-none w-8 h-8 rounded-full bg-[#50db92] flex items-center justify-center text-[#0a4a26] text-lg font-bold" aria-hidden="true">&#10003;</div>
@@ -1511,14 +1546,21 @@ const SignUpForm = () => {
                       onClick={() => {
                         setExistingDomain(null);
                         setBookingOpen(false);
+                        setOrgModalOpen(false);
                         setFormData(prev => ({ ...prev, website: '' }));
+                        // Land the user in the emptied website field.
+                        setTimeout(() => {
+                          websiteRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                          websiteRef.current?.focus({ preventScroll: true });
+                        }, 50);
                       }}
                       className="text-[#0088ff] underline"
                       style={{ fontFamily: 'brother-1816, sans-serif' }}
                     >
-                      Change the website above
+                      Change the website address
                     </button>
                   </div>
+                </div>
                 </div>
               )}
 
