@@ -163,10 +163,11 @@ export function buildSignatureHtml(f: SignatureFields): string {
 
   // Side-by-side: tagline sits under the logo in the left column, width-capped
   // to the logo so it wraps instead of pushing the divider.
-  // One phrase per line ("Great books. / Real formation. / Every fair.") --
-  // sentence breaks become <br/>, so the default tagline reads as three lines.
+  // One phrase per line, set in italic Georgia in the brand ink -- reads as a
+  // motto rather than fine print. Georgia is universally available in email
+  // clients, so no webfont risk.
   const taglineUnderLogo = f.tagline.trim()
-    ? `<tr><td style="font-family:${FONT};font-size:11px;line-height:15px;mso-line-height-rule:exactly;color:#a0a4b0;padding:8px 0 0;width:${brand.width}px;">${esc(f.tagline.trim()).replace(/\.\s+/g, '.<br />')}</td></tr>`
+    ? `<tr><td style="font-family:Georgia, 'Times New Roman', serif;font-style:italic;font-size:13px;line-height:19px;mso-line-height-rule:exactly;color:${brand.ink};padding:9px 0 0;width:${brand.width}px;">${esc(f.tagline.trim()).replace(/\.\s+/g, '.<br />')}</td></tr>`
     : '';
 
   if (f.layout === 'stacked') {
@@ -177,7 +178,7 @@ export function buildSignatureHtml(f: SignatureFields): string {
       ${nameBlock}
     </table>
   </td></tr>
-  ${f.tagline.trim() ? `<tr><td style="font-family:${FONT};font-size:11px;line-height:16px;mso-line-height-rule:exactly;color:#a0a4b0;padding:12px 0 0;">${esc(f.tagline.trim())}</td></tr>` : ''}
+  ${f.tagline.trim() ? `<tr><td style="font-family:Georgia, 'Times New Roman', serif;font-style:italic;font-size:13px;line-height:19px;mso-line-height-rule:exactly;color:${brand.ink};padding:12px 0 0;">${esc(f.tagline.trim())}</td></tr>` : ''}
 </table>`;
   }
 
