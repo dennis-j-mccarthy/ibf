@@ -117,6 +117,14 @@ export default function BookBattlesPage() {
               thumb: '/images/thumb-ibb-sportsmanship.png',
               title: 'Sportsmanship Warning Form',
             },
+            {
+              // Lives ONLY here by design -- removed from the Resource table
+              // (and therefore the resources page and site search) per the
+              // IBB-certificate ClickUp task.
+              href: '/documents/ibb-cert-of-participation.pdf',
+              thumb: '/images/thumb-ibb-cert-participation.png',
+              title: 'Certificate of Participation',
+            },
           ].map((sheet) => (
             <a
               key={sheet.href}
