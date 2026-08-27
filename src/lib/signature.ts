@@ -87,7 +87,7 @@ export const DEFAULT_FIELDS: SignatureFields = {
   credentials: '',
   title: '',
   email: '',
-  phone: '888-771-2321',
+  phone: '(888) 771-2321',
   phoneExt: '',
   mobile: '',
   bookingUrl: '',
@@ -102,6 +102,13 @@ const esc = (s: string) =>
 const telHref = (raw: string) => {
   const digits = raw.replace(/[^\d+]/g, '');
   return digits.startsWith('+') ? digits : `+1${digits}`;
+};
+
+// Display format (888) 771-2321 regardless of how the number was stored.
+const displayPhone = (raw: string) => {
+  let d = raw.replace(/\D/g, '');
+  if (d.length === 11 && d.startsWith('1')) d = d.slice(1);
+  return d.length === 10 ? `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}` : raw.trim();
 };
 
 const abs = (path: string) => (path.startsWith('http') ? path : SIGNATURE_ASSET_BASE + path);
@@ -122,11 +129,15 @@ export function buildSignatureHtml(f: SignatureFields): string {
 
   const contactRows: string[] = [];
   if (f.email.trim()) contactRows.push(line(link(`mailto:${f.email.trim()}`, f.email.trim())));
+  // Phones keep their tel: links for mobile taps but wear the body ink, not
+  // the accent -- a wall of blue reads as noise.
+  const phoneLink = (raw: string) =>
+    `<a href="tel:${telHref(raw)}" style="color:#3a3f4b;text-decoration:none;">${esc(displayPhone(raw))}</a>`;
   if (f.phone.trim()) {
     const ext = f.phoneExt.trim() ? ` ext. ${esc(f.phoneExt.trim())}` : '';
-    contactRows.push(line(`${link(`tel:${telHref(f.phone)}`, f.phone.trim())}${ext}`));
+    contactRows.push(line(`${phoneLink(f.phone)}${ext}`));
   }
-  if (f.mobile.trim()) contactRows.push(line(`${link(`tel:${telHref(f.mobile)}`, f.mobile.trim())} <span style="color:#a0a4b0;">mobile</span>`));
+  if (f.mobile.trim()) contactRows.push(line(`${phoneLink(f.mobile)} <span style="color:#a0a4b0;">mobile</span>`));
   contactRows.push(line(link(`https://${brand.site}`, brand.site)));
   if (f.bookingUrl.trim())
     contactRows.push(
