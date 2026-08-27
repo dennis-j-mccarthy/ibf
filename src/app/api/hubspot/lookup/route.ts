@@ -4,8 +4,8 @@ const HUBSPOT_ACCESS_TOKEN = process.env.HUBSPOT_ACCESS_TOKEN;
 
 // Mapping of HubSpot owner IDs to their info and booking URLs
 const OWNER_INFO: Record<string, { firstName: string; lastName: string; email: string; bookingUrl: string; photo?: string }> = {
-  '681153152': { firstName: 'Alma', lastName: 'Cue', email: 'Alma.Cue@avemaria.edu', bookingUrl: 'https://meetings.hubspot.com/alma-cue', photo: '/images/rep-alma.webp' },
-  '1438738471': { firstName: 'Jeanette', lastName: 'Pohl', email: 'Jeanette.Pohl@avemaria.edu', bookingUrl: 'https://meetings.hubspot.com/jeanette-pohl1/ignatius-book-fair', photo: '/images/rep-jeanette.webp' },
+  '681153152': { firstName: 'Alma', lastName: 'Cue', email: 'alma.cue@ignatiusbookclub.com', bookingUrl: 'https://meetings.hubspot.com/alma-cue', photo: '/images/rep-alma.webp' },
+  '1438738471': { firstName: 'Jeanette', lastName: 'Pohl', email: 'jeanette.pohl@ignatiusbookclub.com', bookingUrl: 'https://meetings.hubspot.com/jeanette-pohl1/ignatius-book-fair', photo: '/images/rep-jeanette.webp' },
   // Owner ids confirmed against the live owners API 2026-08-26 via
   // scripts/check-owner-scope.js. Emails are the owners' verified HubSpot
   // login addresses; booking URLs match APPOINTMENT_URLS in SignUpForm.tsx.
