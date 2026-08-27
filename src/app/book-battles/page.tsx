@@ -97,7 +97,7 @@ export default function BookBattlesPage() {
           className="text-[#02176f] text-3xl md:text-4xl font-black uppercase text-center"
           style={{ fontFamily: 'brother-1816, sans-serif', marginTop: '80px', marginBottom: '40px' }}
         >
-          Book Battle Worksheets
+          Book Battle Docs
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
