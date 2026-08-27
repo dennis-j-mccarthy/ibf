@@ -63,6 +63,9 @@ export default function SignatureMaker() {
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- SSR-safe
+      // localStorage hydration: a lazy useState initializer would touch
+      // localStorage during server render and mismatch on hydrate.
       if (saved) setF({ ...DEFAULT_FIELDS, ...JSON.parse(saved) });
     } catch {
       /* first run */
@@ -239,10 +242,24 @@ export default function SignatureMaker() {
                   ))}
                 </div>
               </div>
-              <label className="flex items-center gap-2 text-sm text-gray-600">
-                <input type="checkbox" checked={f.showSite} onChange={(e) => set('showSite', e.target.checked)} />
-                Show website
-              </label>
+              <div className="flex flex-wrap gap-x-5 gap-y-2">
+                <label className="flex items-center gap-2 text-sm text-gray-600">
+                  <input type="checkbox" checked={f.showSite} onChange={(e) => set('showSite', e.target.checked)} />
+                  Show website
+                </label>
+                <label className="flex items-center gap-2 text-sm text-gray-600">
+                  <input type="checkbox" checked={f.showFacebook} onChange={(e) => set('showFacebook', e.target.checked)} />
+                  Facebook
+                </label>
+                <label className="flex items-center gap-2 text-sm text-gray-600">
+                  <input type="checkbox" checked={f.showInstagram} onChange={(e) => set('showInstagram', e.target.checked)} />
+                  Instagram
+                </label>
+                <label className="flex items-center gap-2 text-sm text-gray-600">
+                  <input type="checkbox" checked={f.showLinkedin} onChange={(e) => set('showLinkedin', e.target.checked)} />
+                  LinkedIn
+                </label>
+              </div>
             </div>
           </section>
 

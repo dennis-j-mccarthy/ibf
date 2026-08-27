@@ -55,6 +55,15 @@ export const BRANDS: Brand[] = [
   },
 ];
 
+// Official IBF social profiles. Toggleable per person: staff whose roles use
+// custom links (personal booking pages, regional accounts) can switch any of
+// these off rather than carry links that are wrong for them.
+export const SOCIAL_LINKS = [
+  { key: 'showFacebook' as const, label: 'Facebook', url: 'https://www.facebook.com/IgnatiusBookFairs' },
+  { key: 'showInstagram' as const, label: 'Instagram', url: 'https://www.instagram.com/ignatiusbookfairs/' },
+  { key: 'showLinkedin' as const, label: 'LinkedIn', url: 'https://www.linkedin.com/company/ignatiusbookfairs/posts/?feedView=all' },
+];
+
 export interface SignatureFields {
   brand: string;
   layout: 'side' | 'stacked';
@@ -70,6 +79,9 @@ export interface SignatureFields {
   tagline: string;
   photoUrl: string;
   showSite: boolean;
+  showFacebook: boolean;
+  showInstagram: boolean;
+  showLinkedin: boolean;
 }
 
 export const DEFAULT_FIELDS: SignatureFields = {
@@ -87,6 +99,9 @@ export const DEFAULT_FIELDS: SignatureFields = {
   tagline: 'Great books. Real formation. Every fair.',
   photoUrl: '',
   showSite: true,
+  showFacebook: true,
+  showInstagram: true,
+  showLinkedin: true,
 };
 
 const esc = (s: string) =>
@@ -127,6 +142,13 @@ export function buildSignatureHtml(f: SignatureFields): string {
       line(
         `<a href="${esc(f.bookingUrl.trim())}" style="color:${brand.accent};text-decoration:none;font-weight:bold;">Book a time with me</a>`
       )
+    );
+  // Text links, not icons: icon images need hosting and get blocked or broken
+  // by inbox image proxies; plain links survive Gmail and Outlook untouched.
+  const socials = SOCIAL_LINKS.filter((s) => f[s.key]);
+  if (socials.length)
+    contactRows.push(
+      line(socials.map((s) => link(s.url, s.label)).join('<span style="color:#a0a4b0;">&nbsp;&middot;&nbsp;</span>'))
     );
 
   const nameBlock = `
