@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import {
-  BRANDS,
   DEFAULT_FIELDS,
   buildSignatureHtml,
   type SignatureFields,
@@ -66,7 +65,7 @@ export default function SignatureMaker() {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- SSR-safe
       // localStorage hydration: a lazy useState initializer would touch
       // localStorage during server render and mismatch on hydrate.
-      if (saved) setF({ ...DEFAULT_FIELDS, ...JSON.parse(saved) });
+      if (saved) setF({ ...DEFAULT_FIELDS, ...JSON.parse(saved), brand: 'ibf' });
     } catch {
       /* first run */
     }
@@ -147,22 +146,6 @@ export default function SignatureMaker() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
           {/* Fields */}
           <section className="bg-white rounded-xl shadow-sm p-6 space-y-4">
-            <div>
-              <label className={label}>Brand</label>
-              <div className="flex flex-wrap gap-2">
-                {BRANDS.map((b) => (
-                  <button
-                    key={b.key}
-                    onClick={() => set('brand', b.key)}
-                    className={`px-3.5 py-2 rounded-full text-sm font-semibold transition-colors ${
-                      f.brand === b.key ? 'bg-[#02176f] text-white' : 'bg-[#f5f6fa] text-[#7e828f] hover:text-[#02176f]'
-                    }`}
-                  >
-                    {b.label}
-                  </button>
-                ))}
-              </div>
-            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
