@@ -55,13 +55,12 @@ export const BRANDS: Brand[] = [
   },
 ];
 
-// Official IBF social profiles. Toggleable per person: staff whose roles use
-// custom links (personal booking pages, regional accounts) can switch any of
-// these off rather than carry links that are wrong for them.
+// Official IBF social profiles -- always in the signature, as icon images
+// hosted on the production site (same hosting caveat as the logo).
 export const SOCIAL_LINKS = [
-  { key: 'showFacebook' as const, label: 'Facebook', url: 'https://www.facebook.com/IgnatiusBookFairs' },
-  { key: 'showInstagram' as const, label: 'Instagram', url: 'https://www.instagram.com/ignatiusbookfairs/' },
-  { key: 'showLinkedin' as const, label: 'LinkedIn', url: 'https://www.linkedin.com/company/ignatiusbookfairs/posts/?feedView=all' },
+  { label: 'Facebook', url: 'https://www.facebook.com/IgnatiusBookFairs', icon: '/images/sig-facebook.png' },
+  { label: 'Instagram', url: 'https://www.instagram.com/ignatiusbookfairs/', icon: '/images/sig-instagram.png' },
+  { label: 'LinkedIn', url: 'https://www.linkedin.com/company/ignatiusbookfairs/posts/?feedView=all', icon: '/images/sig-linkedin.png' },
 ];
 
 export interface SignatureFields {
@@ -76,12 +75,8 @@ export interface SignatureFields {
   phoneExt: string;
   mobile: string;
   bookingUrl: string;
+  linkTitle: string;
   tagline: string;
-  photoUrl: string;
-  showSite: boolean;
-  showFacebook: boolean;
-  showInstagram: boolean;
-  showLinkedin: boolean;
 }
 
 export const DEFAULT_FIELDS: SignatureFields = {
@@ -96,12 +91,8 @@ export const DEFAULT_FIELDS: SignatureFields = {
   phoneExt: '',
   mobile: '',
   bookingUrl: '',
+  linkTitle: 'Book a time with me',
   tagline: 'Great books. Real formation. Every fair.',
-  photoUrl: '',
-  showSite: true,
-  showFacebook: true,
-  showInstagram: true,
-  showLinkedin: true,
 };
 
 const esc = (s: string) =>
@@ -136,20 +127,21 @@ export function buildSignatureHtml(f: SignatureFields): string {
     contactRows.push(line(`${link(`tel:${telHref(f.phone)}`, f.phone.trim())}${ext}`));
   }
   if (f.mobile.trim()) contactRows.push(line(`${link(`tel:${telHref(f.mobile)}`, f.mobile.trim())} <span style="color:#a0a4b0;">mobile</span>`));
-  if (f.showSite) contactRows.push(line(link(`https://${brand.site}`, brand.site)));
+  contactRows.push(line(link(`https://${brand.site}`, brand.site)));
   if (f.bookingUrl.trim())
     contactRows.push(
       line(
-        `<a href="${esc(f.bookingUrl.trim())}" style="color:${brand.accent};text-decoration:none;font-weight:bold;">Book a time with me</a>`
+        `<a href="${esc(f.bookingUrl.trim())}" style="color:${brand.accent};text-decoration:none;font-weight:bold;">${esc(f.linkTitle.trim() || 'Book a time with me')}</a>`
       )
     );
-  // Text links, not icons: icon images need hosting and get blocked or broken
-  // by inbox image proxies; plain links survive Gmail and Outlook untouched.
-  const socials = SOCIAL_LINKS.filter((s) => f[s.key]);
-  if (socials.length)
-    contactRows.push(
-      line(socials.map((s) => link(s.url, s.label)).join('<span style="color:#a0a4b0;">&nbsp;&middot;&nbsp;</span>'))
-    );
+  // Icon images hosted on the prod site, like the logo. Explicit width/height
+  // and display:inline-block keep Outlook from stretching them.
+  contactRows.push(
+    `<tr><td style="padding:7px 0 0;">${SOCIAL_LINKS.map(
+      (s) =>
+        `<a href="${esc(s.url)}" style="text-decoration:none;"><img src="${esc(abs(s.icon))}" width="22" height="22" alt="${esc(s.label)}" style="display:inline-block;border:0;vertical-align:middle;" /></a>`
+    ).join('&nbsp;&nbsp;')}</td></tr>`
+  );
 
   const nameBlock = `
         <tr><td style="font-family:${FONT};font-size:16px;line-height:20px;mso-line-height-rule:exactly;font-weight:bold;color:${brand.ink};padding:0 0 2px;">${esc(fullName)}</td></tr>
@@ -158,12 +150,10 @@ export function buildSignatureHtml(f: SignatureFields): string {
 
   const logoImg = `<img src="${esc(abs(brand.logo))}" width="${brand.width}" height="${brand.height}" alt="${esc(brand.label)}" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;" />`;
 
-  const photoImg = f.photoUrl.trim()
-    ? `<img src="${esc(abs(f.photoUrl.trim()))}" width="64" height="64" alt="${esc(name)}" style="display:block;border:0;outline:none;text-decoration:none;" />`
-    : '';
-
-  const taglineRow = f.tagline.trim()
-    ? `<tr><td colspan="3" style="font-family:${FONT};font-size:11px;line-height:16px;mso-line-height-rule:exactly;color:#a0a4b0;padding:12px 0 0;">${esc(f.tagline.trim())}</td></tr>`
+  // Side-by-side: tagline sits under the logo in the left column, width-capped
+  // to the logo so it wraps instead of pushing the divider.
+  const taglineUnderLogo = f.tagline.trim()
+    ? `<tr><td style="font-family:${FONT};font-size:11px;line-height:15px;mso-line-height-rule:exactly;color:#a0a4b0;padding:8px 0 0;max-width:${brand.width}px;">${esc(f.tagline.trim())}</td></tr>`
     : '';
 
   if (f.layout === 'stacked') {
@@ -171,7 +161,6 @@ export function buildSignatureHtml(f: SignatureFields): string {
   <tr><td style="padding:0 0 10px;">${logoImg}</td></tr>
   <tr><td style="border-top:2px solid ${brand.accent};padding:10px 0 0;">
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
-      ${photoImg ? `<tr><td style="padding:0 0 8px;">${photoImg}</td></tr>` : ''}
       ${nameBlock}
     </table>
   </td></tr>
@@ -181,10 +170,10 @@ export function buildSignatureHtml(f: SignatureFields): string {
 
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-family:${FONT};">
   <tr>
-    <td style="padding:0 18px 0 0;vertical-align:top;">
+    <td style="padding:0 18px 0 0;vertical-align:top;width:${brand.width}px;">
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
-        <tr><td style="padding:0 0 ${photoImg ? '10px' : '0'};">${logoImg}</td></tr>
-        ${photoImg ? `<tr><td style="padding:0;">${photoImg}</td></tr>` : ''}
+        <tr><td style="padding:0;">${logoImg}</td></tr>
+        ${taglineUnderLogo}
       </table>
     </td>
     <td style="width:2px;background-color:${brand.accent};font-size:0;line-height:0;">&nbsp;</td>
@@ -194,6 +183,5 @@ export function buildSignatureHtml(f: SignatureFields): string {
       </table>
     </td>
   </tr>
-  ${taglineRow}
 </table>`;
 }

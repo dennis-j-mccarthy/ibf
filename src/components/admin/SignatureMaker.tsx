@@ -44,12 +44,12 @@ const CLIENTS = [
     key: 'outlook-desktop',
     label: 'Outlook desktop',
     steps: [
-      'Click "Download .htm file" above.',
-      'Press Windows+R, paste %APPDATA%\\Microsoft\\Signatures and press Enter.',
-      'Move the downloaded .htm file into that folder.',
-      'In Outlook go to File, Options, Mail, Signatures and select it for new messages and replies.',
+      'Click "Copy signature" above.',
+      'In Outlook go to File, Options, Mail, Signatures.',
+      'Create a new signature, click into the editor, and paste with Ctrl+V.',
+      'Select it for new messages and replies, then click OK.',
     ],
-    note: 'On Mac, use Outlook Settings, Signatures, then paste the copied signature into a new signature instead -- Mac Outlook has no signature folder.',
+    note: 'On Mac: Outlook Settings, Signatures, then paste into a new signature the same way.',
   },
 ];
 
@@ -70,6 +70,16 @@ export default function SignatureMaker() {
       /* first run */
     }
   }, []);
+
+  // 10 digits -> 888-771-2321 as you type; tolerates a leading 1.
+  const fmtPhone = (v: string) => {
+    let d = v.replace(/\D/g, '');
+    if (d.length === 11 && d.startsWith('1')) d = d.slice(1);
+    d = d.slice(0, 10);
+    if (d.length > 6) return `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}`;
+    if (d.length > 3) return `${d.slice(0, 3)}-${d.slice(3)}`;
+    return d;
+  };
 
   const set = <K extends keyof SignatureFields>(key: K, value: SignatureFields[K]) =>
     setF((cur) => {
@@ -111,18 +121,6 @@ export default function SignatureMaker() {
     flash('src');
   };
 
-  const download = () => {
-    // Outlook desktop reads signature files as HTML documents, so the fragment
-    // needs a wrapper with an explicit charset.
-    const doc = `<!doctype html><html><head><meta charset="utf-8"></head><body>${html}</body></html>`;
-    const url = URL.createObjectURL(new Blob([doc], { type: 'text/html' }));
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${[f.firstName, f.lastName].filter(Boolean).join('-').toLowerCase() || 'ignatius'}-signature.htm`;
-    a.click();
-    URL.revokeObjectURL(url);
-    flash('file');
-  };
 
   const active = CLIENTS.find((c) => c.key === client) ?? CLIENTS[0];
 
@@ -177,7 +175,7 @@ export default function SignatureMaker() {
             <div className="grid grid-cols-1 sm:grid-cols-[1fr_110px] gap-4">
               <div>
                 <label className={label}>Office phone</label>
-                <input className={input} value={f.phone} onChange={(e) => set('phone', e.target.value)} />
+                <input className={input} value={f.phone} onChange={(e) => set('phone', fmtPhone(e.target.value))} />
               </div>
               <div>
                 <label className={label}>Extension</label>
@@ -187,12 +185,17 @@ export default function SignatureMaker() {
 
             <div>
               <label className={label}>Mobile (optional)</label>
-              <input className={input} value={f.mobile} onChange={(e) => set('mobile', e.target.value)} placeholder="239-555-0134" />
+              <input className={input} value={f.mobile} onChange={(e) => set('mobile', fmtPhone(e.target.value))} placeholder="239-555-0134" />
             </div>
 
             <div>
-              <label className={label}>Booking link (optional)</label>
+              <label className={label}>Link (optional)</label>
               <input className={input} value={f.bookingUrl} onChange={(e) => set('bookingUrl', e.target.value)} placeholder="https://meetings.hubspot.com/..." />
+            </div>
+
+            <div>
+              <label className={label}>Link title</label>
+              <input className={input} value={f.linkTitle} onChange={(e) => set('linkTitle', e.target.value)} placeholder="Book a time with me" />
             </div>
 
             <div>
@@ -200,13 +203,6 @@ export default function SignatureMaker() {
               <input className={input} value={f.tagline} onChange={(e) => set('tagline', e.target.value)} />
             </div>
 
-            <div>
-              <label className={label}>Headshot URL (optional)</label>
-              <input className={input} value={f.photoUrl} onChange={(e) => set('photoUrl', e.target.value)} placeholder="/images/rep-julie.webp" />
-              <p className="text-xs text-[#7e828f] mt-1.5">
-                Must be a public image on our site. Rendered at 64x64.
-              </p>
-            </div>
 
             <div className="flex flex-wrap items-center gap-5 border-t border-[#eef0f5] pt-4">
               <div>
@@ -224,24 +220,6 @@ export default function SignatureMaker() {
                     </button>
                   ))}
                 </div>
-              </div>
-              <div className="flex flex-wrap gap-x-5 gap-y-2">
-                <label className="flex items-center gap-2 text-sm text-gray-600">
-                  <input type="checkbox" checked={f.showSite} onChange={(e) => set('showSite', e.target.checked)} />
-                  Show website
-                </label>
-                <label className="flex items-center gap-2 text-sm text-gray-600">
-                  <input type="checkbox" checked={f.showFacebook} onChange={(e) => set('showFacebook', e.target.checked)} />
-                  Facebook
-                </label>
-                <label className="flex items-center gap-2 text-sm text-gray-600">
-                  <input type="checkbox" checked={f.showInstagram} onChange={(e) => set('showInstagram', e.target.checked)} />
-                  Instagram
-                </label>
-                <label className="flex items-center gap-2 text-sm text-gray-600">
-                  <input type="checkbox" checked={f.showLinkedin} onChange={(e) => set('showLinkedin', e.target.checked)} />
-                  LinkedIn
-                </label>
               </div>
             </div>
           </section>
@@ -267,11 +245,11 @@ export default function SignatureMaker() {
                   {copied === 'sig' ? 'Copied!' : 'Copy signature'}
                 </button>
                 <button
-                  onClick={download}
+                  onClick={copySource}
                   disabled={!ready}
                   className="border border-[#dfe3ec] hover:border-[#0088ff] disabled:opacity-40 text-[#02176f] font-semibold rounded-full py-2.5 px-5 text-sm transition-colors"
                 >
-                  {copied === 'file' ? 'Downloaded' : 'Download .htm file'}
+                  {copied === 'src' ? 'HTML copied!' : 'Copy HTML'}
                 </button>
                 <button onClick={() => setShowSource((v) => !v)} className="text-sm font-semibold text-[#0088ff] hover:underline">
                   {showSource ? 'Hide HTML' : 'Show HTML'}
