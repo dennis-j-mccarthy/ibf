@@ -21,6 +21,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Pinterest domain verification */}
+        <meta name="p:domain_verify" content="17d6f32473dfb3a46bbff7f7c8694faa" />
         {/* Adobe Fonts - Brother 1816, Open Sans, Great Vibes */}
         <link rel="stylesheet" href="https://use.typekit.net/poj1hyc.css" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
