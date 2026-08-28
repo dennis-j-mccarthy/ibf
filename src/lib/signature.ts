@@ -169,7 +169,7 @@ export function buildSignatureHtml(f: SignatureFields): string {
 
   const nameBlock = `
         <tr><td style="font-family:${FONT};font-size:16px;line-height:20px;mso-line-height-rule:exactly;font-weight:bold;color:${brand.ink};padding:0 0 2px;">${esc(fullName)}</td></tr>
-        ${f.title.trim() ? `<tr><td style="font-family:${FONT};font-size:13px;line-height:18px;mso-line-height-rule:exactly;color:#7e828f;padding:0 0 8px;">${esc(f.title.trim())}</td></tr>` : '<tr><td style="padding:0 0 6px;font-size:0;line-height:0;">&nbsp;</td></tr>'}
+        ${f.title.trim() ? `<tr><td style="font-family:${FONT};font-size:13px;line-height:18px;mso-line-height-rule:exactly;color:${brand.ink};padding:0 0 8px;">${esc(f.title.trim())}</td></tr>` : '<tr><td style="padding:0 0 6px;font-size:0;line-height:0;">&nbsp;</td></tr>'}
         ${contactRows.join('\n        ')}`;
 
   const logoImg = `<img src="${esc(abs(brand.logo))}" width="${brand.width}" height="${brand.height}" alt="${esc(brand.label)}" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;" />`;
