@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { createPortal } from 'react-dom';
 import { trackFunnelEvent, getRepName } from '@/lib/analytics';
 
 interface HubSpotData {
@@ -234,6 +233,8 @@ const SignUpForm = () => {
   // changing the website) leaves a slim inline banner that can reopen it.
   const [orgModalOpen, setOrgModalOpen] = useState(false);
   const websiteRef = useRef<HTMLInputElement>(null);
+  const orgModalRef = useRef<HTMLDivElement>(null);
+  const [orgModalHeight, setOrgModalHeight] = useState(0);
 
   // Auto-fill form with test data using keyboard shortcuts
   // Works in dev mode OR when ?testmode=true is in the URL
@@ -713,6 +714,30 @@ const SignUpForm = () => {
       document.body.appendChild(script);
     }
   }, [bookingOpen, existingDomain, orgModalOpen]);
+
+  // The modal card is anchored to the top of the step-2 panel, which can be
+  // scrolled past by the time the website field blurs — bring it into view.
+  useEffect(() => {
+    if (orgModalOpen) {
+      orgModalRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }, [orgModalOpen]);
+
+  // The overlay spans the step-2 panel, but the card can be taller than the
+  // form (especially with the booking iframe open) and the slider clips
+  // overflow — so grow the panel to fit the card while the modal is open.
+  useEffect(() => {
+    if (!orgModalOpen || !orgModalRef.current) {
+      setOrgModalHeight(0);
+      return;
+    }
+    const card = orgModalRef.current;
+    const observer = new ResizeObserver(() => {
+      setOrgModalHeight(card.offsetHeight);
+    });
+    observer.observe(card);
+    return () => observer.disconnect();
+  }, [orgModalOpen, existingDomain]);
 
   // Success state
   if (submitSuccess) {
@@ -1272,7 +1297,12 @@ const SignUpForm = () => {
               </div>
 
               {/* Step 2: Organization Info */}
-              <div className={`w-1/2 px-4 ${currentStep === 1 ? 'h-0 overflow-hidden' : ''}`}>
+              <div
+                className={`w-1/2 px-4 relative ${currentStep === 1 ? 'h-0 overflow-hidden' : ''}`}
+                style={currentStep === 2 && orgModalOpen && orgModalHeight
+                  ? { minHeight: orgModalHeight + 56 } // card + overlay top/bottom padding
+                  : undefined}
+              >
                 <form onSubmit={handleStep2Submit} className="max-w-lg mx-auto">
               {/* Email field at top - prefilled from step 1, not editable */}
               <div className="mb-4">
@@ -1434,13 +1464,14 @@ const SignUpForm = () => {
                   </button>
                 </div>
               )}
-              {existingDomain && orgModalOpen && createPortal(
+              {existingDomain && orgModalOpen && (
                 <div
-                  className="fixed inset-0 z-50 bg-black/50 flex items-start justify-center overflow-y-auto p-4 sm:py-10"
+                  className="absolute inset-0 z-40 bg-black/50 flex items-start justify-center p-4 sm:pt-10"
                   onClick={() => { setOrgModalOpen(false); setBookingOpen(false); }}
                   style={{ fontFamily: 'brother-1816, sans-serif' }}
                 >
                 <div
+                  ref={orgModalRef}
                   className="relative w-full max-w-xl rounded-xl border-2 border-[#0088ff] overflow-hidden bg-white text-left"
                   style={{ fontFamily: 'brother-1816, sans-serif' }}
                   onClick={(e) => e.stopPropagation()}
@@ -1563,8 +1594,7 @@ const SignUpForm = () => {
                     </button>
                   </div>
                 </div>
-                </div>,
-                document.body
+                </div>
               )}
 
               {/* Organization Name */}
