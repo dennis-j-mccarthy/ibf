@@ -1,6 +1,12 @@
 import type { Metadata } from 'next';
 import { getBotAnswers } from '@/lib/data';
-import { answerToHtml, type BotLink } from '@/lib/bot-knowledge';
+import { answerToHtml, parseDocs, FAQ_DOCUMENTS, SITE_URL, type BotLink } from '@/lib/bot-knowledge';
+
+const APPLIES_TO: Record<string, string> = {
+  Catholic: 'Catholic schools and parishes only',
+  Public: 'Public and charter schools only',
+  Both: 'All organizations',
+};
 
 // Source content for the HubSpot chatbot. Kept reachable (so HubSpot can fetch it)
 // but noindex so it never appears in Google or competes with real marketing pages.
@@ -25,6 +31,23 @@ export default async function BotKnowledgePage() {
             <h2>{a.question}</h2>
             {/* Authored by admins only, same trust level as FAQ answers. */}
             <div dangerouslySetInnerHTML={{ __html: answerToHtml(a.answer) }} />
+            {/* Same qualifiers as the .txt feed: several questions have a
+                Catholic and a Public answer that must not be interchanged. */}
+            {a.siteVersion && APPLIES_TO[a.siteVersion] && (
+              <p><strong>Applies to:</strong> {APPLIES_TO[a.siteVersion]}</p>
+            )}
+            {a.siteCategory && (
+              <p><strong>Topic:</strong> {a.siteCategory}</p>
+            )}
+            {parseDocs(a.sourceDocs).map((key) => {
+              const doc = FAQ_DOCUMENTS.find((d) => d.key === key);
+              return doc ? (
+                <p key={key}>
+                  <strong>Source document:</strong>{' '}
+                  <a href={`${SITE_URL}${doc.file}`}>FAQs for {doc.label} Coordinators</a>
+                </p>
+              ) : null;
+            })}
             {links.length > 0 && (
               <ul>
                 {links.map((l, i) => (

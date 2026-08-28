@@ -2,6 +2,10 @@ import prisma from '@/lib/prisma';
 
 export type BotLink = { label: string; url: string };
 
+// Absolute base for links handed to the chatbot and to email clients, which
+// have no page context to resolve a relative path against.
+export const SITE_URL = 'https://www.ignatiusbookfairs.com';
+
 export function slugify(input: string): string {
   return input
     .toLowerCase()
