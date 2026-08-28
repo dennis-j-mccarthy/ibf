@@ -91,7 +91,10 @@ export interface SignatureFields {
 }
 
 // The tagline is fixed brand copy -- every signature carries it verbatim.
-export const TAGLINE = 'Great books. Real formation. Every fair.';
+// Fixed brand copy. Book Battle runs without one -- its logo column is too
+// narrow to set a sentence this long without it wrapping into a thin stack.
+export const TAGLINE = 'Since 2023, providing the books parents trust and the stories kids love.';
+const taglineFor = (brandKey: string) => (brandKey === 'ibb' ? '' : TAGLINE);
 
 export const DEFAULT_FIELDS: SignatureFields = {
   brand: 'ibf',
@@ -174,12 +177,15 @@ export function buildSignatureHtml(f: SignatureFields): string {
 
   const logoImg = `<img src="${esc(abs(brand.logo))}" width="${brand.width}" height="${brand.height}" alt="${esc(brand.label)}" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;" />`;
 
+  const tagline = taglineFor(brand.key);
+
   // Side-by-side: tagline sits under the logo in the left column, width-capped
   // to the logo so it wraps instead of pushing the divider.
-  // One phrase per line, set in italic Georgia in the brand ink -- reads as a
-  // motto rather than fine print. Georgia is universally available in email
-  // clients, so no webfont risk.
-  const taglineUnderLogo = `<tr><td style="font-family:Georgia, 'Times New Roman', serif;font-style:italic;font-size:13px;line-height:19px;mso-line-height-rule:exactly;color:${brand.ink};padding:9px 0 0;width:${brand.colWidth}px;">${esc(TAGLINE).replace(/\.\s+/g, '.<br />')}</td></tr>`;
+  // Set in italic Georgia in the brand ink -- reads as a motto rather than fine
+  // print. Georgia is universally available in email clients, so no webfont risk.
+  const taglineUnderLogo = tagline
+    ? `<tr><td style="font-family:Georgia, 'Times New Roman', serif;font-style:italic;font-size:13px;line-height:19px;mso-line-height-rule:exactly;color:${brand.ink};padding:9px 0 0;width:${brand.colWidth}px;">${esc(tagline).replace(/\.\s+/g, '.<br />')}</td></tr>`
+    : '';
 
   if (f.layout === 'stacked') {
     return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-family:${FONT};">
@@ -189,7 +195,7 @@ export function buildSignatureHtml(f: SignatureFields): string {
       ${nameBlock}
     </table>
   </td></tr>
-  <tr><td style="font-family:Georgia, 'Times New Roman', serif;font-style:italic;font-size:13px;line-height:19px;mso-line-height-rule:exactly;color:${brand.ink};padding:12px 0 0;">${esc(TAGLINE)}</td></tr>
+  ${tagline ? `<tr><td style="font-family:Georgia, 'Times New Roman', serif;font-style:italic;font-size:13px;line-height:19px;mso-line-height-rule:exactly;color:${brand.ink};padding:12px 0 0;">${esc(tagline)}</td></tr>` : ''}
 </table>`;
   }
 
