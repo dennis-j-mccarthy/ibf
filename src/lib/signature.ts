@@ -59,7 +59,7 @@ export const BRANDS: Brand[] = [
     logo: '/images/ibb-logo.png',
     width: 62,
     height: 80,
-    colWidth: 130,
+    colWidth: 110,
     site: 'ignatiusbookfairs.com/book-battles',
     accent: '#02176f',
     ink: '#02176f',
