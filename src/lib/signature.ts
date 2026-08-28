@@ -30,7 +30,7 @@ export const BRANDS: Brand[] = [
     width: 190,
     height: 30,
     site: 'ignatiusbookfairs.com',
-    accent: '#0088ff',
+    accent: '#902124',
     ink: '#02176f',
   },
   {
