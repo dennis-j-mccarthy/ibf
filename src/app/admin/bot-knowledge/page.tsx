@@ -45,7 +45,6 @@ const EMPTY: Omit<BotAnswer, 'id' | 'slug'> = {
   sourceDocs: null,
 };
 
-const PILL = 'text-xs font-semibold px-2.5 py-1 rounded-full border transition-colors';
 // Icon-only toggles keep the row compact enough to scan 123 answers at once.
 const ICON_BTN =
   'inline-flex items-center justify-center gap-1 h-7 px-2 rounded-full border text-xs font-semibold transition-colors';
@@ -412,7 +411,10 @@ export default function BotKnowledgeAdmin() {
               <label className="block text-sm font-medium text-[#02176f] mb-2">
                 Appears in these FAQ documents
               </label>
-              <div className="flex flex-wrap gap-2">
+              <span className="inline-flex items-center h-9 rounded-full border border-[#dddddd] overflow-hidden">
+                <span className="px-2 text-gray-400" aria-hidden>
+                  <DocIcon />
+                </span>
                 {FAQ_DOCUMENTS.map((d) => {
                   const on = parseDocs(draft.sourceDocs).includes(d.key);
                   return (
@@ -427,14 +429,15 @@ export default function BotKnowledgeAdmin() {
                           sourceDocs: serializeDocs(on ? cur.filter((k) => k !== d.key) : [...cur, d.key]),
                         });
                       }}
-                      className={`${ICON_BTN} ${on ? 'bg-[#02176f] text-white border-[#02176f]' : OFF}`}
+                      className={`h-full px-3 text-sm font-semibold border-l border-[#dddddd] transition-colors ${
+                        on ? 'bg-[#02176f] text-white' : 'bg-white text-gray-400 hover:text-gray-600'
+                      }`}
                     >
-                      <DocIcon />
                       {d.label}
                     </button>
                   );
                 })}
-              </div>
+              </span>
             </div>
 
             {/* Website publishing. Separate from the chatbot fields above: an
@@ -668,29 +671,38 @@ export default function BotKnowledgeAdmin() {
                         Independent of the website tags above — a printed-only
                         answer still belongs to a document. */}
                     <span className="w-px h-5 bg-[#e2e5ec] mx-0.5" aria-hidden />
-                    {FAQ_DOCUMENTS.map((d) => {
-                      const on = docs.includes(d.key);
-                      return (
-                        <button
-                          key={d.key}
-                          type="button"
-                          title={`Appears in the ${d.label} coordinator FAQ`}
-                          aria-label={`In the ${d.label} FAQ document`}
-                          aria-pressed={on}
-                          onClick={() =>
-                            tagInline(item, {
-                              sourceDocs: serializeDocs(
-                                on ? docs.filter((k) => k !== d.key) : [...docs, d.key]
-                              ),
-                            })
-                          }
-                          className={`${ICON_BTN} ${on ? 'bg-[#02176f] text-white border-[#02176f]' : OFF}`}
-                        >
-                          <DocIcon />
-                          {DOC_SHORT[d.key]}
-                        </button>
-                      );
-                    })}
+                    <span
+                      className="inline-flex items-center h-7 rounded-full border border-[#dddddd] overflow-hidden"
+                      title="Which published coordinator FAQ PDFs this answer appears in"
+                    >
+                      <span className="px-1.5 text-gray-400" aria-hidden>
+                        <DocIcon />
+                      </span>
+                      {FAQ_DOCUMENTS.map((d) => {
+                        const on = docs.includes(d.key);
+                        return (
+                          <button
+                            key={d.key}
+                            type="button"
+                            title={`${on ? 'Remove from' : 'Add to'} the ${d.label} coordinator FAQ`}
+                            aria-label={`In the ${d.label} FAQ document`}
+                            aria-pressed={on}
+                            onClick={() =>
+                              tagInline(item, {
+                                sourceDocs: serializeDocs(
+                                  on ? docs.filter((k) => k !== d.key) : [...docs, d.key]
+                                ),
+                              })
+                            }
+                            className={`h-full px-2 text-xs font-semibold border-l border-[#dddddd] transition-colors ${
+                              on ? 'bg-[#02176f] text-white' : 'bg-white text-gray-400 hover:text-gray-600'
+                            }`}
+                          >
+                            {DOC_SHORT[d.key]}
+                          </button>
+                        );
+                      })}
+                    </span>
                   </div>
                 </div>
               );
