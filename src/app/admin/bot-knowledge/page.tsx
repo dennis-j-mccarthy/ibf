@@ -3,7 +3,14 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import RichTextEditor from '@/components/admin/RichTextEditor';
-import { answerToText, SITE_SECTIONS, SITE_VERSIONS } from '@/lib/bot-knowledge';
+import {
+  answerToText,
+  SITE_SECTIONS,
+  SITE_VERSIONS,
+  FAQ_DOCUMENTS,
+  parseDocs,
+  serializeDocs,
+} from '@/lib/bot-knowledge';
 
 type BotLink = { label: string; url: string };
 type BotAnswer = {
@@ -20,6 +27,7 @@ type BotAnswer = {
   siteFeatured: boolean;
   siteVersion: string | null;
   siteCategory: string | null;
+  sourceDocs: string | null;
 };
 
 const EMPTY: Omit<BotAnswer, 'id' | 'slug'> = {
@@ -34,9 +42,44 @@ const EMPTY: Omit<BotAnswer, 'id' | 'slug'> = {
   siteFeatured: false,
   siteVersion: null,
   siteCategory: null,
+  sourceDocs: null,
 };
 
 const PILL = 'text-xs font-semibold px-2.5 py-1 rounded-full border transition-colors';
+// Icon-only toggles keep the row compact enough to scan 123 answers at once.
+const ICON_BTN =
+  'inline-flex items-center justify-center gap-1 h-7 px-2 rounded-full border text-xs font-semibold transition-colors';
+const ON = 'bg-[#0088ff] text-white border-[#0088ff]';
+const OFF = 'bg-white text-gray-400 border-[#dddddd] hover:text-gray-600';
+
+const S = { className: 'w-3.5 h-3.5', fill: 'none', stroke: 'currentColor', strokeWidth: 2, viewBox: '0 0 24 24' } as const;
+
+const GlobeIcon = () => (
+  <svg {...S}><circle cx="12" cy="12" r="9" /><path strokeLinecap="round" d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18" /></svg>
+);
+// These render at 14px, so both marks have to survive at that size: a
+// schoolhouse with a roof ornament turned to mush. A cross and a flag stay
+// legible because they differ in overall silhouette, not in fine detail.
+const CatholicIcon = () => (
+  <svg {...S}><path strokeLinecap="round" d="M12 3.5v17M7.5 9h9" /></svg>
+);
+const PublicIcon = () => (
+  <svg {...S}><path strokeLinecap="round" strokeLinejoin="round" d="M6 21V3.5M6 5h11l-2.3 3.3L17 11.6H6" /></svg>
+);
+const HouseIcon = () => (
+  <svg {...S}><path strokeLinecap="round" strokeLinejoin="round" d="M3 10.5L12 4l9 6.5M5.5 9.5V20h13V9.5" /></svg>
+);
+const DocIcon = () => (
+  <svg {...S}><path strokeLinecap="round" strokeLinejoin="round" d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8l-5-5z" /><path strokeLinecap="round" strokeLinejoin="round" d="M14 3v5h5" /></svg>
+);
+
+// Short chip labels for the four published coordinator FAQ PDFs.
+const DOC_SHORT: Record<string, string> = {
+  'catholic-in-person': 'Cath',
+  virtual: 'Virtual',
+  'parish-in-person': 'Parish',
+  'public-in-person': 'Public',
+};
 
 // The site's mode filter is one string, but it reads as two independent
 // switches -- mirroring how the /faqs page's own tagging mode works.
@@ -117,6 +160,7 @@ export default function BotKnowledgeAdmin() {
           siteFeatured: draft.siteFeatured === true,
           siteVersion: draft.siteVersion || null,
           siteCategory: draft.siteCategory || null,
+          sourceDocs: draft.sourceDocs || null,
         }),
       }
     );
@@ -363,6 +407,36 @@ export default function BotKnowledgeAdmin() {
               Active (visible to the chatbot)
             </label>
 
+            {/* Which published coordinator FAQ PDFs this answer appears in. */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-[#02176f] mb-2">
+                Appears in these FAQ documents
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {FAQ_DOCUMENTS.map((d) => {
+                  const on = parseDocs(draft.sourceDocs).includes(d.key);
+                  return (
+                    <button
+                      key={d.key}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() => {
+                        const cur = parseDocs(draft.sourceDocs);
+                        setDraft({
+                          ...draft,
+                          sourceDocs: serializeDocs(on ? cur.filter((k) => k !== d.key) : [...cur, d.key]),
+                        });
+                      }}
+                      className={`${ICON_BTN} ${on ? 'bg-[#02176f] text-white border-[#02176f]' : OFF}`}
+                    >
+                      <DocIcon />
+                      {d.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* Website publishing. Separate from the chatbot fields above: an
                 entry can serve the bot without ever appearing on the site. */}
             <div className="rounded-lg border border-[#e2e5ec] bg-[#fafbfc] p-4 mb-6">
@@ -443,6 +517,7 @@ export default function BotKnowledgeAdmin() {
             {items.length === 0 && <p className="p-6 text-gray-500">No answers yet. Add your first one.</p>}
             {items.map((item) => {
               const tags = versionTags(item.siteVersion);
+              const docs = parseDocs(item.sourceDocs);
               const busy = tagBusy === item.id;
               return (
                 <div key={item.id} className="p-4">
@@ -465,30 +540,43 @@ export default function BotKnowledgeAdmin() {
                         {` · /bot-knowledge/${item.slug}`}
                       </p>
                     </div>
-                    <div className="flex gap-2 shrink-0">
+                    <div className="flex gap-1.5 shrink-0">
                       <button
                         onClick={() => startEdit(item)}
-                        className="text-sm px-3 py-1.5 rounded-md border border-[#dddddd] text-gray-700 hover:bg-gray-50"
+                        title="Edit this answer"
+                        aria-label={`Edit: ${item.question}`}
+                        className="p-2 rounded-md border border-[#dddddd] text-gray-600 hover:bg-gray-50 hover:text-[#02176f] transition-colors"
                       >
-                        Edit
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
                       </button>
                       <button
                         onClick={() => remove(item.id)}
-                        className="text-sm px-3 py-1.5 rounded-md border border-red-200 text-red-600 hover:bg-red-50"
+                        title="Delete this answer"
+                        aria-label={`Delete: ${item.question}`}
+                        className="p-2 rounded-md border border-red-200 text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors"
                       >
-                        Delete
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
                       </button>
                     </div>
                   </div>
 
-                  {/* Live website tagging — each control saves on change. */}
+                  {/* Live website tagging — each control saves on change. No
+                      divider above it: a rule here reads as a separator from
+                      the question these controls actually belong to. */}
                   <div
-                    className={`mt-3 pt-3 border-t border-gray-100 flex flex-wrap items-center gap-2 transition-opacity ${
+                    className={`mt-2 flex flex-wrap items-center gap-2 transition-opacity ${
                       busy ? 'opacity-50' : ''
                     }`}
                   >
                     <button
                       type="button"
+                      title={item.publishToSite ? 'On the website FAQ page — click to remove' : 'Not on the website — click to publish'}
+                      aria-label={item.publishToSite ? 'Remove from the website' : 'Show on the website'}
+                      aria-pressed={item.publishToSite}
                       onClick={() =>
                         tagInline(item, {
                           publishToSite: !item.publishToSite,
@@ -499,21 +587,33 @@ export default function BotKnowledgeAdmin() {
                             : {}),
                         })
                       }
-                      className={`${PILL} ${
-                        item.publishToSite
-                          ? 'bg-[#e8f8ee] text-[#0a5c33] border-[#7fd6a4]'
-                          : 'bg-white text-gray-500 border-[#dddddd]'
+                      className={`${ICON_BTN} ${
+                        item.publishToSite ? 'bg-[#e8f8ee] text-[#0a5c33] border-[#7fd6a4]' : OFF
                       }`}
                     >
-                      {item.publishToSite ? '● On the site' : '○ Not on the site'}
+                      <GlobeIcon />
                     </button>
 
                     {item.publishToSite && (
                       <>
+                        <button
+                          type="button"
+                          title="Feature in the homepage FAQ block"
+                          aria-label="Feature on the homepage"
+                          aria-pressed={item.siteFeatured}
+                          onClick={() => tagInline(item, { siteFeatured: !item.siteFeatured })}
+                          className={`${ICON_BTN} ${
+                            item.siteFeatured ? 'bg-[#fff4e5] text-[#b45309] border-[#f0c98a]' : OFF
+                          }`}
+                        >
+                          <HouseIcon />
+                        </button>
+
                         <select
                           value={item.siteCategory ?? ''}
                           onChange={(e) => tagInline(item, { siteCategory: e.target.value || null })}
-                          className={`${PILL} ${
+                          title="Which section of the FAQ page"
+                          className={`h-7 rounded-full border text-xs font-semibold px-2 ${
                             item.siteCategory
                               ? 'bg-white text-[#02176f] border-[#c9d4e6]'
                               : 'bg-[#fff4e5] text-[#b45309] border-[#f0c98a]'
@@ -525,44 +625,31 @@ export default function BotKnowledgeAdmin() {
                           ))}
                         </select>
 
-                        <span className="inline-flex rounded-full border border-[#c9d4e6] overflow-hidden">
-                          <button
-                            type="button"
-                            title="Show in Catholic mode"
-                            onClick={() =>
-                              tagInline(item, { siteVersion: fromVersionTags(!tags.catholic, tags.public) })
-                            }
-                            className={`px-2.5 py-1 text-xs font-semibold transition-colors ${
-                              tags.catholic ? 'bg-[#0088ff] text-white' : 'bg-white text-gray-400'
-                            }`}
-                          >
-                            Catholic
-                          </button>
-                          <button
-                            type="button"
-                            title="Show in Public mode"
-                            onClick={() =>
-                              tagInline(item, { siteVersion: fromVersionTags(tags.catholic, !tags.public) })
-                            }
-                            className={`px-2.5 py-1 text-xs font-semibold border-l border-[#c9d4e6] transition-colors ${
-                              tags.public ? 'bg-[#0088ff] text-white' : 'bg-white text-gray-400'
-                            }`}
-                          >
-                            Public
-                          </button>
-                        </span>
+                        <span className="w-px h-5 bg-[#e2e5ec] mx-0.5" aria-hidden />
 
                         <button
                           type="button"
-                          title="Feature in the homepage FAQ block"
-                          onClick={() => tagInline(item, { siteFeatured: !item.siteFeatured })}
-                          className={`${PILL} ${
-                            item.siteFeatured
-                              ? 'bg-[#fff4e5] text-[#b45309] border-[#f0c98a]'
-                              : 'bg-white text-gray-400 border-[#dddddd]'
-                          }`}
+                          title="Show in Catholic mode"
+                          aria-label="Show in Catholic mode"
+                          aria-pressed={tags.catholic}
+                          onClick={() =>
+                            tagInline(item, { siteVersion: fromVersionTags(!tags.catholic, tags.public) })
+                          }
+                          className={`${ICON_BTN} ${tags.catholic ? ON : OFF}`}
                         >
-                          {item.siteFeatured ? '★ Homepage' : '☆ Homepage'}
+                          <CatholicIcon />
+                        </button>
+                        <button
+                          type="button"
+                          title="Show in Public mode"
+                          aria-label="Show in Public mode"
+                          aria-pressed={tags.public}
+                          onClick={() =>
+                            tagInline(item, { siteVersion: fromVersionTags(tags.catholic, !tags.public) })
+                          }
+                          className={`${ICON_BTN} ${tags.public ? ON : OFF}`}
+                        >
+                          <PublicIcon />
                         </button>
 
                         {(!item.siteCategory || !item.siteVersion) && (
@@ -576,6 +663,34 @@ export default function BotKnowledgeAdmin() {
                         )}
                       </>
                     )}
+
+                    {/* Which published coordinator PDF(s) this answer appears in.
+                        Independent of the website tags above — a printed-only
+                        answer still belongs to a document. */}
+                    <span className="w-px h-5 bg-[#e2e5ec] mx-0.5" aria-hidden />
+                    {FAQ_DOCUMENTS.map((d) => {
+                      const on = docs.includes(d.key);
+                      return (
+                        <button
+                          key={d.key}
+                          type="button"
+                          title={`Appears in the ${d.label} coordinator FAQ`}
+                          aria-label={`In the ${d.label} FAQ document`}
+                          aria-pressed={on}
+                          onClick={() =>
+                            tagInline(item, {
+                              sourceDocs: serializeDocs(
+                                on ? docs.filter((k) => k !== d.key) : [...docs, d.key]
+                              ),
+                            })
+                          }
+                          className={`${ICON_BTN} ${on ? 'bg-[#02176f] text-white border-[#02176f]' : OFF}`}
+                        >
+                          <DocIcon />
+                          {DOC_SHORT[d.key]}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               );

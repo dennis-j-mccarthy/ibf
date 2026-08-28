@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { uniqueSlug, normalizeLinks, isSiteSection, isSiteVersion } from '@/lib/bot-knowledge';
+import { uniqueSlug, normalizeLinks, isSiteSection, isSiteVersion, serializeDocs } from '@/lib/bot-knowledge';
 
 // Auth is enforced by middleware.ts for the whole /api/admin/* prefix.
 
@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
       siteFeatured: body.siteFeatured === true,
       siteVersion: isSiteVersion(body.siteVersion) ? body.siteVersion : null,
       siteCategory: isSiteSection(body.siteCategory) ? body.siteCategory : null,
+      sourceDocs: serializeDocs(body.sourceDocs),
     },
   });
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { uniqueSlug, normalizeLinks, isSiteSection, isSiteVersion } from '@/lib/bot-knowledge';
+import { uniqueSlug, normalizeLinks, isSiteSection, isSiteVersion, serializeDocs } from '@/lib/bot-knowledge';
 
 // Auth is enforced by middleware.ts for the whole /api/admin/* prefix.
 
@@ -31,6 +31,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (body.siteCategory !== undefined) {
     data.siteCategory = isSiteSection(body.siteCategory) ? body.siteCategory : null;
   }
+  if (body.sourceDocs !== undefined) data.sourceDocs = serializeDocs(body.sourceDocs);
   // Recompute the slug only when explicitly provided, keeping it unique.
   if (typeof body.slug === 'string' && body.slug.trim()) {
     data.slug = await uniqueSlug(body.slug, answerId);

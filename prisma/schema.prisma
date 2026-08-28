@@ -130,6 +130,11 @@ model BotAnswer {
   siteCategory  String? // one of the five designed /faqs groups
   faqId         Int?    // mirrored FAQ row, so republish/unpublish is idempotent
 
+  // Which published coordinator FAQ PDFs this answer appears in. Comma-separated
+  // keys from FAQ_DOCUMENTS -- multi-valued because half the questions in those
+  // PDFs appear in more than one of them.
+  sourceDocs    String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

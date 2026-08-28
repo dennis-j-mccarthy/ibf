@@ -64,6 +64,42 @@ export function isSiteVersion(value: unknown): value is SiteVersion {
   return typeof value === 'string' && (SITE_VERSIONS as readonly string[]).includes(value);
 }
 
+// --- Published coordinator FAQ documents -------------------------------------
+//
+// The four PDFs on the resources page. An answer can appear in several of them
+// (14 of the 28 questions extracted from the PDFs do), so this is stored as a
+// comma-separated list rather than a single value.
+export const FAQ_DOCUMENTS = [
+  { key: 'catholic-in-person', label: 'Catholic In-Person', file: '/documents/faqs-in-person-catholic-3-12.pdf' },
+  { key: 'parish-in-person', label: 'Parish In-Person', file: '/documents/faq-in-person-parish.pdf' },
+  { key: 'public-in-person', label: 'Public In-Person', file: '/documents/faq-in-person-public-4-17.pdf' },
+  { key: 'virtual', label: 'Virtual', file: '/documents/faqs-virtual-3-12.pdf' },
+] as const;
+
+export type FaqDocumentKey = (typeof FAQ_DOCUMENTS)[number]['key'];
+
+const DOC_KEYS = FAQ_DOCUMENTS.map((d) => d.key) as readonly string[];
+
+export function parseDocs(value: string | null | undefined): string[] {
+  return (value ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => DOC_KEYS.includes(s));
+}
+
+// Normalizes to a stable, de-duplicated, validated list; empty becomes null so
+// "belongs to no document" is one value rather than '' and null both meaning it.
+export function serializeDocs(values: unknown): string | null {
+  const list = Array.isArray(values) ? values : typeof values === 'string' ? values.split(',') : [];
+  const clean = [...new Set(list.map((v) => String(v).trim()).filter((v) => DOC_KEYS.includes(v)))];
+  clean.sort((a, b) => DOC_KEYS.indexOf(a) - DOC_KEYS.indexOf(b));
+  return clean.length ? clean.join(',') : null;
+}
+
+export function docLabel(key: string): string {
+  return FAQ_DOCUMENTS.find((d) => d.key === key)?.label ?? key;
+}
+
 // --- Answer formatting -------------------------------------------------------
 //
 // A BotAnswer.answer holds EITHER legacy plain text (newline-separated
