@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { trackFunnelEvent, getRepName } from '@/lib/analytics';
 
 interface HubSpotData {
@@ -1433,10 +1434,11 @@ const SignUpForm = () => {
                   </button>
                 </div>
               )}
-              {existingDomain && orgModalOpen && (
+              {existingDomain && orgModalOpen && createPortal(
                 <div
                   className="fixed inset-0 z-50 bg-black/50 flex items-start justify-center overflow-y-auto p-4 sm:py-10"
                   onClick={() => { setOrgModalOpen(false); setBookingOpen(false); }}
+                  style={{ fontFamily: 'brother-1816, sans-serif' }}
                 >
                 <div
                   className="relative w-full max-w-xl rounded-xl border-2 border-[#0088ff] overflow-hidden bg-white text-left"
@@ -1561,7 +1563,8 @@ const SignUpForm = () => {
                     </button>
                   </div>
                 </div>
-                </div>
+                </div>,
+                document.body
               )}
 
               {/* Organization Name */}
