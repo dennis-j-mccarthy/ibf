@@ -9,16 +9,35 @@ type Tutorial = { id: number; title: string; description: string; url: string; c
 const fmtSize = (b: number) => (b > 1e6 ? `${(b / 1e6).toFixed(1)} MB` : `${Math.round(b / 1e3)} KB`);
 const fmtDate = (s: string) => new Date(s).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
+// Publishing to the public Resources page is limited to these people; other
+// admins can still record, play, share, and delete. Matched on the email's
+// local part so avemaria.edu and ignatiusbookclub.com addresses both count.
+const PUBLISHERS = ['dennis.mccarthy', 'jessica.miano'];
+
 export default function TutorialsLibrary() {
   const [items, setItems] = useState<Tutorial[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<number | null>(null);
+  const [canPublish, setCanPublish] = useState(false);
+  const [notified, setNotified] = useState<number[]>([]);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    const r = await fetch('/api/admin/tutorials');
-    if (r.ok) setItems(await r.json());
-    setLoading(false);
+  useEffect(() => {
+    fetch('/api/admin/me')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        const localPart = (d?.username ?? '').split('@')[0].toLowerCase();
+        setCanPublish(PUBLISHERS.includes(localPart));
+      })
+      .catch(() => setCanPublish(false));
+  }, []);
+
+  const load = useCallback(() => {
+    fetch('/api/admin/tutorials')
+      .then((r) => (r.ok ? r.json() : []))
+      .then((rows) => {
+        setItems(rows);
+        setLoading(false);
+      });
   }, []);
 
   useEffect(() => {
@@ -38,6 +57,19 @@ export default function TutorialsLibrary() {
     }
     setBusy(null);
     load();
+  };
+
+  // Non-publishers flag a finished recording instead: emails Dennis and
+  // Jessica a link to this library so one of them can publish it.
+  const requestPublish = async (t: Tutorial) => {
+    setBusy(t.id);
+    const r = await fetch('/api/admin/tutorials/request-publish', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: t.id }),
+    });
+    setBusy(null);
+    if (r.ok) setNotified((n) => [...n, t.id]);
   };
 
   const remove = async (id: number) => {
@@ -84,14 +116,30 @@ export default function TutorialsLibrary() {
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                           Published — view
                         </a>
-                        <button onClick={() => publish(t)} disabled={busy === t.id} className="text-sm text-gray-400 hover:text-red-600 px-2 disabled:opacity-50">
-                          {busy === t.id ? '…' : 'Unpublish'}
-                        </button>
+                        {canPublish && (
+                          <button onClick={() => publish(t)} disabled={busy === t.id} className="text-sm text-gray-400 hover:text-red-600 px-2 disabled:opacity-50">
+                            {busy === t.id ? '…' : 'Unpublish'}
+                          </button>
+                        )}
                       </>
                     ) : (
-                      <button onClick={() => publish(t)} disabled={busy === t.id} className="text-sm bg-[#7c3aed] text-white px-4 py-2 rounded-lg hover:bg-[#7c3aed]/90 transition-colors disabled:opacity-60">
-                        {busy === t.id ? 'Publishing…' : 'Publish to Resources'}
-                      </button>
+                      <>
+                        {canPublish && (
+                          <button onClick={() => publish(t)} disabled={busy === t.id} className="text-sm bg-[#7c3aed] text-white px-4 py-2 rounded-lg hover:bg-[#7c3aed]/90 transition-colors disabled:opacity-60">
+                            {busy === t.id ? 'Publishing…' : 'Publish to Resources'}
+                          </button>
+                        )}
+                        {notified.includes(t.id) ? (
+                          <span className="text-sm text-[#00a843] font-semibold inline-flex items-center gap-1.5">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                            Publishers notified
+                          </span>
+                        ) : (
+                          <button onClick={() => requestPublish(t)} disabled={busy === t.id} className="text-sm border border-[#7c3aed] text-[#7c3aed] px-4 py-2 rounded-lg hover:bg-[#7c3aed]/10 transition-colors disabled:opacity-60">
+                            {busy === t.id ? 'Notifying…' : 'Prepare for publishing'}
+                          </button>
+                        )}
+                      </>
                     )}
                   </div>
                   <div className="mt-2 flex flex-wrap gap-2">

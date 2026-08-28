@@ -16,8 +16,12 @@ export async function GET(request: NextRequest) {
   if (!secret) {
     return new NextResponse('ADMIN_SESSION_SECRET is not set in .env.local', { status: 500 });
   }
-  // Sign in as the first built-in admin so admin-only areas (blog, tutorials) pass.
-  const email = [...allowedAdminEmails()][0] || 'dev-admin@avemaria.edu';
+  // Sign in as the first built-in admin (Dennis) so admin-only areas pass.
+  // ?as=<email> switches to another allowlisted admin, so per-person behavior
+  // (e.g. who sees the tutorial Publish button) is testable locally.
+  const allowed = [...allowedAdminEmails()];
+  const asParam = request.nextUrl.searchParams.get('as')?.trim().toLowerCase();
+  const email = (asParam && allowed.includes(asParam) ? asParam : allowed[0]) || 'dev-admin@avemaria.edu';
 
   const nextParam = request.nextUrl.searchParams.get('next');
   const next =
