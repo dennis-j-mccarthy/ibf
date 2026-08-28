@@ -1,17 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getAdminEmail } from '@/lib/auth/admin-guard';
 
-const ADMIN_KEY = 'ibf-admin-2024';
-
-function isAuthorized(request: NextRequest): boolean {
-  return request.headers.get('x-admin-key') === ADMIN_KEY;
+// Writes require a real signed-in admin session. This previously accepted a
+// shared header key that was hardcoded in client components, so it shipped to
+// every visitor's browser and let anyone edit or delete FAQs.
+async function isAuthorized(): Promise<boolean> {
+  return (await getAdminEmail()) !== null;
 }
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!isAuthorized(request)) {
+  if (!(await isAuthorized())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   try {
@@ -45,7 +47,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!isAuthorized(request)) {
+  if (!(await isAuthorized())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   try {

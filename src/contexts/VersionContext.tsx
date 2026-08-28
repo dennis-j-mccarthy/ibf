@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { isAdminSession } from '@/lib/auth/is-admin-client';
 
 type VersionMode = 'Catholic' | 'Public';
 
@@ -83,18 +84,13 @@ export function VersionProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Ctrl+Option+Shift+T → toggle tagging mode
+      // Ctrl+Option+Shift+T → toggle tagging mode (admins only)
       if (e.ctrlKey && e.altKey && e.shiftKey && e.code === 'KeyT') {
         e.preventDefault();
         if (taggingMode) {
           setTaggingMode(false);
         } else {
-          const auth = sessionStorage.getItem('faqEditAuth');
-          if (auth === 'true') {
-            setTaggingMode(true);
-          } else {
-            setShowTagAuth(true);
-          }
+          isAdminSession().then((ok) => (ok ? setTaggingMode(true) : setShowTagAuth(true)));
         }
         return;
       }
@@ -109,14 +105,6 @@ export function VersionProvider({ children }: { children: ReactNode }) {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [taggingMode]);
-
-  const handleTagAuth = (username: string, password: string) => {
-    if (username === 'ibfadmin' && password === 'ibf') {
-      sessionStorage.setItem('faqEditAuth', 'true');
-      setShowTagAuth(false);
-      setTaggingMode(true);
-    }
-  };
 
   return (
     <VersionContext.Provider value={{
@@ -136,7 +124,7 @@ export function VersionProvider({ children }: { children: ReactNode }) {
           <span className="text-white/60 font-normal text-xs ml-1">Ctrl+⌥+Shift+T to exit</span>
         </div>
       )}
-      {showTagAuth && <TagAuthModal onLogin={handleTagAuth} onClose={() => setShowTagAuth(false)} />}
+      {showTagAuth && <TagSignInNotice onClose={() => setShowTagAuth(false)} />}
     </VersionContext.Provider>
   );
 }
@@ -149,46 +137,22 @@ export function useVersion() {
   return context;
 }
 
-function TagAuthModal({ onLogin, onClose }: { onLogin: (u: string, p: string) => void; onClose: () => void }) {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState(false);
-
-  const handleSubmit = () => {
-    if (username === 'ibfadmin' && password === 'ibf') {
-      onLogin(username, password);
-    } else {
-      setError(true);
-    }
-  };
-
+// Tag mode is admin-only. There is no password here on purpose: the API
+// verifies the admin session cookie, so the only way in is a real sign-in.
+function TagSignInNotice({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50" onClick={onClose}>
       <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 p-6" onClick={(e) => e.stopPropagation()}>
-        <h3 className="font-bold text-lg text-gray-800 mb-4" style={{ fontFamily: 'brother-1816, sans-serif' }}>
-          Enter Tag Mode
+        <h3 className="font-bold text-lg text-gray-800 mb-2" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+          Admin sign-in required
         </h3>
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => { setUsername(e.target.value); setError(false); }}
-          onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-          className="w-full px-4 py-2 border rounded-lg mb-3 focus:outline-none focus:ring-2 focus:ring-purple-500"
-          autoFocus
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => { setPassword(e.target.value); setError(false); }}
-          onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-          className="w-full px-4 py-2 border rounded-lg mb-3 focus:outline-none focus:ring-2 focus:ring-purple-500"
-        />
-        {error && <p className="text-red-500 text-sm mb-3">Invalid credentials</p>}
+        <p className="text-sm text-gray-600 mb-5">
+          Tag mode edits live content, so it needs an admin session. Sign in and
+          then come back to this page.
+        </p>
         <div className="flex justify-end gap-3">
           <button onClick={onClose} className="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
-          <button onClick={handleSubmit} className="px-6 py-2 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700">Enter</button>
+          <a href="/admin/login" className="px-6 py-2 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700">Sign in</a>
         </div>
       </div>
     </div>

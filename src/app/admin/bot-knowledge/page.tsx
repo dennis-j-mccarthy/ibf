@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import RichTextEditor from '@/components/admin/RichTextEditor';
+import { answerToText } from '@/lib/bot-knowledge';
 
 type BotLink = { label: string; url: string };
 type BotAnswer = {
@@ -20,7 +22,7 @@ const EMPTY: Omit<BotAnswer, 'id' | 'slug'> = {
   question: '',
   answer: '',
   links: [],
-  audience: 'Both',
+  audience: 'All',
   category: '',
   order: 0,
   isActive: true,
@@ -211,23 +213,30 @@ export default function BotKnowledgeAdmin() {
             />
 
             <label className="block text-sm font-medium text-[#02176f] mb-1">Answer</label>
-            <textarea
-              className={`${inputCls} mb-4`}
-              rows={5}
-              value={draft.answer ?? ''}
-              onChange={(e) => setDraft({ ...draft, answer: e.target.value })}
-            />
+            <div className="mb-4">
+              <RichTextEditor
+                value={draft.answer ?? ''}
+                onChange={(html) => setDraft({ ...draft, answer: html })}
+              />
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-[#02176f] mb-1">Audience</label>
                 <select
                   className={inputCls}
-                  value={draft.audience ?? 'Both'}
+                  value={draft.audience ?? 'All'}
                   onChange={(e) => setDraft({ ...draft, audience: e.target.value })}
                 >
-                  <option value="Both">Both</option>
-                  <option value="Catholic">Catholic</option>
+                  {/* These are the values actually present in the data and
+                      grouped by the chatbot feed. The old list offered
+                      Both/Catholic/Public, none of which except Public exist,
+                      so editing an entry silently retagged it. */}
+                  <option value="All">All</option>
+                  <option value="In-Person">In-Person</option>
+                  <option value="Virtual">Virtual</option>
+                  <option value="Catholic School">Catholic School</option>
+                  <option value="Parish">Parish</option>
                   <option value="Public">Public</option>
                 </select>
               </div>
@@ -322,9 +331,10 @@ export default function BotKnowledgeAdmin() {
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-gray-500 line-clamp-2">{item.answer}</p>
+                  {/* Answers may be rich text — show a markup-free preview. */}
+                  <p className="text-sm text-gray-500 line-clamp-2">{answerToText(item.answer)}</p>
                   <p className="text-xs text-gray-400 mt-1">
-                    {item.audience || 'Both'}
+                    {item.audience || 'All'}
                     {item.category ? ` · ${item.category}` : ''}
                     {item.links?.length ? ` · ${item.links.length} link(s)` : ''}
                     {` · /bot-knowledge/${item.slug}`}

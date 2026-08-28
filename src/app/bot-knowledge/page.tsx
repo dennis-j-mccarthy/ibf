@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { getBotAnswers } from '@/lib/data';
-import type { BotLink } from '@/lib/bot-knowledge';
+import { answerToHtml, type BotLink } from '@/lib/bot-knowledge';
 
 // Source content for the HubSpot chatbot. Kept reachable (so HubSpot can fetch it)
 // but noindex so it never appears in Google or competes with real marketing pages.
@@ -23,9 +23,8 @@ export default async function BotKnowledgePage() {
         return (
           <article key={a.id} id={a.slug} style={{ marginTop: '2rem' }}>
             <h2>{a.question}</h2>
-            {a.answer.split('\n').filter(Boolean).map((para, i) => (
-              <p key={i}>{para}</p>
-            ))}
+            {/* Authored by admins only, same trust level as FAQ answers. */}
+            <div dangerouslySetInnerHTML={{ __html: answerToHtml(a.answer) }} />
             {links.length > 0 && (
               <ul>
                 {links.map((l, i) => (

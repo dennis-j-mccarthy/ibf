@@ -3,7 +3,7 @@
 // its markup isn't reliably crawlable; this route handler returns raw text that
 // any crawler can ingest. noindex via X-Robots-Tag.
 import { getBotAnswers } from '@/lib/data';
-import type { BotLink } from '@/lib/bot-knowledge';
+import { answerToText, type BotLink } from '@/lib/bot-knowledge';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,7 +28,7 @@ export async function GET() {
     lines.push(`## Audience: ${aud}`, '');
     for (const a of items) {
       lines.push(`Q: ${a.question}`);
-      lines.push(`A: ${a.answer.replace(/\s*\n\s*/g, ' ').trim()}`);
+      lines.push(`A: ${answerToText(a.answer)}`);
       const links = Array.isArray(a.links) ? (a.links as unknown as BotLink[]) : [];
       for (const l of links) if (l?.url) lines.push(`Link: ${l.label || l.url} — ${l.url}`);
       lines.push('');

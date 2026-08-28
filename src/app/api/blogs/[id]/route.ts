@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-
-const ADMIN_KEY = 'ibf-admin-2024';
+import { getAdminEmail } from '@/lib/auth/admin-guard';
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (request.headers.get('x-admin-key') !== ADMIN_KEY) {
+  // Requires a real admin session; the old shared header key was hardcoded in
+  // client components and therefore public.
+  if (!(await getAdminEmail())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   try {

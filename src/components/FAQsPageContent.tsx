@@ -6,6 +6,7 @@ import type { FAQ as PrismaFAQ } from '@prisma/client';
 import FAQTaggingModal from './FAQTaggingModal';
 import ScrollReveal from './ScrollReveal';
 import { useVersion } from '@/contexts/VersionContext';
+import { isAdminSession } from '@/lib/auth/is-admin-client';
 
 // Subtle dot pattern background
 const DotPattern = ({ opacity = 0.03 }: { opacity?: number }) => (
@@ -111,7 +112,6 @@ export default function FAQsPageContent({ catholicFaqs, publicFaqs }: FAQsPageCo
   const [editMode, setEditMode] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authError, setAuthError] = useState('');
 
   // In tagging mode show all FAQs; otherwise filter by current version using live version data
   const faqs = taggingMode
@@ -121,40 +121,25 @@ export default function FAQsPageContent({ catholicFaqs, publicFaqs }: FAQsPageCo
         return isCatholic ? t.catholic : t.public;
       });
 
-  // Check for existing auth on mount
-  useEffect(() => {
-    const auth = sessionStorage.getItem('faqEditAuth');
-    if (auth === 'true') {
-      setIsAuthenticated(true);
-    }
-  }, []);
-
-  // Handle edit mode toggle with auth check
+  // Handle edit mode toggle — admin session required to turn it on
   const handleEditModeToggle = useCallback(() => {
     if (editMode) {
       // Turning off edit mode - no auth needed
       setEditMode(false);
     } else if (isAuthenticated) {
-      // Already authenticated
+      // Already verified this session
       setEditMode(true);
     } else {
-      // Need to authenticate
-      setShowAuthModal(true);
+      isAdminSession().then((ok) => {
+        if (ok) {
+          setIsAuthenticated(true);
+          setEditMode(true);
+        } else {
+          setShowAuthModal(true);
+        }
+      });
     }
   }, [editMode, isAuthenticated]);
-
-  // Handle login
-  const handleLogin = useCallback((username: string, password: string) => {
-    if (username === 'ibfadmin' && password === 'ibf') {
-      setIsAuthenticated(true);
-      setEditMode(true);
-      setShowAuthModal(false);
-      setAuthError('');
-      sessionStorage.setItem('faqEditAuth', 'true');
-    } else {
-      setAuthError('Invalid username or password');
-    }
-  }, []);
 
   // Find the currently focused/open FAQ for tagging
   const getCurrentlyOpenFaq = useCallback((): FAQ | null => {
@@ -213,7 +198,7 @@ export default function FAQsPageContent({ catholicFaqs, publicFaqs }: FAQsPageCo
     if (!confirm('Delete this FAQ? This cannot be undone.')) return;
     setAllFaqs((prev) => prev.filter((f) => f.id !== faqId));
     try {
-      await fetch(`/api/faqs/${faqId}`, { method: 'DELETE', headers: { 'x-admin-key': 'ibf-admin-2024' } });
+      await fetch(`/api/faqs/${faqId}`, { method: 'DELETE' });
     } catch (error) {
       console.error('Error deleting FAQ:', error);
     }
@@ -234,7 +219,7 @@ export default function FAQsPageContent({ catholicFaqs, publicFaqs }: FAQsPageCo
     try {
       await fetch(`/api/faqs/${faq.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'x-admin-key': 'ibf-admin-2024' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ version: newVersion }),
       });
     } catch (error) {
@@ -573,59 +558,30 @@ export default function FAQsPageContent({ catholicFaqs, publicFaqs }: FAQsPageCo
           >
             <div className="bg-purple-600 px-6 py-4">
               <h2 className="text-white font-bold text-lg" style={{ fontFamily: 'brother-1816, sans-serif' }}>
-                Admin Login
+                Admin sign-in required
               </h2>
-              <p className="text-white/80 text-sm mt-1">Enter credentials to enable edit mode</p>
             </div>
-            <form
-              className="p-6 space-y-4"
-              onSubmit={(e) => {
-                e.preventDefault();
-                const form = e.target as HTMLFormElement;
-                const username = (form.elements.namedItem('username') as HTMLInputElement).value;
-                const password = (form.elements.namedItem('password') as HTMLInputElement).value;
-                handleLogin(username, password);
-              }}
-            >
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
-                <input
-                  type="text"
-                  name="username"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  autoFocus
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                <input
-                  type="password"
-                  name="password"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                />
-              </div>
-              {authError && (
-                <p className="text-red-600 text-sm">{authError}</p>
-              )}
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-gray-600">
+                Edit mode changes live FAQ content, so it needs an admin
+                session. Sign in and then come back to this page.
+              </p>
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    setShowAuthModal(false);
-                    setAuthError('');
-                  }}
+                  onClick={() => setShowAuthModal(false)}
                   className="flex-1 px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors border border-gray-300 rounded-lg"
                 >
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition-colors"
+                <a
+                  href="/admin/login"
+                  className="flex-1 px-4 py-2 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition-colors text-center"
                 >
-                  Login
-                </button>
+                  Sign in
+                </a>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
