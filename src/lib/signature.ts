@@ -59,7 +59,7 @@ export const BRANDS: Brand[] = [
     logo: '/images/ibb-logo.png',
     width: 62,
     height: 80,
-    colWidth: 190,
+    colWidth: 130,
     site: 'ignatiusbookfairs.com/book-battles',
     accent: '#02176f',
     ink: '#02176f',
@@ -197,7 +197,7 @@ export function buildSignatureHtml(f: SignatureFields): string {
   <tr>
     <td style="padding:0 18px 0 0;vertical-align:top;width:${brand.colWidth}px;">
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;width:${brand.colWidth}px;">
-        <tr><td align="center" style="padding:0;">${logoImg.replace('display:block;', 'display:block;margin:0 auto;')}</td></tr>
+        <tr><td style="padding:0;">${logoImg}</td></tr>
         ${taglineUnderLogo}
       </table>
     </td>
