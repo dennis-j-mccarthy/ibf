@@ -28,6 +28,8 @@ type BotAnswer = {
   siteVersion: string | null;
   siteCategory: string | null;
   sourceDocs: string | null;
+  keepSeparate: boolean;
+  mergedInto: number | null;
 };
 
 const EMPTY: Omit<BotAnswer, 'id' | 'slug'> = {
@@ -43,6 +45,8 @@ const EMPTY: Omit<BotAnswer, 'id' | 'slug'> = {
   siteVersion: null,
   siteCategory: null,
   sourceDocs: null,
+  keepSeparate: false,
+  mergedInto: null,
 };
 
 // Icon-only toggles keep the row compact enough to scan 123 answers at once.
@@ -250,6 +254,12 @@ export default function BotKnowledgeAdmin() {
               className="px-3 py-1.5 rounded-md text-white/90 hover:bg-white/10 hover:text-white transition-colors"
             >
               Blog
+            </a>
+            <a
+              href="/admin/bot-knowledge/reconcile"
+              className="px-3 py-1.5 rounded-md text-white/90 hover:bg-white/10 hover:text-white transition-colors"
+            >
+              Reconcile
             </a>
             <a
               href="/bot-knowledge"
@@ -531,6 +541,14 @@ export default function BotKnowledgeAdmin() {
                         {!item.isActive && (
                           <span className="text-[10px] uppercase bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded">
                             inactive
+                          </span>
+                        )}
+                        {item.mergedInto !== null && (
+                          <span
+                            className="text-[10px] uppercase bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded"
+                            title={`Retired — superseded by answer #${item.mergedInto}`}
+                          >
+                            merged
                           </span>
                         )}
                       </div>

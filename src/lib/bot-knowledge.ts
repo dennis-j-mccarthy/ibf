@@ -100,6 +100,77 @@ export function docLabel(key: string): string {
   return FAQ_DOCUMENTS.find((d) => d.key === key)?.label ?? key;
 }
 
+// --- Similarity & clustering -------------------------------------------------
+//
+// Used to group answers that are versions of the same question. Deliberately
+// shared between the reconcile screen and the import/backfill scripts so a
+// cluster the tool shows is the same cluster a script would act on.
+
+export function tokens(s: string): Set<string> {
+  return new Set(
+    answerToText(s || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .split(/\s+/)
+      .filter(Boolean)
+  );
+}
+
+// Jaccard overlap: shared words over total distinct words. Survives HTML
+// wrappers, punctuation and curly-quote drift.
+export function similarity(a: string, b: string): number {
+  const A = tokens(a);
+  const B = tokens(b);
+  if (!A.size || !B.size) return 0;
+  let shared = 0;
+  for (const w of A) if (B.has(w)) shared += 1;
+  return shared / (A.size + B.size - shared);
+}
+
+export const QUESTION_MATCH = 0.6; // two questions are "the same question"
+export const ANSWER_IDENTICAL = 0.95;
+export const ANSWER_NEAR = 0.6;
+
+export type VariantBand = 'identical' | 'drifted' | 'different';
+
+export function bandFor(minAnswerSimilarity: number): VariantBand {
+  if (minAnswerSimilarity >= ANSWER_IDENTICAL) return 'identical';
+  if (minAnswerSimilarity >= ANSWER_NEAR) return 'drifted';
+  return 'different';
+}
+
+// Groups rows whose questions are effectively the same. Order-stable so the
+// screen doesn't reshuffle between loads.
+export function clusterByQuestion<T extends { question: string }>(rows: T[]): T[][] {
+  const clusters: T[][] = [];
+  for (const row of rows) {
+    const hit = clusters.find((c) => similarity(c[0].question, row.question) >= QUESTION_MATCH);
+    if (hit) hit.push(row);
+    else clusters.push([row]);
+  }
+  return clusters;
+}
+
+// Lowest pairwise answer similarity in a cluster — the worst disagreement.
+export function lowestAnswerSimilarity(rows: { answer: string }[]): number {
+  let min = 1;
+  for (let i = 0; i < rows.length; i++) {
+    for (let j = i + 1; j < rows.length; j++) {
+      min = Math.min(min, similarity(rows[i].answer, rows[j].answer));
+    }
+  }
+  return min;
+}
+
+// Words present in `text` but not in `reference` — what makes this version
+// unique. Used to highlight drift rather than render a full character diff.
+export function uniqueWords(text: string, reference: string): Set<string> {
+  const ref = tokens(reference);
+  const out = new Set<string>();
+  for (const w of tokens(text)) if (!ref.has(w)) out.add(w);
+  return out;
+}
+
 // --- Answer formatting -------------------------------------------------------
 //
 // A BotAnswer.answer holds EITHER legacy plain text (newline-separated
