@@ -201,8 +201,7 @@ export function buildSignatureHtml(f: SignatureFields): string {
         ${taglineUnderLogo}
       </table>
     </td>
-    <td style="width:2px;background-color:${brand.accent};font-size:0;line-height:0;">&nbsp;</td>
-    <td style="padding:0 0 0 18px;vertical-align:top;">
+    <td style="border-left:2px solid ${brand.accent};padding:0 0 0 18px;vertical-align:top;">
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
         ${nameBlock}
       </table>
