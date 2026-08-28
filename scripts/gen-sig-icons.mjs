@@ -5,7 +5,7 @@ import sharp from 'sharp';
 
 const SETS = [
   { suffix: '', bg: '#0088ff' }, // Ignatius Book Fairs
-  { suffix: '-battle', bg: '#902124' }, // Ignatius Book Battle
+  { suffix: '-battle', bg: '#02176f' }, // Ignatius Book Battle
 ];
 
 const base = (bg, inner) => `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">

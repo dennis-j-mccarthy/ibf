@@ -17,6 +17,9 @@ export interface Brand {
   logo: string;
   width: number;
   height: number;
+  // Side-by-side left column width -- can exceed the logo width (the logo is
+  // centered in the column) so narrow logos don't squeeze the tagline.
+  colWidth: number;
   site: string;
   accent: string;
   ink: string;
@@ -32,6 +35,7 @@ export const BRANDS: Brand[] = [
     logo: '/images/ibf-logo-blue.png',
     width: 190,
     height: 30,
+    colWidth: 190,
     site: 'ignatiusbookfairs.com',
     accent: '#0088ff',
     ink: '#02176f',
@@ -43,6 +47,7 @@ export const BRANDS: Brand[] = [
     logo: '/images/ibc-logo.png',
     width: 180,
     height: 37,
+    colWidth: 180,
     site: 'ignatiusbookclub.com',
     accent: '#0088ff',
     ink: '#02176f',
@@ -54,8 +59,9 @@ export const BRANDS: Brand[] = [
     logo: '/images/ibb-logo.png',
     width: 62,
     height: 80,
+    colWidth: 190,
     site: 'ignatiusbookfairs.com/book-battles',
-    accent: '#902124',
+    accent: '#02176f',
     ink: '#02176f',
     iconSuffix: '-battle',
   },
@@ -173,7 +179,7 @@ export function buildSignatureHtml(f: SignatureFields): string {
   // One phrase per line, set in italic Georgia in the brand ink -- reads as a
   // motto rather than fine print. Georgia is universally available in email
   // clients, so no webfont risk.
-  const taglineUnderLogo = `<tr><td style="font-family:Georgia, 'Times New Roman', serif;font-style:italic;font-size:13px;line-height:19px;mso-line-height-rule:exactly;color:${brand.ink};padding:9px 0 0;width:${brand.width}px;">${esc(TAGLINE).replace(/\.\s+/g, '.<br />')}</td></tr>`;
+  const taglineUnderLogo = `<tr><td style="font-family:Georgia, 'Times New Roman', serif;font-style:italic;font-size:13px;line-height:19px;mso-line-height-rule:exactly;color:${brand.ink};padding:9px 0 0;width:${brand.colWidth}px;">${esc(TAGLINE).replace(/\.\s+/g, '.<br />')}</td></tr>`;
 
   if (f.layout === 'stacked') {
     return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-family:${FONT};">
@@ -189,9 +195,9 @@ export function buildSignatureHtml(f: SignatureFields): string {
 
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-family:${FONT};">
   <tr>
-    <td style="padding:0 18px 0 0;vertical-align:top;width:${brand.width}px;">
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
-        <tr><td style="padding:0;">${logoImg}</td></tr>
+    <td style="padding:0 18px 0 0;vertical-align:top;width:${brand.colWidth}px;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;width:${brand.colWidth}px;">
+        <tr><td align="center" style="padding:0;">${logoImg.replace('display:block;', 'display:block;margin:0 auto;')}</td></tr>
         ${taglineUnderLogo}
       </table>
     </td>
