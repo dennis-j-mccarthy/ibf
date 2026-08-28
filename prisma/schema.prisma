@@ -103,18 +103,33 @@ model FormFunnelEvent {
   @@index([createdAt])
 }
 
-// Chatbot knowledge base. Separate from the public-facing FAQ model on purpose --
-// these power the HubSpot bot's noindexed source pages, not the on-site FAQ accordion.
+// Knowledge base — the source of truth for question/answer content. It feeds the
+// HubSpot chatbot (via the noindexed /bot-knowledge pages) and, for entries
+// flagged with publishToSite, the on-site FAQ accordion.
+//
+// `answer` holds either legacy plain text or rich text as HTML; read it through
+// answerToHtml/answerToText in lib/bot-knowledge.ts rather than raw.
 model BotAnswer {
   id        Int      @id @default(autoincrement())
   question  String
   answer    String
   slug      String   @unique
   links     Json?    // [{ label: string, url: string }]
-  audience  String?  // "Catholic", "Public", or "Both"
-  category  String?  // free-form grouping (e.g. "Pricing", "Logistics")
+  // Chatbot facet. Real values in use: All, In-Person, Virtual, Catholic School,
+  // Parish, Public. NOTE this conflates who-the-fair-is-for with fair format, so
+  // it cannot drive the website's Catholic/Public filter -- siteVersion does that.
+  audience  String?
+  category  String?  // free-form grouping for the bot (e.g. "Pricing", "Logistics")
   order     Float    @default(0)
   isActive  Boolean  @default(true)
+
+  // --- Website publishing (mirrors into the FAQ table the site renders) ---
+  publishToSite Boolean @default(false)
+  siteFeatured  Boolean @default(false) // also show in the homepage FAQ block
+  siteVersion   String? // "Catholic" | "Public" | "Both" -- drives the site's mode filter
+  siteCategory  String? // one of the five designed /faqs groups
+  faqId         Int?    // mirrored FAQ row, so republish/unpublish is idempotent
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

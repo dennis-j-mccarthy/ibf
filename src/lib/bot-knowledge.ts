@@ -35,6 +35,35 @@ export function normalizeLinks(input: unknown): BotLink[] {
     .filter((l) => l.url.length > 0);
 }
 
+// --- Website publishing ------------------------------------------------------
+//
+// The /faqs page renders exactly these five sections, in this order, each with
+// its own header image; it drops anything else. Keep this list and
+// categoryConfig/categoryOrder in FAQsPageContent.tsx in step, or an entry
+// tagged with an unknown section will publish into a void.
+export const SITE_SECTIONS = [
+  'Turning the Page',
+  'Flow of the Fair',
+  'Literature Logistics',
+  'Reader Rewards',
+  'Your Concerns Our Commitments',
+] as const;
+
+export type SiteSection = (typeof SITE_SECTIONS)[number];
+
+// The site's mode filter. "Both" shows in Catholic and Public mode alike.
+export const SITE_VERSIONS = ['Catholic', 'Public', 'Both'] as const;
+
+export type SiteVersion = (typeof SITE_VERSIONS)[number];
+
+export function isSiteSection(value: unknown): value is SiteSection {
+  return typeof value === 'string' && (SITE_SECTIONS as readonly string[]).includes(value);
+}
+
+export function isSiteVersion(value: unknown): value is SiteVersion {
+  return typeof value === 'string' && (SITE_VERSIONS as readonly string[]).includes(value);
+}
+
 // --- Answer formatting -------------------------------------------------------
 //
 // A BotAnswer.answer holds EITHER legacy plain text (newline-separated

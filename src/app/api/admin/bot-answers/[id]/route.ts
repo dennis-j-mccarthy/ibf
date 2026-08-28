@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { uniqueSlug, normalizeLinks } from '@/lib/bot-knowledge';
+import { uniqueSlug, normalizeLinks, isSiteSection, isSiteVersion } from '@/lib/bot-knowledge';
 
 // Auth is enforced by middleware.ts for the whole /api/admin/* prefix.
 
@@ -21,6 +21,16 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (body.category !== undefined) data.category = body.category || null;
   if (typeof body.order === 'number') data.order = body.order;
   if (typeof body.isActive === 'boolean') data.isActive = body.isActive;
+  // Website publishing. Section and version are validated against the values
+  // the /faqs page can actually render, so a typo can't publish into a void.
+  if (typeof body.publishToSite === 'boolean') data.publishToSite = body.publishToSite;
+  if (typeof body.siteFeatured === 'boolean') data.siteFeatured = body.siteFeatured;
+  if (body.siteVersion !== undefined) {
+    data.siteVersion = isSiteVersion(body.siteVersion) ? body.siteVersion : null;
+  }
+  if (body.siteCategory !== undefined) {
+    data.siteCategory = isSiteSection(body.siteCategory) ? body.siteCategory : null;
+  }
   // Recompute the slug only when explicitly provided, keeping it unique.
   if (typeof body.slug === 'string' && body.slug.trim()) {
     data.slug = await uniqueSlug(body.slug, answerId);
