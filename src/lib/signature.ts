@@ -20,6 +20,9 @@ export interface Brand {
   site: string;
   accent: string;
   ink: string;
+  // Appended to social icon filenames so each brand gets icons in its accent
+  // (e.g. sig-facebook-battle.png). Empty string = the default blue set.
+  iconSuffix: string;
 }
 
 export const BRANDS: Brand[] = [
@@ -30,8 +33,9 @@ export const BRANDS: Brand[] = [
     width: 190,
     height: 30,
     site: 'ignatiusbookfairs.com',
-    accent: '#902124',
+    accent: '#0088ff',
     ink: '#02176f',
+    iconSuffix: '',
   },
   {
     key: 'ibc',
@@ -42,6 +46,7 @@ export const BRANDS: Brand[] = [
     site: 'ignatiusbookclub.com',
     accent: '#0088ff',
     ink: '#02176f',
+    iconSuffix: '',
   },
   {
     key: 'ibb',
@@ -50,8 +55,9 @@ export const BRANDS: Brand[] = [
     width: 62,
     height: 80,
     site: 'ignatiusbookfairs.com/book-battles',
-    accent: '#ff6445',
+    accent: '#902124',
     ink: '#02176f',
+    iconSuffix: '-battle',
   },
 ];
 
@@ -76,8 +82,10 @@ export interface SignatureFields {
   mobile: string;
   bookingUrl: string;
   linkTitle: string;
-  tagline: string;
 }
+
+// The tagline is fixed brand copy -- every signature carries it verbatim.
+export const TAGLINE = 'Great books. Real formation. Every fair.';
 
 export const DEFAULT_FIELDS: SignatureFields = {
   brand: 'ibf',
@@ -92,7 +100,6 @@ export const DEFAULT_FIELDS: SignatureFields = {
   mobile: '',
   bookingUrl: '',
   linkTitle: 'Book a time with me',
-  tagline: 'Great books. Real formation. Every fair.',
 };
 
 const esc = (s: string) =>
@@ -150,7 +157,7 @@ export function buildSignatureHtml(f: SignatureFields): string {
   contactRows.push(
     `<tr><td style="padding:7px 0 0;">${SOCIAL_LINKS.map(
       (s) =>
-        `<a href="${esc(s.url)}" style="text-decoration:none;"><img src="${esc(abs(s.icon))}" width="22" height="22" alt="${esc(s.label)}" style="display:inline-block;border:0;vertical-align:middle;" /></a>`
+        `<a href="${esc(s.url)}" style="text-decoration:none;"><img src="${esc(abs(s.icon.replace(/\.png$/, `${brand.iconSuffix}.png`)))}" width="22" height="22" alt="${esc(s.label)}" style="display:inline-block;border:0;vertical-align:middle;" /></a>`
     ).join('&nbsp;&nbsp;')}</td></tr>`
   );
 
@@ -166,9 +173,7 @@ export function buildSignatureHtml(f: SignatureFields): string {
   // One phrase per line, set in italic Georgia in the brand ink -- reads as a
   // motto rather than fine print. Georgia is universally available in email
   // clients, so no webfont risk.
-  const taglineUnderLogo = f.tagline.trim()
-    ? `<tr><td style="font-family:Georgia, 'Times New Roman', serif;font-style:italic;font-size:13px;line-height:19px;mso-line-height-rule:exactly;color:${brand.ink};padding:9px 0 0;width:${brand.width}px;">${esc(f.tagline.trim()).replace(/\.\s+/g, '.<br />')}</td></tr>`
-    : '';
+  const taglineUnderLogo = `<tr><td style="font-family:Georgia, 'Times New Roman', serif;font-style:italic;font-size:13px;line-height:19px;mso-line-height-rule:exactly;color:${brand.ink};padding:9px 0 0;width:${brand.width}px;">${esc(TAGLINE).replace(/\.\s+/g, '.<br />')}</td></tr>`;
 
   if (f.layout === 'stacked') {
     return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-family:${FONT};">
@@ -178,7 +183,7 @@ export function buildSignatureHtml(f: SignatureFields): string {
       ${nameBlock}
     </table>
   </td></tr>
-  ${f.tagline.trim() ? `<tr><td style="font-family:Georgia, 'Times New Roman', serif;font-style:italic;font-size:13px;line-height:19px;mso-line-height-rule:exactly;color:${brand.ink};padding:12px 0 0;">${esc(f.tagline.trim())}</td></tr>` : ''}
+  <tr><td style="font-family:Georgia, 'Times New Roman', serif;font-style:italic;font-size:13px;line-height:19px;mso-line-height-rule:exactly;color:${brand.ink};padding:12px 0 0;">${esc(TAGLINE)}</td></tr>
 </table>`;
   }
 

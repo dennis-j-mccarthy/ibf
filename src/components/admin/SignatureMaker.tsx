@@ -62,10 +62,14 @@ export default function SignatureMaker() {
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- SSR-safe
-      // localStorage hydration: a lazy useState initializer would touch
-      // localStorage during server render and mismatch on hydrate.
-      if (saved) setF({ ...DEFAULT_FIELDS, ...JSON.parse(saved), brand: 'ibf' });
+      // SSR-safe localStorage hydration: a lazy useState initializer would
+      // touch localStorage during server render and mismatch on hydrate.
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Only the fairs and book-battle brands are offered in the switcher.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setF({ ...DEFAULT_FIELDS, ...parsed, brand: parsed.brand === 'ibb' ? 'ibb' : 'ibf' });
+      }
     } catch {
       /* first run */
     }
@@ -198,13 +202,23 @@ export default function SignatureMaker() {
               <input className={input} value={f.linkTitle} onChange={(e) => set('linkTitle', e.target.value)} placeholder="Book a time with me" />
             </div>
 
-            <div>
-              <label className={label}>Tagline (optional)</label>
-              <input className={input} value={f.tagline} onChange={(e) => set('tagline', e.target.value)} />
-            </div>
-
-
             <div className="flex flex-wrap items-center gap-5 border-t border-[#eef0f5] pt-4">
+              <div>
+                <span className="text-sm font-medium text-[#02176f] mr-3">Brand</span>
+                <div className="inline-flex bg-[#f5f6fa] rounded-full p-1">
+                  {([['ibf', 'Book Fairs'], ['ibb', 'Book Battle']] as const).map(([key, name]) => (
+                    <button
+                      key={key}
+                      onClick={() => set('brand', key)}
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                        f.brand === key ? 'bg-[#0088ff] text-white' : 'text-[#7e828f]'
+                      }`}
+                    >
+                      {name}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <div>
                 <span className="text-sm font-medium text-[#02176f] mr-3">Layout</span>
                 <div className="inline-flex bg-[#f5f6fa] rounded-full p-1">
