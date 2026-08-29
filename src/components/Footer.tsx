@@ -76,6 +76,23 @@ const Footer = () => {
             )}
           </nav>
 
+          {/* Book Battles — the interest form is the only way in, so it needs a
+              route from the footer of every page. */}
+          <div className="max-w-xs" style={{ fontFamily: 'brother-1816, sans-serif' }}>
+            <p className="text-white text-sm font-bold uppercase mb-1.5">
+              Ignatius Book Battles
+            </p>
+            <p className="text-white/80 text-sm leading-snug mb-2.5">
+              A reading competition built on stories that inspire, challenge, and delight.
+            </p>
+            <Link
+              href="/book-battle-interest-form"
+              className="text-white text-sm font-bold underline underline-offset-2 hover:opacity-80 transition-opacity"
+            >
+              Bring one to your school &rarr;
+            </Link>
+          </div>
+
           {/* Logo & Info */}
           <div className="text-left md:text-right">
             <Image
