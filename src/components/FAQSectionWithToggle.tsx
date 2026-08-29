@@ -129,22 +129,15 @@ export default function FAQSectionWithToggle({ catholicFaqs, publicFaqs, showTog
                 </button>
                 {openIndex === index && (
                   <div className="px-6 pt-3 pb-5">
-                    {faq.question.includes('Find a Book Fair') ? (
-                      <Image
-                        src="/images/anim-map.gif"
-                        alt="Find a Book Fair Near You"
-                        width={800}
-                        height={500}
-                        className="w-full h-auto rounded-lg"
-                        unoptimized
-                      />
-                    ) : (
-                      <div
-                        className="text-gray-600 text-base leading-relaxed"
-                        style={{ fontFamily: 'brother-1816, sans-serif' }}
-                        dangerouslySetInnerHTML={{ __html: faq.answer }}
-                      />
-                    )}
+                    {/* Every answer renders from its stored content. The map
+                        answer used to be special-cased to a hardcoded image,
+                        which silently discarded its text and its link to the
+                        inquiry form -- a call to action with no way to act. */}
+                    <div
+                      className="faq-home-answer text-gray-600 text-base leading-relaxed [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-lg [&_figure]:my-3"
+                      style={{ fontFamily: 'brother-1816, sans-serif' }}
+                      dangerouslySetInnerHTML={{ __html: faq.answer }}
+                    />
                   </div>
                 )}
               </div>
