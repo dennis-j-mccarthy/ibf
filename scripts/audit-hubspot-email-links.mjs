@@ -35,11 +35,23 @@ async function main() {
     if (res.status === 403) {
       const body = await res.json().catch(() => ({}));
       console.error("HubSpot refused the request:\n  " + (body.message || res.statusText));
+      // HubSpot names the scopes it wanted; print those verbatim rather than
+      // guessing, since the docs are vague about this endpoint.
+      const required =
+        body.context?.requiredScopes ||
+        body.context?.requiredGranularScopes ||
+        body.requiredScopes;
+      if (required?.length) {
+        console.error("\nHubSpot says this app needs:");
+        for (const s of required) console.error("  " + s);
+      } else {
+        console.error("\nHubSpot did not name a scope. The one that covers marketing email is 'content'.");
+      }
       console.error(
-        "\nThe private app is missing a scope. In HubSpot go to\n" +
-          "  Settings → Integrations → Private Apps → (your app) → Scopes\n" +
-          "and add:  marketing.email.read   (content read may also be needed)\n" +
-          "Then re-copy the token into .env.local and run this again."
+        "\nAdd it under Settings → Integrations → Private Apps → (your app) → Scopes,\n" +
+          "then re-copy the token into .env.local and run this again.\n" +
+          "Note: 'content' requires Marketing Hub Professional or Enterprise. On a lower\n" +
+          "tier the scope is unavailable and these emails have to be checked by hand."
       );
       process.exit(2);
     }
