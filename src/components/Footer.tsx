@@ -107,17 +107,18 @@ const Footer = () => {
           </nav>
 
           {/* Book Battles — the interest form is the only way in, so it needs a
-              route from the footer of every page. */}
-          <div>
+              route from the footer of every page. Tinted so it reads as a
+              promotion rather than a fourth column of navigation. */}
+          <div className="bg-white/10 rounded-lg p-4 self-start">
             <p className={HEADING}>Ignatius Book Battles</p>
-            <p className="text-white/85 text-sm leading-snug mb-3 max-w-[16rem]">
+            <p className="text-white/85 text-sm leading-snug mb-4 max-w-[16rem]">
               A reading competition built on stories that inspire, challenge, and delight.
             </p>
             <Link
               href="/book-battle-interest-form"
-              className="text-white text-sm font-bold underline underline-offset-4 hover:opacity-80 transition-opacity"
+              className="inline-block bg-white/15 hover:bg-white/25 border border-white/30 text-white text-[11px] font-bold uppercase tracking-wide px-3 py-1.5 rounded transition-colors"
             >
-              Bring one to your school &rarr;
+              Bring one to your school
             </Link>
           </div>
 
