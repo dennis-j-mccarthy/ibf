@@ -36,6 +36,13 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // Catholic planning checklist: the 3-17 file was superseded by the
+      // 8-13-26 revision. Keeps links already sent to coordinators working.
+      {
+        source: '/documents/checklist-in-person-catholic-3-17.pdf',
+        destination: '/documents/checklist-in-person-catholic-8-13-26.pdf',
+        permanent: true,
+      },
       // The Catholic in-person guide carried a Webflow hash and a January date
       // in its filename long after the August revision replaced it. Renamed for
       // honesty; this keeps every link already sent to coordinators working.

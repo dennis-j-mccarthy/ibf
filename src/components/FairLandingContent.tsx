@@ -51,7 +51,7 @@ const RESOURCES_BY_TYPE: Record<string, { guide: string; checklist: string; faq:
     checklist: 'catholic-school-planning-checklist',
     faq: 'faqs-catholic-in-person-coordinators',
     guideThumbnail: '/images/thumb-guide-catholic.png',
-    checklistThumbnail: '/images/checklist-catholic-3-17-thumb.png',
+    checklistThumbnail: '/images/checklist-catholic-8-13-26-thumb.png',
     faqThumbnail: '/images/faqs-in-person-catholic-thumb.png',
   },
   'catholic-virtual': {
