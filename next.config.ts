@@ -36,6 +36,14 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // The Catholic in-person guide carried a Webflow hash and a January date
+      // in its filename long after the August revision replaced it. Renamed for
+      // honesty; this keeps every link already sent to coordinators working.
+      {
+        source: '/documents/6972c6f5a779558d8d96668a_in-person-guide-catholic-1-22-26.pdf',
+        destination: '/documents/in-person-guide-catholic-8-31-26.pdf',
+        permanent: true,
+      },
       // Old Webflow slugs that don't match current DB slugs
       {
         source: '/resources/you-caption-it---social-media-post',

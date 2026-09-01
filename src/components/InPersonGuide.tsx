@@ -435,7 +435,7 @@ export default function InPersonGuide() {
                 Print This Guide
               </button>
               <a
-                href="/documents/6972c6f5a779558d8d96668a_in-person-guide-catholic-1-22-26.pdf"
+                href="/documents/in-person-guide-catholic-8-31-26.pdf"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 bg-[#00c853] hover:bg-[#00a843] text-white font-brother font-bold px-6 py-3 rounded-full transition-colors"
