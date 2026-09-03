@@ -106,6 +106,21 @@ export default async function AdminDashboard() {
       ),
     },
     {
+      href: '/admin/email-audit',
+      title: 'Email Audit',
+      desc: 'Every HubSpot automation email, grouped by sequence, with a broken-link report.',
+      stat: 'HubSpot',
+      statLabel: 'read-only',
+      accent: '#0e8a5f',
+      icon: (
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+        />
+      ),
+    },
+    {
       href: '/admin/training',
       title: 'Training',
       desc: 'Brand statements, angles, colors, fonts, prefs + image library that inform the blog & social tools.',

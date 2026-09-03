@@ -29,15 +29,15 @@ model Resource {
   title        String
   slug         String   @unique
   description  String?
-  thumbnail    String?  // Image URL
-  fileUrl      String?  // Direct file URL
-  category     String?  // Operational, Advertising, Public, Tutorials
-  audience     String?  // "Catholic In Person", "Catholic Virtual", "Parish In Person", "Public In Person"
-  resourceType String?  // PDF, Video, Image, etc.
-  embedCode    String?  // For YouTube/Loom embeds
+  thumbnail    String? // Image URL
+  fileUrl      String? // Direct file URL
+  category     String? // Operational, Advertising, Public, Tutorials
+  audience     String? // "Catholic In Person", "Catholic Virtual", "Parish In Person", "Public In Person"
+  resourceType String? // PDF, Video, Image, etc.
+  embedCode    String? // For YouTube/Loom embeds
   featured     Boolean  @default(false)
   hasDetails   Boolean  @default(false)
-  parentGuide  String?  // Parent operational guide slug (book-fair-administrator-operational-guide, parish-book-fair-administrator-operational-guide, virtual-book-fair-operational-guide, public-book-fair-administrator-operational-guide)
+  parentGuide  String? // Parent operational guide slug (book-fair-administrator-operational-guide, parish-book-fair-administrator-operational-guide, virtual-book-fair-operational-guide, public-book-fair-administrator-operational-guide)
   order        Float    @default(0)
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
@@ -45,24 +45,24 @@ model Resource {
 }
 
 model Blog {
-  id              Int       @id @default(autoincrement())
-  title           String
-  slug            String    @unique
-  content         String    // Rich HTML content
-  summary         String?   // Short description/excerpt
-  thumbnail       String?   // Main image URL
-  thumbnailSmall  String?   // Small thumbnail URL
-  category        String?   // Catholic, Public, etc.
-  color           String?   // Accent color for the post
-  embedHtml       String?   // Custom embed HTML content
-  featuredBooks   Json?     // [{url,title,image,sku}] fetched from shop.ignatiusbookfairs.com
-  featured        Boolean   @default(false)
-  archived        Boolean   @default(false)
-  starred         Boolean   @default(false)  // queued for the next newsletter
-  newsletteredAt  DateTime?                  // stamped when a newsletter featuring it went out
-  publishedAt     DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id             Int       @id @default(autoincrement())
+  title          String
+  slug           String    @unique
+  content        String // Rich HTML content
+  summary        String? // Short description/excerpt
+  thumbnail      String? // Main image URL
+  thumbnailSmall String? // Small thumbnail URL
+  category       String? // Catholic, Public, etc.
+  color          String? // Accent color for the post
+  embedHtml      String? // Custom embed HTML content
+  featuredBooks  Json? // [{url,title,image,sku}] fetched from shop.ignatiusbookfairs.com
+  featured       Boolean   @default(false)
+  archived       Boolean   @default(false)
+  starred        Boolean   @default(false) // queued for the next newsletter
+  newsletteredAt DateTime? // stamped when a newsletter featuring it went out
+  publishedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }
 
 // AI-generated promo kit for a blog post: per-platform promo copy (instagram /
@@ -71,7 +71,7 @@ model Blog {
 model PromoKit {
   id        Int      @id @default(autoincrement())
   blogId    Int      @unique
-  content   String   // JSON: { instagram: [...], facebook: [...], x: [...], email: {...} }
+  content   String // JSON: { instagram: [...], facebook: [...], x: [...], email: {...} }
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -88,15 +88,15 @@ model Testimonial {
 }
 
 model FormFunnelEvent {
-  id          Int      @id @default(autoincrement())
-  sessionId   String   // Unique session identifier
-  event       String   // form_step1_completed, form_step2_completed, appointment_shown, etc.
-  orgType     String?
-  schoolType  String?
-  state       String?
-  rep         String?
-  properties  String?  // JSON string for additional properties
-  createdAt   DateTime @default(now())
+  id         Int      @id @default(autoincrement())
+  sessionId  String // Unique session identifier
+  event      String // form_step1_completed, form_step2_completed, appointment_shown, etc.
+  orgType    String?
+  schoolType String?
+  state      String?
+  rep        String?
+  properties String? // JSON string for additional properties
+  createdAt  DateTime @default(now())
 
   @@index([sessionId])
   @@index([event])
@@ -110,30 +110,30 @@ model FormFunnelEvent {
 // `answer` holds either legacy plain text or rich text as HTML; read it through
 // answerToHtml/answerToText in lib/bot-knowledge.ts rather than raw.
 model BotAnswer {
-  id        Int      @id @default(autoincrement())
-  question  String
-  answer    String
-  slug      String   @unique
-  links     Json?    // [{ label: string, url: string }]
+  id       Int     @id @default(autoincrement())
+  question String
+  answer   String
+  slug     String  @unique
+  links    Json? // [{ label: string, url: string }]
   // Chatbot facet. Real values in use: All, In-Person, Virtual, Catholic School,
   // Parish, Public. NOTE this conflates who-the-fair-is-for with fair format, so
   // it cannot drive the website's Catholic/Public filter -- siteVersion does that.
-  audience  String?
-  category  String?  // free-form grouping for the bot (e.g. "Pricing", "Logistics")
-  order     Float    @default(0)
-  isActive  Boolean  @default(true)
+  audience String?
+  category String? // free-form grouping for the bot (e.g. "Pricing", "Logistics")
+  order    Float   @default(0)
+  isActive Boolean @default(true)
 
   // --- Website publishing (mirrors into the FAQ table the site renders) ---
   publishToSite Boolean @default(false)
   siteFeatured  Boolean @default(false) // also show in the homepage FAQ block
   siteVersion   String? // "Catholic" | "Public" | "Both" -- drives the site's mode filter
   siteCategory  String? // one of the five designed /faqs groups
-  faqId         Int?    // mirrored FAQ row, so republish/unpublish is idempotent
+  faqId         Int? // mirrored FAQ row, so republish/unpublish is idempotent
 
   // Which published coordinator FAQ PDFs this answer appears in. Comma-separated
   // keys from FAQ_DOCUMENTS -- multi-valued because half the questions in those
   // PDFs appear in more than one of them.
-  sourceDocs    String?
+  sourceDocs String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -152,11 +152,11 @@ model AdminUser {
 // generators. Compiled into a brand brief injected into both system prompts.
 model TrainingProfile {
   id           Int      @id @default(1) // singleton row
-  audiences    Json     @default("[]")  // [{ audience, statements: string[], angles: string[] }]
-  colors       Json     @default("[]")  // [{ name, hex }]
-  fonts        Json     @default("[]")  // [{ name, usage }]
-  socialPrefs  String   @default("")    // freeform social-media guidance
-  articlePrefs String   @default("")    // freeform article guidance
+  audiences    Json     @default("[]") // [{ audience, statements: string[], angles: string[] }]
+  colors       Json     @default("[]") // [{ name, hex }]
+  fonts        Json     @default("[]") // [{ name, usage }]
+  socialPrefs  String   @default("") // freeform social-media guidance
+  articlePrefs String   @default("") // freeform article guidance
   updatedAt    DateTime @updatedAt
 }
 
@@ -180,9 +180,9 @@ model TrainingImage {
   url       String
   alt       String   @default("")
   category  String   @default("other") // kids|bookfairs|parents|teachers|admins|doodads|other
-  audience  String   @default("")      // optional target audience
+  audience  String   @default("") // optional target audience
   tags      String[] @default([])
-  source    String   @default("url")   // url|blob
+  source    String   @default("url") // url|blob
   createdAt DateTime @default(now())
 }
 
@@ -248,12 +248,12 @@ model TrainingDocument {
 // ("sec-01".."sec-09"). No auth by design — this is an internal review tool;
 // abuse is held off by a honeypot field and a per-author hourly cap.
 model SpecComment {
-  id          String   @id @default(cuid())
-  docSlug     String   @default("gift-wallet-spec")
-  section     String // matches iframe doc's section id, e.g. "sec-05"
-  authorName  String
-  body        String
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  docSlug    String   @default("gift-wallet-spec")
+  section    String // matches iframe doc's section id, e.g. "sec-05"
+  authorName String
+  body       String
+  createdAt  DateTime @default(now())
 
   @@index([docSlug, section])
 }
@@ -270,4 +270,62 @@ model HealthComment {
 
   @@index([itemId])
   @@index([createdAt])
+}
+
+// ===== Email audit (/admin/email-audit) =====
+// Cached results of the HubSpot marketing-email audit. HubSpot is only read
+// during an explicit "Re-run audit", never on page load; the page renders the
+// latest finished run. Runs advance in small steps (see
+// /api/admin/email-audit/step) so each request fits serverless time limits.
+model EmailAuditRun {
+  id             String    @id @default(cuid())
+  startedAt      DateTime  @default(now())
+  // Touched by every step slice; "running but stale updatedAt" = abandoned.
+  updatedAt      DateTime  @updatedAt
+  finishedAt     DateTime?
+  status         String    @default("running") // running | complete | failed
+  phase          String    @default("list") // list | details | links | done
+  cursor         String? // HubSpot paging.next.after during the list phase
+  error          String?
+  totalEmails    Int       @default(0)
+  detailsFetched Int       @default(0)
+  totalLinks     Int       @default(0)
+  checkedLinks   Int       @default(0)
+  flowsTotal     Int       @default(0)
+  flowsEnabled   Int       @default(0)
+
+  emails EmailAuditEmail[]
+  links  EmailAuditLink[]
+}
+
+model EmailAuditEmail {
+  id        String        @id @default(cuid())
+  runId     String
+  run       EmailAuditRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  hubspotId String
+  name      String
+  subject   String        @default("")
+  // Ordered content blocks parsed from content.widgets:
+  // [{ type: "html"|"image"|"cta", html?, src?, text?, url? }]
+  blocks    Json?
+  // Every link found in the email, href attributes AND CTA destination fields:
+  // [{ url, source: "href"|"cta", text }]
+  links     Json?
+
+  @@unique([runId, hubspotId])
+  @@index([runId])
+}
+
+model EmailAuditLink {
+  id         String        @id @default(cuid())
+  runId      String
+  run        EmailAuditRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  url        String
+  // broken | works-via-redirect | ok | inconclusive
+  status     String        @default("ok")
+  httpStatus Int?
+  finalUrl   String?
+
+  @@unique([runId, url])
+  @@index([runId])
 }
