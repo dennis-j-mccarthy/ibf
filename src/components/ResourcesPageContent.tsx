@@ -284,8 +284,8 @@ export default function ResourcesPageContent({ resources }: ResourcesPageContent
   }).sort((a, b) => {
     // Sort order: Guides, FAQs, Checklists, Parent Letters, other docs, videos
     const typeOrder = (r: Resource) => {
-      if (activeFilter === 'Advertising' && r.slug === 'back-to-school-flyer-2026') return -1; // Pin to position one within Advertising
-      if (activeFilter === 'Public' && r.slug === 'back-to-school-flyer-public-2026') return -1; // Pin to position one within Public
+      if (activeFilter === 'Advertising' && r.slug === 'fall-flyer-2026') return -1; // Pin to position one within Advertising (seasonal; was back-to-school)
+      if (activeFilter === 'Public' && r.slug === 'fall-flyer-public-2026') return -1; // Pin to position one within Public (seasonal; was back-to-school)
       if (activeFilter === 'Operational' && r.slug === 'pos-device-instructions') return -1; // Pin to position one within Operational
       if (activeFilter === 'Tutorials' && r.slug.startsWith('tutorial-')) return -1; // Newly published tutorials pin to the top of Tutorials
       if (r.slug.endsWith('operational-guide')) return 0; // Guides
