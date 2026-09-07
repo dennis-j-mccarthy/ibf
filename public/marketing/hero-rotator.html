@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Proposed home hero rotator - Ignatius Book Fairs store</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, sans-serif; background: #f4f4f4; }
+  .note { max-width: 1200px; margin: 18px auto 10px; padding: 0 16px; color: #555; font-size: 14px; }
+  .rotator { position: relative; max-width: 1600px; margin: 0 auto; overflow: hidden; background: #fff; }
+  .slide { display: none; }
+  .slide.active { display: block; }
+  .slide img { width: 100%; height: auto; display: block; }
+  .dots { position: absolute; bottom: 14px; left: 0; right: 0; text-align: center; }
+  .dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: rgba(2,23,111,0.25);
+         margin: 0 5px; cursor: pointer; }
+  .dot.active { background: #02176f; }
+  .arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 44px;
+           border-radius: 50%; background: rgba(255,255,255,0.85); border: 1px solid #ddd; cursor: pointer;
+           font-size: 22px; color: #02176f; line-height: 40px; text-align: center; user-select: none; }
+  .prev { left: 14px; } .next { right: 14px; }
+</style>
+</head>
+<body>
+  <p class="note">Proposed rotator for the top of the store home page &mdash; three slides, 5s auto-advance,
+     each slide clicks through to its destination.</p>
+  <div class="rotator" id="rot">
+    <a class="slide active" href="https://store.ignatiusbookfairs.com/october-2026/chapter-books?categoryIds=477%2C480" target="_blank" rel="noopener">
+      <img src="ibf-fall-26-hero-catholic.png" alt="Fall 26 flyers">
+    </a>
+    <a class="slide" href="https://store.ignatiusbookfairs.com/book-angel" target="_blank" rel="noopener">
+      <img src="ibf-book-angel-hero.gif" alt="Be a Book Angel">
+    </a>
+    <a class="slide" href="https://store.ignatiusbookfairs.com/category/toys-trinkets/toys?categoryIds=368%2C369" target="_blank" rel="noopener">
+      <img src="ibf-toys-trinkets-hero.gif" alt="Explore Toys and Trinkets">
+    </a>
+    <span class="arrow prev">&#8249;</span>
+    <span class="arrow next">&#8250;</span>
+    <div class="dots"></div>
+  </div>
+<script>
+  const slides = [...document.querySelectorAll('.slide')];
+  const dotsBox = document.querySelector('.dots');
+  let i = 0, timer;
+  slides.forEach((_, n) => {
+    const d = document.createElement('span');
+    d.className = 'dot' + (n === 0 ? ' active' : '');
+    d.onclick = () => go(n, true);
+    dotsBox.appendChild(d);
+  });
+  const dots = [...document.querySelectorAll('.dot')];
+  function go(n, manual) {
+    slides[i].classList.remove('active'); dots[i].classList.remove('active');
+    i = (n + slides.length) % slides.length;
+    slides[i].classList.add('active'); dots[i].classList.add('active');
+    if (manual) restart();
+  }
+  function restart() { clearInterval(timer); timer = setInterval(() => go(i + 1), 5000); }
+  document.querySelector('.prev').onclick = () => go(i - 1, true);
+  document.querySelector('.next').onclick = () => go(i + 1, true);
+  restart();
+</script>
+</body>
+</html>
