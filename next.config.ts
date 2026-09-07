@@ -36,6 +36,14 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // Shareable short link for the proposed store home-hero rotator demo.
+      // Temporary (not permanent) so the slug can be reused for whatever the
+      // next internal demo is without fighting browser redirect caches.
+      {
+        source: '/rotator',
+        destination: '/marketing/hero-rotator.html',
+        permanent: false,
+      },
       // Catholic planning checklist: the 3-17 file was superseded by the
       // 8-13-26 revision. Keeps links already sent to coordinators working.
       {
