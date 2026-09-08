@@ -44,6 +44,13 @@ const nextConfig: NextConfig = {
         destination: '/marketing/hero-rotator.html',
         permanent: false,
       },
+      // Category signs: 9-8-26 revision (crop marks trimmed) replaced the old
+      // table-category-signs file.
+      {
+        source: '/documents/table-category-signs.pdf',
+        destination: '/documents/category-signs-9-8-26.pdf',
+        permanent: true,
+      },
       // Catholic planning checklist: the 3-17 file was superseded by the
       // 8-13-26 revision. Keeps links already sent to coordinators working.
       {
