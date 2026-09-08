@@ -24,7 +24,7 @@
 </style>
 </head>
 <body>
-  <p class="note">Proposed rotator for the top of the store home page &mdash; three slides, 4s auto-advance,
+  <p class="note">Proposed rotator for the top of the store home page &mdash; three slides, 5.5s auto-advance,
      each slide clicks through to its destination.</p>
   <div class="rotator" id="rot">
     <a class="slide active" href="https://store.ignatiusbookfairs.com/october-2026/chapter-books?categoryIds=477%2C480" target="_blank" rel="noopener">
@@ -57,7 +57,7 @@
     slides[i].classList.add('active'); dots[i].classList.add('active');
     if (manual) restart();
   }
-  function restart() { clearInterval(timer); timer = setInterval(() => go(i + 1), 4000); }
+  function restart() { clearInterval(timer); timer = setInterval(() => go(i + 1), 5500); }
   document.querySelector('.prev').onclick = () => go(i - 1, true);
   document.querySelector('.next').onclick = () => go(i + 1, true);
   restart();
