@@ -3,7 +3,7 @@
 // old link), then sets the standard ibf_admin session cookie.
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminMagicLink } from '@/lib/auth/magic-link';
-import { isAllowedAdminEmail, isAllowedStaffOrAdmin } from '@/lib/auth/admin-allowlist';
+import { isAllowedStaffOrAdmin } from '@/lib/auth/admin-allowlist';
 import { signSession, COOKIE_NAME, DEFAULT_TTL_MS } from '@/lib/auth/session';
 
 export const runtime = 'nodejs';
@@ -26,9 +26,9 @@ export async function GET(request: NextRequest) {
   // link was issued.
   if (!isAllowedStaffOrAdmin(email)) return fail();
 
-  // Full admins land on the admin dashboard; staff-only users land on the
-  // Upcoming Fairs list (the only /admin area they may see).
-  const fallback = isAllowedAdminEmail(email) ? '/admin' : '/admin/fairs';
+  // Every session lands on the dashboard; it hides admin-only tiles from
+  // staff, and the middleware deny-list still blocks direct navigation.
+  const fallback = '/admin';
   // Only honor a same-origin admin sub-page as the post-login destination.
   const nextParam = request.nextUrl.searchParams.get('next');
   const next =

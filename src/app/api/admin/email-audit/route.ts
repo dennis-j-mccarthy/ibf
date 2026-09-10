@@ -49,6 +49,18 @@ export async function GET(request: NextRequest) {
       ]);
 
       const linkStatus = new Map(links.map((l) => [l.url, l]));
+      // First image block per email -- the accordion row thumbnail.
+      const firstImage = new Map<string, string>();
+      for (const e of emails) {
+        const blocks = e.blocks;
+        if (!Array.isArray(blocks)) continue;
+        const img = blocks.find(
+          (b): b is { type: string; src: string } =>
+            typeof b === 'object' && b !== null && (b as { type?: unknown }).type === 'image' &&
+            typeof (b as { src?: unknown }).src === 'string',
+        );
+        if (img) firstImage.set(e.hubspotId, img.src);
+      }
       const rows: AuditEmailRow[] = emails.map((e) => ({
         hubspotId: e.hubspotId,
         name: e.name,
@@ -61,6 +73,7 @@ export async function GET(request: NextRequest) {
 
       const decorate = (g: (typeof sequenced)[number]) => ({
         ...g,
+        thumb: firstImage.get(g.previewId) ?? null,
         links: g.links.map((l) => ({
           ...l,
           status: linkStatus.get(l.url)?.status ?? 'unchecked',

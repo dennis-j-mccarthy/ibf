@@ -7,7 +7,8 @@ export const dynamic = 'force-dynamic';
 // Image proxy for the email preview modal, so HubSpot-hosted images render
 // without inlining megabytes of data URIs. Strict host allowlist: this must
 // not be usable as an open proxy.
-const ALLOWED_HOST = /^[a-z0-9-]+\.hubspotusercontent(?:-[a-z0-9]+)?\.net$/i;
+// Real hosts have nested labels, e.g. 44239293.fs1.hubspotusercontent-na1.net.
+const ALLOWED_HOST = /^(?:[a-z0-9-]+\.)+hubspotusercontent(?:-[a-z0-9]+)?\.net$/i;
 
 export async function GET(request: NextRequest) {
   if (!(await getSessionEmail())) {

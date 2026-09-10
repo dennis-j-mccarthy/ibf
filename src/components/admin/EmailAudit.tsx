@@ -15,6 +15,7 @@ type Message = {
   variantsDiffer: boolean;
   links: LinkRow[];
   previewId: string;
+  thumb: string | null;
 };
 
 type View = {
@@ -46,6 +47,12 @@ type Block =
   | { type: 'image'; src: string; alt?: string }
   | { type: 'cta'; text: string; url: string };
 
+type Comment = { id: string; author: string; body: string; createdAt: string };
+
+// Lazily fetched per-message content, cached for the session so reopening an
+// accordion is instant.
+type Detail = { blocks: Block[] | null; comments: Comment[] };
+
 const brokenLinks = (m: Message) => m.links.filter((l) => l.status === 'broken');
 
 // "VF Fair -15" renders as a countdown stamp like "VF FAIR −15".
@@ -54,6 +61,9 @@ function stamp(m: Message): string {
   const off = m.offset == null ? '' : ` ${m.offset > 0 ? `+${m.offset}` : m.offset === 0 ? '±0' : m.offset}`;
   return `${m.phase.toUpperCase()}${off}`;
 }
+
+const proxied = (src: string) =>
+  /hubspotusercontent/.test(src) ? `/api/admin/email-audit/img?u=${encodeURIComponent(src)}` : src;
 
 export default function EmailAudit() {
   const [loading, setLoading] = useState(true);
@@ -65,8 +75,10 @@ export default function EmailAudit() {
   const [search, setSearch] = useState('');
   const [onlyBroken, setOnlyBroken] = useState(false);
   const [onlyDuplicated, setOnlyDuplicated] = useState(false);
-  const [modal, setModal] = useState<Message | null>(null);
-  const [modalBlocks, setModalBlocks] = useState<Block[] | null>(null);
+  const [open, setOpen] = useState<Set<string>>(new Set());
+  const [details, setDetails] = useState<Record<string, Detail>>({});
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [postingKey, setPostingKey] = useState<string | null>(null);
 
   const load = useCallback(() => {
     fetch('/api/admin/email-audit')
@@ -117,18 +129,46 @@ export default function EmailAudit() {
       }
     }
     setProgress(null);
+    setDetails({});
     load();
   };
 
-  const openModal = async (m: Message) => {
-    setModal(m);
-    setModalBlocks(null);
-    const res = await fetch(`/api/admin/email-audit?email=${encodeURIComponent(m.previewId)}`);
+  const toggle = async (m: Message) => {
+    const opening = !open.has(m.key);
+    setOpen((prev) => {
+      const next = new Set(prev);
+      if (opening) next.add(m.key);
+      else next.delete(m.key);
+      return next;
+    });
+    if (!opening || details[m.key]) return;
+    setDetails((d) => ({ ...d, [m.key]: { blocks: null, comments: [] } }));
+    const [res, cres] = await Promise.all([
+      fetch(`/api/admin/email-audit?email=${encodeURIComponent(m.previewId)}`),
+      fetch(`/api/admin/email-audit/comments?key=${encodeURIComponent(m.key)}`),
+    ]);
+    const blocks: Block[] = res.ok ? (((await res.json()).blocks as Block[]) ?? []) : [];
+    const comments: Comment[] = cres.ok ? (((await cres.json()).comments as Comment[]) ?? []) : [];
+    setDetails((d) => ({ ...d, [m.key]: { blocks, comments } }));
+  };
+
+  const postComment = async (m: Message) => {
+    const text = (drafts[m.key] ?? '').trim();
+    if (!text) return;
+    setPostingKey(m.key);
+    const res = await fetch('/api/admin/email-audit/comments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: m.key, body: text }),
+    });
+    setPostingKey(null);
     if (res.ok) {
       const d = await res.json();
-      setModalBlocks((d.blocks as Block[]) ?? []);
-    } else {
-      setModalBlocks([]);
+      setDetails((prev) => {
+        const cur = prev[m.key] ?? { blocks: [], comments: [] };
+        return { ...prev, [m.key]: { ...cur, comments: [...cur.comments, d.comment] } };
+      });
+      setDrafts((prev) => ({ ...prev, [m.key]: '' }));
     }
   };
 
@@ -143,12 +183,50 @@ export default function EmailAudit() {
     return true;
   };
 
-  const proxied = (src: string) =>
-    /hubspotusercontent/.test(src)
-      ? `/api/admin/email-audit/img?u=${encodeURIComponent(src)}`
-      : src;
-
   const font = { fontFamily: 'brother-1816, sans-serif' } as const;
+
+  const allSections = view
+    ? [
+        ...view.sections,
+        ...(view.unmatchedSequenced.length
+          ? [{ title: 'Other sequences', messages: view.unmatchedSequenced }]
+          : []),
+        ...(view.other.length ? [{ title: 'Other marketing emails', messages: view.other }] : []),
+      ]
+    : [];
+
+  const visibleKeys = allSections.flatMap((s) => s.messages.filter(matches).map((m) => m.key));
+  const allOpen = visibleKeys.length > 0 && visibleKeys.every((k) => open.has(k));
+
+  const expandAll = () => {
+    if (allOpen) {
+      setOpen(new Set());
+      return;
+    }
+    setOpen(new Set(visibleKeys));
+    // Fetch content for anything not yet loaded, a few at a time.
+    const pending = allSections
+      .flatMap((s) => s.messages.filter(matches))
+      .filter((m) => !details[m.key]);
+    pending.forEach((m) => {
+      setDetails((d) => ({ ...d, [m.key]: { blocks: null, comments: [] } }));
+    });
+    (async () => {
+      for (let i = 0; i < pending.length; i += 4) {
+        await Promise.all(
+          pending.slice(i, i + 4).map(async (m) => {
+            const [res, cres] = await Promise.all([
+              fetch(`/api/admin/email-audit?email=${encodeURIComponent(m.previewId)}`),
+              fetch(`/api/admin/email-audit/comments?key=${encodeURIComponent(m.key)}`),
+            ]);
+            const blocks: Block[] = res.ok ? (((await res.json()).blocks as Block[]) ?? []) : [];
+            const comments: Comment[] = cres.ok ? (((await cres.json()).comments as Comment[]) ?? []) : [];
+            setDetails((d) => ({ ...d, [m.key]: { blocks, comments } }));
+          }),
+        );
+      }
+    })();
+  };
 
   return (
     <div className="min-h-screen bg-[#f5f5f5]">
@@ -254,14 +332,15 @@ export default function EmailAudit() {
                     />
                     Only copy-differs
                   </label>
+                  <button
+                    onClick={expandAll}
+                    className="text-sm text-[#02176f] font-semibold border border-[#02176f]/30 rounded-lg px-3 py-1.5 hover:bg-[#eef4f9] transition-colors"
+                  >
+                    {allOpen ? 'Collapse all' : 'Expand all'}
+                  </button>
                 </div>
 
-                {[...view.sections,
-                  ...(view.unmatchedSequenced.length
-                    ? [{ title: 'Other sequences', messages: view.unmatchedSequenced }]
-                    : []),
-                  ...(view.other.length ? [{ title: 'Other marketing emails', messages: view.other }] : []),
-                ].map((section) => {
+                {allSections.map((section) => {
                   const visible = section.messages.filter(matches);
                   if (!visible.length) return null;
                   return (
@@ -270,39 +349,186 @@ export default function EmailAudit() {
                         {section.title}
                         <span className="text-gray-400 font-normal normal-case ml-2">{visible.length}</span>
                       </h2>
-                      <div className="bg-white rounded-xl shadow-sm divide-y divide-gray-100">
+                      <div className="flex flex-col gap-2">
                         {visible.map((m) => {
                           const dead = brokenLinks(m);
+                          const isOpen = open.has(m.key);
+                          const detail = details[m.key];
                           return (
-                            <button
-                              key={m.key}
-                              onClick={() => openModal(m)}
-                              className="w-full text-left px-4 py-3 flex flex-wrap items-center gap-2 hover:bg-[#f6faff] transition-colors"
-                            >
-                              {m.phase && (
-                                <span className="text-[11px] font-bold text-white bg-[#02176f] rounded px-2 py-0.5 whitespace-nowrap">
-                                  {stamp(m)}
+                            <div key={m.key} className="bg-white rounded-xl shadow-sm overflow-hidden">
+                              <button
+                                onClick={() => toggle(m)}
+                                aria-expanded={isOpen}
+                                className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-[#f6faff] transition-colors"
+                              >
+                                {m.thumb ? (
+                                  // eslint-disable-next-line @next/next/no-img-element -- proxied external email asset
+                                  <img
+                                    src={proxied(m.thumb)}
+                                    alt=""
+                                    loading="lazy"
+                                    className="w-16 h-16 object-cover object-top rounded-md border border-gray-200 flex-none bg-gray-50"
+                                  />
+                                ) : (
+                                  <span className="w-16 h-16 rounded-md border border-dashed border-gray-300 flex-none flex items-center justify-center text-[10px] text-gray-400">
+                                    no art
+                                  </span>
+                                )}
+                                <span className="flex-1 min-w-0">
+                                  <span className="flex flex-wrap items-center gap-2">
+                                    {m.phase && (
+                                      <span className="text-[11px] font-bold text-white bg-[#02176f] rounded px-2 py-0.5 whitespace-nowrap">
+                                        {stamp(m)}
+                                      </span>
+                                    )}
+                                    <span className="font-semibold text-[#02176f]">{m.subject || m.title}</span>
+                                  </span>
+                                  <span className="flex flex-wrap items-center gap-1.5 mt-1">
+                                    {m.reps.map((r) => (
+                                      <span
+                                        key={r}
+                                        className="text-[11px] bg-[#eef4f9] text-[#02176f] rounded-full px-2 py-0.5"
+                                      >
+                                        {r}
+                                      </span>
+                                    ))}
+                                    {m.copies.length > 1 && (
+                                      <span className="text-[11px] text-gray-400">{m.copies.length} copies</span>
+                                    )}
+                                    {dead.length > 0 && (
+                                      <span className="text-[11px] font-bold bg-[#fdecea] text-[#8a1f14] rounded-full px-2 py-0.5">
+                                        {dead.length} dead link{dead.length > 1 ? 's' : ''}
+                                      </span>
+                                    )}
+                                    {m.variantsDiffer && (
+                                      <span className="text-[11px] font-bold bg-[#fff7e6] text-[#6b5310] rounded-full px-2 py-0.5">
+                                        copy differs by rep
+                                      </span>
+                                    )}
+                                    {detail && detail.comments.length > 0 && (
+                                      <span className="text-[11px] bg-[#eef4f9] text-[#02176f] rounded-full px-2 py-0.5">
+                                        {detail.comments.length} comment{detail.comments.length > 1 ? 's' : ''}
+                                      </span>
+                                    )}
+                                  </span>
                                 </span>
+                                <span
+                                  className={`text-[#02176f] text-sm flex-none transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                                  aria-hidden
+                                >
+                                  ▾
+                                </span>
+                              </button>
+
+                              {isOpen && (
+                                <div className="border-t border-gray-100">
+                                  {dead.length > 0 && (
+                                    <div className="px-5 py-3 bg-[#fdecea] text-sm text-[#8a1f14]">
+                                      <p className="font-bold mb-1">Broken links</p>
+                                      {dead.map((l) => (
+                                        <p key={l.url + l.text} className="truncate">
+                                          {l.text ? `"${l.text}" — ` : ''}
+                                          <span className="font-mono text-xs">{l.url || '(empty destination)'}</span>
+                                          {l.httpStatus ? ` (HTTP ${l.httpStatus})` : ''}
+                                        </p>
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  {m.copies.length > 1 && (
+                                    <p className="px-5 pt-3 text-xs text-gray-500">
+                                      Sent as {m.copies.length} rep copies ({m.reps.join(', ')}).{' '}
+                                      {m.variantsDiffer
+                                        ? 'Wording differs between reps — worth reconciling.'
+                                        : 'Wording is identical apart from the signature.'}
+                                    </p>
+                                  )}
+
+                                  <div className="px-5 py-4">
+                                    {!detail || detail.blocks === null ? (
+                                      <p className="text-gray-500 text-sm">Loading email…</p>
+                                    ) : detail.blocks.length === 0 ? (
+                                      <p className="text-gray-500 text-sm">No stored content for this email.</p>
+                                    ) : (
+                                      <div className="max-w-2xl">
+                                        {detail.blocks.map((b, i) => {
+                                          if (b.type === 'image') {
+                                            return (
+                                              // eslint-disable-next-line @next/next/no-img-element -- proxied external email asset
+                                              <img
+                                                key={i}
+                                                src={proxied(b.src)}
+                                                alt={b.alt ?? ''}
+                                                loading="lazy"
+                                                className="max-w-full h-auto my-2 rounded"
+                                              />
+                                            );
+                                          }
+                                          if (b.type === 'cta') {
+                                            return (
+                                              <p key={i} className="my-3 text-center">
+                                                <span className="inline-block bg-[#0088ff] text-white font-bold px-5 py-2.5 rounded">
+                                                  {b.text || '(unlabelled button)'}
+                                                </span>
+                                                <span className="block text-xs text-gray-400 mt-1 font-mono truncate">
+                                                  {b.url || '(no destination)'}
+                                                </span>
+                                              </p>
+                                            );
+                                          }
+                                          return (
+                                            <div
+                                              key={i}
+                                              className="my-2 text-sm leading-relaxed [&_a]:text-[#0088ff] [&_a]:underline"
+                                              // Admin-only page; content is authored by staff in HubSpot.
+                                              dangerouslySetInnerHTML={{ __html: b.html }}
+                                            />
+                                          );
+                                        })}
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  <div className="px-5 py-3 border-t border-gray-100 bg-[#fafbfc]">
+                                    <p className="text-xs font-bold uppercase tracking-wide text-[#7e828f] mb-2">
+                                      Comments
+                                    </p>
+                                    {(!detail || detail.comments.length === 0) && (
+                                      <p className="text-xs text-gray-400 mb-2">No comments yet.</p>
+                                    )}
+                                    {detail?.comments.map((c) => (
+                                      <div key={c.id} className="mb-2">
+                                        <p className="text-xs text-[#02176f] font-bold">
+                                          {c.author.split('@')[0]}
+                                          <span className="text-gray-400 font-normal ml-2">
+                                            {new Date(c.createdAt).toLocaleDateString()}
+                                          </span>
+                                        </p>
+                                        <p className="text-sm text-[#3a3f4b]">{c.body}</p>
+                                      </div>
+                                    ))}
+                                    <div className="flex gap-2 mt-2">
+                                      <input
+                                        value={drafts[m.key] ?? ''}
+                                        onChange={(e) => setDrafts((d) => ({ ...d, [m.key]: e.target.value }))}
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter') postComment(m);
+                                        }}
+                                        placeholder="Add a comment…"
+                                        className="flex-1 h-9 px-3 rounded-lg border border-gray-300 text-sm"
+                                      />
+                                      <button
+                                        onClick={() => postComment(m)}
+                                        disabled={postingKey === m.key || !(drafts[m.key] ?? '').trim()}
+                                        className="text-sm bg-[#0088ff] text-white font-bold px-4 rounded-lg disabled:opacity-50"
+                                      >
+                                        Post
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
                               )}
-                              <span className="font-semibold text-[#02176f] flex-1 min-w-[200px]">
-                                {m.subject || m.title}
-                              </span>
-                              {m.reps.map((r) => (
-                                <span key={r} className="text-[11px] bg-[#eef4f9] text-[#02176f] rounded-full px-2 py-0.5">
-                                  {r}
-                                </span>
-                              ))}
-                              {dead.length > 0 && (
-                                <span className="text-[11px] font-bold bg-[#fdecea] text-[#8a1f14] rounded-full px-2 py-0.5">
-                                  {dead.length} dead link{dead.length > 1 ? 's' : ''}
-                                </span>
-                              )}
-                              {m.variantsDiffer && (
-                                <span className="text-[11px] font-bold bg-[#fff7e6] text-[#6b5310] rounded-full px-2 py-0.5">
-                                  copy differs by rep
-                                </span>
-                              )}
-                            </button>
+                            </div>
                           );
                         })}
                       </div>
@@ -314,90 +540,6 @@ export default function EmailAudit() {
           </>
         )}
       </main>
-
-      {modal && (
-        <div
-          className="fixed inset-0 z-50 bg-black/50 flex items-start justify-center overflow-y-auto p-4 sm:py-10"
-          onClick={() => setModal(null)}
-        >
-          <div
-            className="relative w-full max-w-2xl rounded-xl bg-white overflow-hidden text-left"
-            style={font}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-gray-100">
-              <div>
-                <p className="text-[#02176f] font-bold">{modal.subject || modal.title}</p>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  {stamp(modal)}
-                  {modal.copies.length > 1
-                    ? ` · sent as ${modal.copies.length} rep copies (${modal.reps.join(', ')})`
-                    : modal.reps.length
-                      ? ` · ${modal.reps.join(', ')}`
-                      : ''}
-                </p>
-              </div>
-              <button
-                aria-label="Close"
-                onClick={() => setModal(null)}
-                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-[#02176f] text-lg font-bold leading-none flex-none"
-              >
-                &times;
-              </button>
-            </div>
-
-            {brokenLinks(modal).length > 0 && (
-              <div className="px-5 py-3 bg-[#fdecea] text-sm text-[#8a1f14]">
-                <p className="font-bold mb-1">Broken links</p>
-                {brokenLinks(modal).map((l) => (
-                  <p key={l.url + l.text} className="truncate">
-                    {l.text ? `"${l.text}" — ` : ''}
-                    <span className="font-mono text-xs">{l.url || '(empty destination)'}</span>
-                    {l.httpStatus ? ` (HTTP ${l.httpStatus})` : ''}
-                  </p>
-                ))}
-              </div>
-            )}
-
-            <div className="px-5 py-4 max-h-[65vh] overflow-y-auto">
-              {modalBlocks === null ? (
-                <p className="text-gray-500 text-sm">Loading email…</p>
-              ) : modalBlocks.length === 0 ? (
-                <p className="text-gray-500 text-sm">No stored content for this email.</p>
-              ) : (
-                modalBlocks.map((b, i) => {
-                  if (b.type === 'image') {
-                    return (
-                      // eslint-disable-next-line @next/next/no-img-element -- proxied external email asset
-                      <img key={i} src={proxied(b.src)} alt={b.alt ?? ''} className="max-w-full h-auto my-2 rounded" />
-                    );
-                  }
-                  if (b.type === 'cta') {
-                    return (
-                      <p key={i} className="my-3 text-center">
-                        <span className="inline-block bg-[#0088ff] text-white font-bold px-5 py-2.5 rounded">
-                          {b.text || '(unlabelled button)'}
-                        </span>
-                        <span className="block text-xs text-gray-400 mt-1 font-mono truncate">
-                          {b.url || '(no destination)'}
-                        </span>
-                      </p>
-                    );
-                  }
-                  return (
-                    <div
-                      key={i}
-                      className="my-2 text-sm leading-relaxed [&_a]:text-[#0088ff] [&_a]:underline"
-                      // Admin-only page; content is authored by staff in HubSpot.
-                      dangerouslySetInnerHTML={{ __html: b.html }}
-                    />
-                  );
-                })
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
