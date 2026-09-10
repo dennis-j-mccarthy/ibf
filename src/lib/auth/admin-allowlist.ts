@@ -11,6 +11,9 @@ const BUILTIN_ADMIN_EMAILS = [
   'dennis.mccarthy@avemaria.edu',
   'jessica.miano@avemaria.edu',
   'lisastrait@ignatiusbookclub.onmicrosoft.com',
+  // Kristin is admin under either mailbox she signs in with.
+  'kristin.munin@avemaria.edu',
+  'kristin.munin@ignatiusbookclub.com',
 ];
 
 export function allowedAdminEmails(): Set<string> {

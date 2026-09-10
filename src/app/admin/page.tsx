@@ -83,7 +83,6 @@ export default async function AdminDashboard() {
     },
     {
       href: '/admin/bot-knowledge',
-      adminOnly: true,
       title: 'Chatbot Knowledge',
       desc: "Q&A that powers the website chatbot's answers.",
       stat: num(botCount),
@@ -115,7 +114,6 @@ export default async function AdminDashboard() {
     },
     {
       href: '/admin/email-audit',
-      adminOnly: true,
       title: 'Email Audit',
       desc: 'Every HubSpot automation email, grouped by sequence, with a broken-link report.',
       stat: 'HubSpot',
@@ -147,6 +145,7 @@ export default async function AdminDashboard() {
     },
     {
       href: '/admin/header-maker',
+      adminOnly: true,
       title: 'Header Maker',
       desc: 'Craft email headers — headline, brand color, curved bottom edge + doodads.',
       stat: 'Email',
@@ -162,6 +161,7 @@ export default async function AdminDashboard() {
     },
     {
       href: '/admin/sign-maker',
+      adminOnly: true,
       title: 'Sign Maker',
       desc: 'Printable 8.5x11 signs — headline, brand color, curved edge + doodads.',
       stat: 'PDF',
@@ -177,6 +177,7 @@ export default async function AdminDashboard() {
     },
     {
       href: '/admin/certificate-maker',
+      adminOnly: true,
       title: 'Certificate Maker',
       desc: 'Printable 11x8.5 certificates - title, recipient, signatures, doodad border.',
       stat: 'Award',
@@ -208,6 +209,7 @@ export default async function AdminDashboard() {
     },
     {
       href: '/admin/templates',
+      adminOnly: true,
       title: 'Template Studio',
       desc: 'Parent letters, email copy, press releases, flyers - merged with each school automatically.',
       stat: num(templateCount),

@@ -60,18 +60,20 @@ export async function middleware(req: NextRequest) {
   // Authenticated. Any /admin route not on this deny-list is open to every
   // staff-domain session. When adding a NEW admin-only area, add its path
   // prefix here (page and API) — otherwise it defaults to staff-accessible.
-  // The bot-knowledge CMS and the blog CMS are admin-only; staff sign in only
-  // for /admin/fairs.
+  // Content/CMS tools and the maker suite are admin-only; staff get the
+  // dashboard, fairs, bot-knowledge and the email audit.
   const isAdminOnly =
-    pathname.startsWith('/admin/bot-knowledge') ||
-    pathname.startsWith('/api/admin/bot-answers') ||
     pathname.startsWith('/admin/blog') ||
+    pathname.startsWith('/admin/certificate-maker') ||
+    pathname.startsWith('/admin/sign-maker') ||
+    pathname.startsWith('/admin/header-maker') ||
+    pathname.startsWith('/admin/templates') ||
+    pathname.startsWith('/api/admin/templates') ||
+    pathname.startsWith('/api/admin/designs') ||
     pathname.startsWith('/api/admin/blog') ||
     pathname.startsWith('/admin/social') ||
     pathname.startsWith('/api/admin/social') ||
     pathname.startsWith('/admin/tutorials') ||
-    pathname.startsWith('/admin/email-audit') ||
-    pathname.startsWith('/api/admin/email-audit') ||
     pathname.startsWith('/api/admin/tutorials') ||
     pathname.startsWith('/api/admin/blob-upload') ||
     pathname.startsWith('/admin/training') ||

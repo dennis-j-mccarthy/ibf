@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminEmail } from '@/lib/auth/admin-guard';
+import { getSessionEmail } from '@/lib/auth/admin-guard';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 const ALLOWED_HOST = /^[a-z0-9-]+\.hubspotusercontent(?:-[a-z0-9]+)?\.net$/i;
 
 export async function GET(request: NextRequest) {
-  if (!(await getAdminEmail())) {
+  if (!(await getSessionEmail())) {
     return new NextResponse('Unauthorized', { status: 401 });
   }
 

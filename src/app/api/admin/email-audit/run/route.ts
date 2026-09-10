@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getAdminEmail } from '@/lib/auth/admin-guard';
+import { getSessionEmail } from '@/lib/auth/admin-guard';
 import { prisma } from '@/lib/prisma';
 import { marketingToken } from '@/lib/emailAudit/hubspot';
 
@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 // Starts a new audit run. The run itself advances through repeated POSTs to
 // ./step -- each one a short, serverless-sized slice -- driven by the page.
 export async function POST() {
-  if (!(await getAdminEmail())) {
+  if (!(await getSessionEmail())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   if (!marketingToken()) {

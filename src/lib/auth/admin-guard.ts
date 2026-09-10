@@ -14,3 +14,11 @@ export async function getAdminEmail(): Promise<string | null> {
   );
   return email && isAllowedAdminEmail(email) ? email : null;
 }
+
+// Returns the signed-in email for ANY valid session (staff or admin). For
+// tools the middleware exposes to the whole staff domain -- the email audit,
+// bot knowledge -- where attribution matters but allowlisting does not.
+export async function getSessionEmail(): Promise<string | null> {
+  const store = await cookies();
+  return verifySession(store.get(COOKIE_NAME)?.value, process.env.ADMIN_SESSION_SECRET ?? '');
+}

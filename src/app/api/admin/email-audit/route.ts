@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminEmail } from '@/lib/auth/admin-guard';
+import { getSessionEmail } from '@/lib/auth/admin-guard';
 import { prisma } from '@/lib/prisma';
 import { groupEmails, JOURNEY_SECTIONS, type AuditEmailRow } from '@/lib/emailAudit/grouping';
 import { marketingToken } from '@/lib/emailAudit/hubspot';
@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 // called here. ?email=<hubspotId> additionally returns that email's rendered
 // blocks for the preview modal (they are too heavy for the list payload).
 export async function GET(request: NextRequest) {
-  if (!(await getAdminEmail())) {
+  if (!(await getSessionEmail())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

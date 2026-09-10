@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
-import { getAdminEmail } from '@/lib/auth/admin-guard';
+import { getSessionEmail } from '@/lib/auth/admin-guard';
 import { prisma } from '@/lib/prisma';
 import { listEmailsPage, getEmailDetail, countFlows } from '@/lib/emailAudit/hubspot';
 import { parseEmailContent } from '@/lib/emailAudit/content';
@@ -32,7 +32,7 @@ async function pool<T>(items: T[], limit: number, worker: (item: T) => Promise<v
 // Advances the active run by one slice and reports progress. The page calls
 // this in a loop until done. Phases: list -> details -> links -> done.
 export async function POST() {
-  if (!(await getAdminEmail())) {
+  if (!(await getSessionEmail())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

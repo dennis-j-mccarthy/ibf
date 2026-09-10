@@ -329,3 +329,16 @@ model EmailAuditLink {
   @@unique([runId, url])
   @@index([runId])
 }
+
+// Comments on email-audit messages, keyed by the message's group key
+// (phase|offset|title) so they survive across audit runs. Author is the
+// signed-in session email -- staff and admins alike.
+model EmailAuditComment {
+  id         String   @id @default(cuid())
+  messageKey String
+  author     String
+  body       String
+  createdAt  DateTime @default(now())
+
+  @@index([messageKey])
+}
