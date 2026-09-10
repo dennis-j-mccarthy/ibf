@@ -89,14 +89,9 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // /admin renders the admin dashboard for full admins; staff-only sessions go
-  // straight to their one tool (the Upcoming Fairs list).
-  if (pathname === '/admin' && !isAllowedAdminEmail(user)) {
-    const url = req.nextUrl.clone();
-    url.pathname = '/admin/fairs';
-    url.search = '';
-    return NextResponse.redirect(url);
-  }
+  // Every signed-in session sees the dashboard; the page itself hides the
+  // admin-only tiles from staff (and the deny-list above still blocks direct
+  // navigation to those tools).
 
   return NextResponse.next();
 }

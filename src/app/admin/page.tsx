@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { cookies } from 'next/headers';
 import { verifySession, COOKIE_NAME } from '@/lib/auth/session';
+import { isAllowedAdminEmail } from '@/lib/auth/admin-allowlist';
 import { prisma } from '@/lib/prisma';
 import { getUpcomingFairsAllSchools } from '@/lib/book-fair-admin/queries';
 import { getTemplates } from '@/lib/templates/store';
@@ -13,8 +14,9 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-// Middleware guarantees a valid admin session before this renders (staff-only
-// sessions are redirected to /admin/fairs).
+// Middleware guarantees a signed-in session. Staff sessions see the dashboard
+// too, filtered to the tools the middleware lets them open; the admin-only
+// tiles render only for allowlisted admins.
 export default async function AdminDashboard() {
   const store = await cookies();
   const email = await verifySession(store.get(COOKIE_NAME)?.value, process.env.ADMIN_SESSION_SECRET ?? '');
@@ -35,8 +37,11 @@ export default async function AdminDashboard() {
 
   const num = (n: number | null) => (n === null ? '—' : n.toLocaleString('en-US'));
 
+  const isAdmin = isAllowedAdminEmail(email ?? '');
+
   const cards: {
     href: string;
+    adminOnly?: boolean;
     title: string;
     desc: string;
     stat: string;
@@ -62,6 +67,7 @@ export default async function AdminDashboard() {
     },
     {
       href: '/admin/blog',
+      adminOnly: true,
       title: 'Content generator',
       desc: 'Write, publish, and generate blog posts, promos, and newsletters.',
       stat: num(blogTotal),
@@ -77,6 +83,7 @@ export default async function AdminDashboard() {
     },
     {
       href: '/admin/bot-knowledge',
+      adminOnly: true,
       title: 'Chatbot Knowledge',
       desc: "Q&A that powers the website chatbot's answers.",
       stat: num(botCount),
@@ -92,6 +99,7 @@ export default async function AdminDashboard() {
     },
     {
       href: '/admin/social',
+      adminOnly: true,
       title: 'Social Posts',
       desc: 'Spin a blog post into on-brand designed social graphics + captions.',
       stat: '5',
@@ -107,6 +115,7 @@ export default async function AdminDashboard() {
     },
     {
       href: '/admin/email-audit',
+      adminOnly: true,
       title: 'Email Audit',
       desc: 'Every HubSpot automation email, grouped by sequence, with a broken-link report.',
       stat: 'HubSpot',
@@ -122,6 +131,7 @@ export default async function AdminDashboard() {
     },
     {
       href: '/admin/training',
+      adminOnly: true,
       title: 'Training',
       desc: 'Brand statements, angles, colors, fonts, prefs + image library that inform the blog & social tools.',
       stat: 'Brand',
@@ -182,6 +192,7 @@ export default async function AdminDashboard() {
     },
     {
       href: '/admin/flyer-preflight',
+      adminOnly: true,
       title: 'Flyer Preflight',
       desc: 'Check a generated flyer IDML against the BigCommerce export before it goes to print.',
       stat: 'Check',
@@ -227,6 +238,7 @@ export default async function AdminDashboard() {
     },
     {
       href: '/admin/tutorials',
+      adminOnly: true,
       title: 'Tutorials',
       desc: 'Record screen + webcam tutorials and save them to a reopenable video library.',
       stat: 'Rec',
@@ -282,7 +294,7 @@ export default async function AdminDashboard() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {cards.map((c) => (
+          {cards.filter((c) => isAdmin || !c.adminOnly).map((c) => (
             <a
               key={c.href}
               href={c.href}
