@@ -70,6 +70,8 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith('/admin/social') ||
     pathname.startsWith('/api/admin/social') ||
     pathname.startsWith('/admin/tutorials') ||
+    pathname.startsWith('/admin/email-audit') ||
+    pathname.startsWith('/api/admin/email-audit') ||
     pathname.startsWith('/api/admin/tutorials') ||
     pathname.startsWith('/api/admin/blob-upload') ||
     pathname.startsWith('/admin/training') ||
