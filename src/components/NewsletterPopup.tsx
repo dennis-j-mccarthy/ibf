@@ -10,7 +10,7 @@ const DISMISS_DAYS = 7;
 // What subscribers get -- grounded in what the blog actually publishes.
 const PERKS = [
   { icon: '📚', text: 'Book picks and reviews you can trust' },
-  { icon: '🍂', text: 'Seasonal reading lists — Advent, Lent, summer' },
+  { icon: '🍂', text: 'Seasonal reading lists' },
   { icon: '✂️', text: 'Free printables and family reading activities' },
   { icon: '📰', text: 'Book fair news, features, and tips' },
 ];
