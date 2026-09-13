@@ -31,6 +31,12 @@ export default function NewsletterPopup() {
 
   useEffect(() => {
     if (suppressed) return;
+    // ?newsletter=1 forces the popup open immediately, ignoring prior
+    // signup/dismissal -- for previewing and sharing.
+    if (new URLSearchParams(window.location.search).has('newsletter')) {
+      setOpen(true);
+      return;
+    }
     try {
       if (localStorage.getItem(DONE_KEY)) return;
       const dismissed = Number(localStorage.getItem(DISMISS_KEY) || 0);
