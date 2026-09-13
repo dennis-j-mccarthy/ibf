@@ -31,11 +31,28 @@ export default function NewsletterPopup() {
 
   useEffect(() => {
     if (suppressed) return;
+    const params = new URLSearchParams(window.location.search);
     // ?newsletter=1 forces the popup open immediately, ignoring prior
     // signup/dismissal -- for previewing and sharing.
-    if (new URLSearchParams(window.location.search).has('newsletter')) {
+    if (params.has('newsletter')) {
       const t = setTimeout(() => setOpen(true), 0);
       return () => clearTimeout(t);
+    }
+    // Visitors clicking through from our own emails are already subscribed --
+    // mark them so the popup never asks them to join the list they came from.
+    const utmSource = (params.get('utm_source') ?? '').toLowerCase();
+    const fromOwnEmail =
+      (params.get('utm_medium') ?? '').toLowerCase() === 'email' ||
+      utmSource.includes('newsletter') ||
+      utmSource.includes('mailerlite') ||
+      [...params.keys()].some((k) => k.startsWith('ml_'));
+    if (fromOwnEmail) {
+      try {
+        localStorage.setItem(DONE_KEY, '1');
+      } catch {
+        /* ignore */
+      }
+      return;
     }
     try {
       if (localStorage.getItem(DONE_KEY)) return;
