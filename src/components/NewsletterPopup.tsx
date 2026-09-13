@@ -19,6 +19,8 @@ export default function NewsletterPopup() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [state, setState] = useState<'idle' | 'sending' | 'done' | 'error'>('idle');
   const [error, setError] = useState('');
 
@@ -73,7 +75,7 @@ export default function NewsletterPopup() {
       const res = await fetch('/api/newsletter-signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, source: 'popup', path: pathname, website: '' }),
+        body: JSON.stringify({ email, firstName, lastName, source: 'popup', path: pathname, website: '' }),
       });
       const d = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -143,6 +145,26 @@ export default function NewsletterPopup() {
                 className="hidden"
                 aria-hidden="true"
               />
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="text"
+                  required
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="First name"
+                  autoComplete="given-name"
+                  className="h-10 px-3 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0088ff]"
+                />
+                <input
+                  type="text"
+                  required
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Last name"
+                  autoComplete="family-name"
+                  className="h-10 px-3 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0088ff]"
+                />
+              </div>
               <input
                 type="email"
                 required

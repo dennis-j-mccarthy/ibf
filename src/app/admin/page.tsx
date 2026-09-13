@@ -21,11 +21,12 @@ export default async function AdminDashboard() {
   const store = await cookies();
   const email = await verifySession(store.get(COOKIE_NAME)?.value, process.env.ADMIN_SESSION_SECRET ?? '');
 
-  const [blogTotal, blogDrafts, blogQueued, botCount] = await Promise.all([
+  const [blogTotal, blogDrafts, blogQueued, botCount, signupCount] = await Promise.all([
     prisma.blog.count({ where: { archived: false } }).catch(() => null),
     prisma.blog.count({ where: { archived: false, publishedAt: null } }).catch(() => null),
     prisma.blog.count({ where: { starred: true } }).catch(() => null),
     prisma.botAnswer.count().catch(() => null),
+    prisma.newsletterSignup.count().catch(() => null),
   ]);
   const templateCount = (await getTemplates().catch(() => [])).length;
   let fairCount: number | null = null;
@@ -124,6 +125,21 @@ export default async function AdminDashboard() {
           strokeLinecap="round"
           strokeLinejoin="round"
           d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+        />
+      ),
+    },
+    {
+      href: '/admin/newsletter',
+      title: 'Newsletter Signups',
+      desc: 'Emails captured by the website sign-up popup — stats and CSV export.',
+      stat: num(signupCount),
+      statLabel: 'signups',
+      accent: '#e2725b',
+      icon: (
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M16.5 12a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zm0 0c0 1.657 1.007 3 2.25 3S21 13.657 21 12a9 9 0 10-2.636 6.364M16.5 12V8.25"
         />
       ),
     },

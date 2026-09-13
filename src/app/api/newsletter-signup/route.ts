@@ -40,12 +40,15 @@ export async function POST(request: NextRequest) {
 
   const source = typeof body.source === 'string' ? body.source.slice(0, 40) : 'popup';
   const path = typeof body.path === 'string' ? body.path.slice(0, 200) : '';
+  const firstName = typeof body.firstName === 'string' ? body.firstName.trim().slice(0, 80) : '';
+  const lastName = typeof body.lastName === 'string' ? body.lastName.trim().slice(0, 80) : '';
 
   try {
     await prisma.newsletterSignup.upsert({
       where: { email },
-      update: {}, // already subscribed -- treat as success, no churn
-      create: { email, source, path },
+      // Resubscribe: refresh the name if they provided one, otherwise keep it.
+      update: firstName || lastName ? { firstName, lastName } : {},
+      create: { email, firstName, lastName, source, path },
     });
   } catch (err) {
     if (typeof err === 'object' && err && 'code' in err && (err as { code: string }).code === 'P2021') {

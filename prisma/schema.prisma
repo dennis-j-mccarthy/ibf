@@ -335,6 +335,8 @@ model EmailAuditLink {
 model NewsletterSignup {
   id        String   @id @default(cuid())
   email     String   @unique
+  firstName String   @default("")
+  lastName  String   @default("")
   source    String   @default("popup") // popup | footer | ...
   path      String   @default("") // page the visitor signed up from
   createdAt DateTime @default(now())
