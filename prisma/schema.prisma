@@ -330,6 +330,16 @@ model EmailAuditLink {
   @@index([runId])
 }
 
+// Newsletter signups captured by the site's slide-in popup (and any future
+// capture points -- `source` records where the address came from).
+model NewsletterSignup {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  source    String   @default("popup") // popup | footer | ...
+  path      String   @default("") // page the visitor signed up from
+  createdAt DateTime @default(now())
+}
+
 // Comments on email-audit messages, keyed by the message's group key
 // (phase|offset|title) so they survive across audit runs. Author is the
 // signed-in session email -- staff and admins alike.
