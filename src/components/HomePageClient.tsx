@@ -27,12 +27,10 @@ export default function HomePageClient({ children }: { children?: React.ReactNod
     const params = new URLSearchParams(window.location.search);
     if (params.get('chooser') === '1') {
       setShowChooser(true);
-    } else if (
-      !params.get('mode') &&
-      !localStorage.getItem(MODE_CHOOSER_SEEN_KEY)
-    ) {
-      setShowChooser(true);
     }
+    // PAUSED (Dennis, 9/11/26): no auto-open on first visit. The chooser is
+    // still reachable via ?chooser=1 and Option+M. To resume, restore the
+    // first-visit branch: !params.get('mode') && !localStorage.getItem(MODE_CHOOSER_SEEN_KEY)
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement;
       if (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable) return;
