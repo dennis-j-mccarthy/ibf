@@ -49,7 +49,7 @@ export const BRANDS: Brand[] = [
     label: 'Book Fairs + Book Battles',
     logo: '/images/ibf-ibb-dual.png',
     width: 200,
-    height: 111,
+    height: 123,
     colWidth: 200,
     site: 'ignatiusbookfairs.com',
     accent: '#0088ff',
