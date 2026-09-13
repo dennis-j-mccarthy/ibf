@@ -25,8 +25,9 @@ export default function HomePageClient({ children }: { children?: React.ReactNod
   const MODE_CHOOSER_SEEN_KEY = 'modeChooserSeen';
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    let t: ReturnType<typeof setTimeout> | undefined;
     if (params.get('chooser') === '1') {
-      setShowChooser(true);
+      t = setTimeout(() => setShowChooser(true), 0);
     }
     // PAUSED (Dennis, 9/11/26): no auto-open on first visit. The chooser is
     // still reachable via ?chooser=1 and Option+M. To resume, restore the
@@ -40,7 +41,10 @@ export default function HomePageClient({ children }: { children?: React.ReactNod
       }
     };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      if (t) clearTimeout(t);
+    };
   }, []);
 
   return (
