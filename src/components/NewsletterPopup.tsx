@@ -34,8 +34,8 @@ export default function NewsletterPopup() {
     // ?newsletter=1 forces the popup open immediately, ignoring prior
     // signup/dismissal -- for previewing and sharing.
     if (new URLSearchParams(window.location.search).has('newsletter')) {
-      setOpen(true);
-      return;
+      const t = setTimeout(() => setOpen(true), 0);
+      return () => clearTimeout(t);
     }
     try {
       if (localStorage.getItem(DONE_KEY)) return;
