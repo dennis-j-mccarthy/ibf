@@ -66,9 +66,10 @@ export default function SignatureMaker() {
       // touch localStorage during server render and mismatch on hydrate.
       if (saved) {
         const parsed = JSON.parse(saved);
-        // Only the fairs and book-battle brands are offered in the switcher.
+        delete parsed.layout; // retired field from the old two-layout version
+        // Only the fairs and dual brands are offered in the switcher.
         // eslint-disable-next-line react-hooks/set-state-in-effect
-        setF({ ...DEFAULT_FIELDS, ...parsed, brand: parsed.brand === 'ibb' ? 'ibb' : 'ibf' });
+        setF({ ...DEFAULT_FIELDS, ...parsed, brand: parsed.brand === 'dual' ? 'dual' : 'ibf' });
       }
     } catch {
       /* first run */
@@ -206,7 +207,7 @@ export default function SignatureMaker() {
               <div>
                 <span className="text-sm font-medium text-[#02176f] mr-3">Brand</span>
                 <div className="inline-flex bg-[#f5f6fa] rounded-full p-1">
-                  {([['ibf', 'Book Fairs'], ['ibb', 'Book Battle']] as const).map(([key, name]) => (
+                  {([['ibf', 'Book Fairs'], ['dual', 'Fairs + Battles']] as const).map(([key, name]) => (
                     <button
                       key={key}
                       onClick={() => set('brand', key)}
@@ -215,22 +216,6 @@ export default function SignatureMaker() {
                       }`}
                     >
                       {name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <span className="text-sm font-medium text-[#02176f] mr-3">Layout</span>
-                <div className="inline-flex bg-[#f5f6fa] rounded-full p-1">
-                  {(['side', 'stacked'] as const).map((l) => (
-                    <button
-                      key={l}
-                      onClick={() => set('layout', l)}
-                      className={`px-3.5 py-1.5 rounded-full text-xs font-semibold capitalize transition-colors ${
-                        f.layout === l ? 'bg-[#0088ff] text-white' : 'text-[#7e828f]'
-                      }`}
-                    >
-                      {l === 'side' ? 'Side by side' : 'Stacked'}
                     </button>
                   ))}
                 </div>

@@ -28,6 +28,9 @@ export interface Brand {
   iconSuffix: string;
 }
 
+// Two options per stakeholder direction (9/13): IBF alone, or the dual
+// IBF + Book Battles lockup. Both link only to the main site -- the Book
+// Battles page is private for now, so no IBB URL appears anywhere.
 export const BRANDS: Brand[] = [
   {
     key: 'ibf',
@@ -42,28 +45,16 @@ export const BRANDS: Brand[] = [
     iconSuffix: '',
   },
   {
-    key: 'ibc',
-    label: 'Ignatius Book Club',
-    logo: '/images/ibc-logo.png',
-    width: 180,
-    height: 37,
-    colWidth: 180,
-    site: 'ignatiusbookclub.com',
+    key: 'dual',
+    label: 'Book Fairs + Book Battles',
+    logo: '/images/ibf-ibb-dual.png',
+    width: 190,
+    height: 118,
+    colWidth: 190,
+    site: 'ignatiusbookfairs.com',
     accent: '#0088ff',
     ink: '#02176f',
     iconSuffix: '',
-  },
-  {
-    key: 'ibb',
-    label: 'Ignatius Book Battle',
-    logo: '/images/ibb-logo.png',
-    width: 62,
-    height: 80,
-    colWidth: 110,
-    site: 'ignatiusbookfairs.com/book-battles',
-    accent: '#02176f',
-    ink: '#02176f',
-    iconSuffix: '-battle',
   },
 ];
 
@@ -77,7 +68,6 @@ export const SOCIAL_LINKS = [
 
 export interface SignatureFields {
   brand: string;
-  layout: 'side' | 'stacked';
   firstName: string;
   lastName: string;
   credentials: string;
@@ -91,14 +81,10 @@ export interface SignatureFields {
 }
 
 // The tagline is fixed brand copy -- every signature carries it verbatim.
-// Fixed brand copy. Book Battle runs without one -- its logo column is too
-// narrow to set a sentence this long without it wrapping into a thin stack.
 export const TAGLINE = 'Since 2023, providing the books parents trust and the stories kids love.';
-const taglineFor = (brandKey: string) => (brandKey === 'ibb' ? '' : TAGLINE);
 
 export const DEFAULT_FIELDS: SignatureFields = {
   brand: 'ibf',
-  layout: 'side',
   firstName: '',
   lastName: '',
   credentials: '',
@@ -155,11 +141,11 @@ export function buildSignatureHtml(f: SignatureFields): string {
   }
   if (f.mobile.trim()) contactRows.push(line(`${phoneLink(f.mobile)} <span style="color:#a0a4b0;">mobile</span>`));
   contactRows.push(line(link(`https://${brand.site}`, brand.site)));
+  // The booking link is a real button (navy, white text) so it stands apart
+  // from the blue text links -- bulletproof table button for Outlook.
   if (f.bookingUrl.trim())
     contactRows.push(
-      line(
-        `<a href="${esc(f.bookingUrl.trim())}" style="color:${brand.accent};text-decoration:none;font-weight:bold;">${esc(f.linkTitle.trim() || 'Book a time with me')}</a>`
-      )
+      `<tr><td style="padding:10px 0 2px;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;"><tr><td bgcolor="${brand.ink}" style="border-radius:6px;background-color:${brand.ink};"><a href="${esc(f.bookingUrl.trim())}" style="display:inline-block;padding:9px 16px;font-family:${FONT};font-size:13px;line-height:15px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:6px;">${esc(f.linkTitle.trim() || 'Book a time with me')}</a></td></tr></table></td></tr>`
     );
   // Icon images hosted on the prod site, like the logo. Explicit width/height
   // and display:inline-block keep Outlook from stretching them.
@@ -177,7 +163,7 @@ export function buildSignatureHtml(f: SignatureFields): string {
 
   const logoImg = `<img src="${esc(abs(brand.logo))}" width="${brand.width}" height="${brand.height}" alt="${esc(brand.label)}" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;" />`;
 
-  const tagline = taglineFor(brand.key);
+  const tagline = TAGLINE;
 
   // Side-by-side: tagline sits under the logo in the left column, width-capped
   // to the logo so it wraps instead of pushing the divider.
@@ -187,18 +173,7 @@ export function buildSignatureHtml(f: SignatureFields): string {
     ? `<tr><td style="font-family:Georgia, 'Times New Roman', serif;font-style:italic;font-size:13px;line-height:19px;mso-line-height-rule:exactly;color:${brand.ink};padding:9px 0 0;width:${brand.colWidth}px;">${esc(tagline).replace(/\.\s+/g, '.<br />')}</td></tr>`
     : '';
 
-  if (f.layout === 'stacked') {
-    return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-family:${FONT};">
-  <tr><td style="padding:0 0 10px;">${logoImg}</td></tr>
-  <tr><td style="border-top:2px solid ${brand.accent};padding:10px 0 0;">
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
-      ${nameBlock}
-    </table>
-  </td></tr>
-  ${tagline ? `<tr><td style="font-family:Georgia, 'Times New Roman', serif;font-style:italic;font-size:13px;line-height:19px;mso-line-height-rule:exactly;color:${brand.ink};padding:12px 0 0;">${esc(tagline)}</td></tr>` : ''}
-</table>`;
-  }
-
+  // One standard layout for continuity: logo + tagline left, divider, details right.
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-family:${FONT};">
   <tr>
     <td style="padding:0 18px 0 0;vertical-align:top;width:${brand.colWidth}px;">
