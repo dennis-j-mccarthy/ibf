@@ -118,10 +118,18 @@ function RichText({ value, onChange }: { value: string; onChange: (html: string)
     // Initialize once; subsequent value changes come from this editor itself.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  // Emit content with the selection ring stripped so it never lands in the DB.
+  const emit = () => {
+    const img = selImg.current;
+    const ring = img?.style.outline;
+    if (img) img.style.outline = '';
+    onChange(ref.current?.innerHTML ?? '');
+    if (img && ring) img.style.outline = ring;
+  };
   const exec = (cmd: string, arg?: string) => {
     ref.current?.focus();
     document.execCommand(cmd, false, arg);
-    onChange(ref.current?.innerHTML ?? '');
+    emit();
   };
 
   // Inline image upload: the file dialog steals focus, so the caret position
@@ -151,7 +159,7 @@ function RichText({ value, onChange }: { value: string; onChange: (html: string)
         sel?.addRange(savedRange.current);
       }
       document.execCommand('insertImage', false, blob.url);
-      onChange(ref.current?.innerHTML ?? '');
+      emit();
     } catch {
       alert('Image upload failed — try again.');
     } finally {
@@ -159,6 +167,35 @@ function RichText({ value, onChange }: { value: string; onChange: (html: string)
       if (fileRef.current) fileRef.current.value = '';
     }
   };
+  // Track the most recently clicked image so the alignment buttons can act on
+  // it; clicking anywhere else clears the selection (and its highlight ring).
+  const selImg = useRef<HTMLImageElement | null>(null);
+  const selectImg = (img: HTMLImageElement | null) => {
+    if (selImg.current) selImg.current.style.outline = '';
+    selImg.current = img;
+    if (img) img.style.outline = '2px solid #0088ff';
+  };
+  const alignImage = (mode: 'left' | 'center' | 'right') => {
+    const img = selImg.current;
+    if (img) {
+      img.style.float = mode === 'center' ? '' : mode;
+      img.style.display = mode === 'center' ? 'block' : '';
+      img.style.margin =
+        mode === 'center' ? '0.5rem auto' : mode === 'left' ? '0.25rem 1rem 0.5rem 0' : '0.25rem 0 0.5rem 1rem';
+      img.style.maxWidth = mode === 'center' ? '100%' : '50%';
+      emit();
+    } else {
+      exec(mode === 'left' ? 'justifyLeft' : mode === 'center' ? 'justifyCenter' : 'justifyRight');
+    }
+  };
+
+  const Ic = ({ d }: { d: string }) => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      {d.split('|').map((p) => (
+        <path key={p} d={p} />
+      ))}
+    </svg>
+  );
   const Btn = ({ onClick, title, children }: { onClick: () => void; title: string; children: ReactNode }) => (
     <button
       type="button"
@@ -173,14 +210,14 @@ function RichText({ value, onChange }: { value: string; onChange: (html: string)
   return (
     <div className="border border-[#dddddd] rounded-md overflow-hidden">
       <div className="flex flex-wrap items-center gap-0.5 bg-gray-50 border-b border-gray-200 p-1">
-        <Btn title="Bold" onClick={() => exec('bold')}><span className="font-bold">B</span></Btn>
-        <Btn title="Italic" onClick={() => exec('italic')}><span className="italic">I</span></Btn>
+        <Btn title="Bold" onClick={() => exec('bold')}><Ic d="M6 4h8a4 4 0 0 1 0 8H6z|M6 12h9a4 4 0 0 1 0 8H6z" /></Btn>
+        <Btn title="Italic" onClick={() => exec('italic')}><Ic d="M19 4h-9|M14 20H5|M15 4L9 20" /></Btn>
         <span className="w-px h-5 bg-gray-200 mx-1" />
-        <Btn title="Heading" onClick={() => exec('formatBlock', '<h2>')}>H2</Btn>
-        <Btn title="Subheading" onClick={() => exec('formatBlock', '<h3>')}>H3</Btn>
-        <Btn title="Paragraph" onClick={() => exec('formatBlock', '<p>')}>P</Btn>
+        <Btn title="Heading" onClick={() => exec('formatBlock', '<h2>')}><span className="font-bold text-xs">H2</span></Btn>
+        <Btn title="Subheading" onClick={() => exec('formatBlock', '<h3>')}><span className="font-bold text-xs">H3</span></Btn>
+        <Btn title="Paragraph" onClick={() => exec('formatBlock', '<p>')}><Ic d="M13 4v16|M17 4v16|M19 4H9.5a4.5 4.5 0 0 0 0 9H13" /></Btn>
         <span className="w-px h-5 bg-gray-200 mx-1" />
-        <Btn title="Bullet list" onClick={() => exec('insertUnorderedList')}>• List</Btn>
+        <Btn title="Bullet list" onClick={() => exec('insertUnorderedList')}><Ic d="M8 6h13|M8 12h13|M8 18h13|M3 6h.01|M3 12h.01|M3 18h.01" /></Btn>
         <Btn
           title="Link"
           onClick={() => {
@@ -188,12 +225,17 @@ function RichText({ value, onChange }: { value: string; onChange: (html: string)
             if (url) exec('createLink', url);
           }}
         >
-          Link
+          <Ic d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71|M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
         </Btn>
         <Btn title="Insert image at the cursor" onClick={pickImage}>
-          {uploadingImg ? '…' : 'Img'}
+          {uploadingImg ? '…' : <Ic d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z|M8.5 11a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5|M21 15l-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />}
         </Btn>
-        <Btn title="Clear formatting" onClick={() => exec('removeFormat')}>Clear</Btn>
+        <span className="w-px h-5 bg-gray-200 mx-1" />
+        <Btn title="Align left (image or text)" onClick={() => alignImage('left')}><Ic d="M21 6H3|M15 12H3|M17 18H3" /></Btn>
+        <Btn title="Center (image or text)" onClick={() => alignImage('center')}><Ic d="M21 6H3|M17 12H7|M19 18H5" /></Btn>
+        <Btn title="Align right (image or text)" onClick={() => alignImage('right')}><Ic d="M21 6H3|M21 12H9|M21 18H7" /></Btn>
+        <span className="w-px h-5 bg-gray-200 mx-1" />
+        <Btn title="Clear formatting" onClick={() => exec('removeFormat')}><Ic d="M20 20H7L3 16a1.9 1.9 0 0 1 0-3l9.5-9.5a2 2 0 0 1 2.8 0L21 9.2a2 2 0 0 1 0 2.8L13.5 19.5|M6 11l7 7" /></Btn>
         <input
           ref={fileRef}
           type="file"
@@ -209,7 +251,12 @@ function RichText({ value, onChange }: { value: string; onChange: (html: string)
         ref={ref}
         contentEditable
         suppressContentEditableWarning
-        onInput={() => onChange(ref.current?.innerHTML ?? '')}
+        onInput={() => emit()}
+        onClick={(e) => {
+          const t = e.target as HTMLElement;
+          selectImg(t.tagName === 'IMG' ? (t as HTMLImageElement) : null);
+        }}
+        onBlur={() => selectImg(null)}
         className="prose prose-sm max-w-none min-h-[260px] px-4 py-3 focus:outline-none prose-headings:font-brother prose-headings:text-[#02176f] [&_a]:text-[#0066ff]"
       />
     </div>
