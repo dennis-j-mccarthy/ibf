@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
+import { upload } from '@vercel/blob/client';
 
 type Blog = {
   id: number;
@@ -122,6 +123,42 @@ function RichText({ value, onChange }: { value: string; onChange: (html: string)
     document.execCommand(cmd, false, arg);
     onChange(ref.current?.innerHTML ?? '');
   };
+
+  // Inline image upload: the file dialog steals focus, so the caret position
+  // is saved before it opens and restored before the <img> is inserted.
+  const fileRef = useRef<HTMLInputElement>(null);
+  const savedRange = useRef<Range | null>(null);
+  const [uploadingImg, setUploadingImg] = useState(false);
+  const pickImage = () => {
+    const sel = window.getSelection();
+    savedRange.current =
+      sel && sel.rangeCount > 0 && ref.current?.contains(sel.anchorNode) ? sel.getRangeAt(0).cloneRange() : null;
+    fileRef.current?.click();
+  };
+  const insertImage = async (file: File) => {
+    setUploadingImg(true);
+    try {
+      const small = await downscaleImage(file);
+      const safe = file.name.replace(/[^a-zA-Z0-9.-]+/g, '-').toLowerCase();
+      const blob = await upload(`blog/inline/${safe}`, small, {
+        access: 'public',
+        handleUploadUrl: '/api/admin/blob-upload',
+      });
+      ref.current?.focus();
+      if (savedRange.current) {
+        const sel = window.getSelection();
+        sel?.removeAllRanges();
+        sel?.addRange(savedRange.current);
+      }
+      document.execCommand('insertImage', false, blob.url);
+      onChange(ref.current?.innerHTML ?? '');
+    } catch {
+      alert('Image upload failed — try again.');
+    } finally {
+      setUploadingImg(false);
+      if (fileRef.current) fileRef.current.value = '';
+    }
+  };
   const Btn = ({ onClick, title, children }: { onClick: () => void; title: string; children: ReactNode }) => (
     <button
       type="button"
@@ -153,7 +190,20 @@ function RichText({ value, onChange }: { value: string; onChange: (html: string)
         >
           Link
         </Btn>
+        <Btn title="Insert image at the cursor" onClick={pickImage}>
+          {uploadingImg ? '…' : 'Img'}
+        </Btn>
         <Btn title="Clear formatting" onClick={() => exec('removeFormat')}>Clear</Btn>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) insertImage(f);
+          }}
+        />
       </div>
       <div
         ref={ref}
