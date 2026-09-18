@@ -103,6 +103,13 @@ export default function BookBattlesPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {[
             {
+              // Like the certificate below, this lives ONLY on this private
+              // page -- not in the Resource table, resources page, or search.
+              href: '/documents/book-battle-competition-manual-9-18-26.pdf',
+              thumb: '/images/thumb-ibb-competition-manual.png',
+              title: 'Competition Manual',
+            },
+            {
               href: '/documents/ibb-book-summary-sheet.pdf',
               thumb: '/images/thumb-ibb-book-summary-sheet.png',
               title: 'Book Summary Sheet',
