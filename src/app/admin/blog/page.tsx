@@ -189,6 +189,19 @@ function RichText({ value, onChange }: { value: string; onChange: (html: string)
     }
   };
 
+  // Size presets for the selected image; width wins over any alignment cap.
+  const resizeImage = (pct: 25 | 40 | 60 | 100) => {
+    const img = selImg.current;
+    if (!img) {
+      alert('Click an image first, then pick a size.');
+      return;
+    }
+    img.style.width = `${pct}%`;
+    img.style.maxWidth = `${pct}%`;
+    img.style.height = 'auto';
+    emit();
+  };
+
   const Ic = ({ d }: { d: string }) => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       {d.split('|').map((p) => (
@@ -234,6 +247,11 @@ function RichText({ value, onChange }: { value: string; onChange: (html: string)
         <Btn title="Align left (image or text)" onClick={() => alignImage('left')}><Ic d="M21 6H3|M15 12H3|M17 18H3" /></Btn>
         <Btn title="Center (image or text)" onClick={() => alignImage('center')}><Ic d="M21 6H3|M17 12H7|M19 18H5" /></Btn>
         <Btn title="Align right (image or text)" onClick={() => alignImage('right')}><Ic d="M21 6H3|M21 12H9|M21 18H7" /></Btn>
+        <span className="w-px h-5 bg-gray-200 mx-1" />
+        <Btn title="Image size: small (25%)" onClick={() => resizeImage(25)}><span className="text-[10px] font-bold">S</span></Btn>
+        <Btn title="Image size: medium (40%)" onClick={() => resizeImage(40)}><span className="text-xs font-bold">M</span></Btn>
+        <Btn title="Image size: large (60%)" onClick={() => resizeImage(60)}><span className="text-sm font-bold">L</span></Btn>
+        <Btn title="Image size: full width" onClick={() => resizeImage(100)}><Ic d="M8 3H5a2 2 0 0 0-2 2v3|M16 3h3a2 2 0 0 1 2 2v3|M8 21H5a2 2 0 0 1-2-2v-3|M16 21h3a2 2 0 0 0 2-2v-3" /></Btn>
         <span className="w-px h-5 bg-gray-200 mx-1" />
         <Btn title="Clear formatting" onClick={() => exec('removeFormat')}><Ic d="M20 20H7L3 16a1.9 1.9 0 0 1 0-3l9.5-9.5a2 2 0 0 1 2.8 0L21 9.2a2 2 0 0 1 0 2.8L13.5 19.5|M6 11l7 7" /></Btn>
         <input
