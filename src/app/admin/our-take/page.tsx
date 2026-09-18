@@ -1,11 +1,6 @@
-import type { Metadata } from 'next';
-import OurTakeBrowser from '@/components/admin/OurTakeBrowser';
+import { redirect } from 'next/navigation';
 
-export const metadata: Metadata = {
-  title: 'Our Take Reviews | IBF Admin',
-  robots: { index: false, follow: false },
-};
-
-export default function OurTakePage() {
-  return <OurTakeBrowser />;
+// Superseded by the combined Reviews page (store reviews + Our Take).
+export default function OurTakeRedirect() {
+  redirect('/admin/reviews');
 }

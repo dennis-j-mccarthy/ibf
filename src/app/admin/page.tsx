@@ -129,11 +129,11 @@ export default async function AdminDashboard() {
       ),
     },
     {
-      href: '/admin/our-take',
-      title: 'Our Take Reviews',
-      desc: 'Editorial blurbs for every store product, searchable with CSV export.',
-      stat: '1,180',
-      statLabel: 'blurbs',
+      href: '/admin/reviews',
+      title: 'Reviews',
+      desc: 'Real store reviews plus the generated Our Take blurbs, each with CSV export.',
+      stat: '82 + 1,180',
+      statLabel: 'store + generated',
       accent: '#6b4fbb',
       icon: (
         <path
