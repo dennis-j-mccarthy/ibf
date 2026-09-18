@@ -44,6 +44,13 @@ const nextConfig: NextConfig = {
         destination: '/marketing/hero-rotator.html',
         permanent: false,
       },
+      // Catholic fall flyer: 9-17 revision replaced the 9-5 file. Keeps
+      // links already circulating (heroes, emails) working.
+      {
+        source: '/documents/fall-flyer-catholic-9-5.pdf',
+        destination: '/documents/fall-flyer-catholic-9-17.pdf',
+        permanent: true,
+      },
       // Category signs: 9-8-26 revision (crop marks trimmed) replaced the old
       // table-category-signs file.
       {

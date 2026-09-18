@@ -16,7 +16,7 @@ const ROWS = [
     description:
       '"Fall in Love with Reading!" — seasonal picks for fall book fairs, with parent sign-up steps and store QR code.',
     thumbnail: '/images/thumb-fall-2026.png',
-    fileUrl: '/documents/fall-flyer-catholic-9-5.pdf',
+    fileUrl: '/documents/fall-flyer-catholic-9-17.pdf',
     category: 'Advertising',
     audience: 'Catholic In Person',
     resourceType: 'PDF',
